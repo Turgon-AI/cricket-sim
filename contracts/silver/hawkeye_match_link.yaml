@@ -1,0 +1,156 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.hawkeye_match_link
+name: hawkeye_match_link
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Records which Cricsheet match each Hawk-Eye (HawkeyeStats) match was linked to and how strong the evidence
+    is, so the per-ball Hawk-Eye data can be joined to Cricsheet and the unlinked remainder is visible.
+  limitations: 'Covers only men''s Test, ODI and IPL matches in the HawkeyeStats feed (frozen February 2022). 78
+    of 1,767 Hawk-Eye matches are unmatched (76 ODI, 2 Test; no IPL): most are Afghanistan matches, which
+    Cricsheet withholds. A Hawk-Eye match counts as linked only if at least half of its balls agree
+    with a Cricsheet match on runs, batter and bowler, and each Cricsheet match is used by at most one Hawk-Eye
+    match. Linked matches have an agreement_rate of 0.88 to 1.0 (median 1.0) and no mis-link was found in manual checks.
+    Hawk-Eye coordinate conventions: pitchX/Y are the bounce point in metres (X lateral from middle stump, Y from
+    the batter''s stumps), stumpsX/Y the position at the stumps plane (X lateral, Y height), ballSpeed is m/s with
+    -1 meaning not tracked, and fieldX/Y a unitless 0-100 graphic grid. Hawk-Eye data has no licence: this table
+    is never exported.'
+schema:
+- name: hawkeye_match_link
+  physicalName: data/silver/hawkeye_match_link.parquet
+  physicalType: table
+  logicalType: object
+  description: Link between each Hawk-Eye match and the Cricsheet match it describes, with a confidence and an agreement
+    measure; unmatched Hawk-Eye matches are kept with a NULL match_id.
+  dataGranularityDescription: One row per Hawk-Eye match (hawkeye_match_id within competition), 1,767 rows.
+  properties:
+  - name: hawkeye_match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: HawkeyeStats match id (the feed's matchId), unique within a competition.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: competition
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Which HawkeyeStats file the match came from: ''mensTest'', ''mensODI'' or ''mensIPL''.'
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    quality:
+    - name: valid_competition
+      metric: invalidValues
+      arguments:
+        validValues:
+        - mensTest
+        - mensODI
+        - mensIPL
+      mustBe: 0
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match this Hawk-Eye match was linked to; NULL when unmatched. Each Cricsheet match appears
+      at most once.
+    relationships:
+    - to: matches.match_id
+  - name: confidence
+    logicalType: number
+    physicalType: DOUBLE
+    description: Margin by which the chosen Cricsheet match beat the runner-up (best minus second-best share of
+      agreeing balls), 0 to 1; high only when the choice is unambiguous. 0 when unmatched.
+    customProperties:
+    - property: unit
+      value: share (0-1)
+    quality:
+    - name: confidence_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: method
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How the link was made: ''pulse_id_pairs+ball_alignment'' (candidates found by overlap of batter/bowler
+      pairs on ICC Pulse ids, then balls aligned by innings, over and delivery) or ''unmatched''. A surname-based
+      candidate search would be named ''surname_pairs+ball_alignment'' but does not occur in the current data.'
+    quality:
+    - name: valid_method
+      metric: invalidValues
+      arguments:
+        validValues:
+        - pulse_id_pairs+ball_alignment
+        - surname_pairs+ball_alignment
+        - unmatched
+      mustBe: 0
+  - name: hawkeye_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Number of Hawk-Eye delivery rows in this match in the source.
+    customProperties:
+    - property: unit
+      value: balls
+    quality:
+    - name: hawkeye_balls_positive
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 100000
+      mustBe: 0
+  - name: aligned_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Number of those Hawk-Eye rows that landed on a Cricsheet ball of the linked match. 0 when unmatched.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: agreement_rate
+    logicalType: number
+    physicalType: DOUBLE
+    description: Share of aligned balls where runs, batter and bowler all agree with Cricsheet (0 to 1). NULL when
+      unmatched.
+    customProperties:
+    - property: unit
+      value: share (0-1)
+    quality:
+    - name: agreement_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  quality:
+  - name: matched_iff_has_match_id
+    type: sql
+    description: match_id is NULL exactly when the method is 'unmatched'.
+    query: SELECT count(*) FROM ${table} WHERE (method = 'unmatched') <> (match_id IS NULL)
+    mustBe: 0
+  - name: aligned_not_more_than_hawkeye
+    type: sql
+    description: Aligned balls cannot exceed the Hawk-Eye balls of the match.
+    query: SELECT count(*) FROM ${table} WHERE aligned_balls > hawkeye_balls
+    mustBe: 0
+  - name: agreement_rate_only_when_matched
+    type: sql
+    description: agreement_rate is NULL exactly when unmatched.
+    query: SELECT count(*) FROM ${table} WHERE (method = 'unmatched') <> (agreement_rate IS NULL)
+    mustBe: 0
+  - name: cricsheet_match_linked_once
+    type: sql
+    description: A Cricsheet match is linked to at most one Hawk-Eye match.
+    query: SELECT count(match_id) - count(DISTINCT match_id) FROM ${table}
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - hawkeye
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - stg_hawkeye_balls
+  - balls
+  - matches
+  - people

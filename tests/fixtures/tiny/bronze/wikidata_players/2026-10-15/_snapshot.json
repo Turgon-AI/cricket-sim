@@ -1,0 +1,133 @@
+{
+  "source": "wikidata_players",
+  "snapshot_id": "2026-10-15",
+  "ingested_at_utc": "2026-10-15T09:45:19Z",
+  "upstream": {
+    "endpoint": "https://query.wikidata.org/sparql",
+    "licence": "CC0-1.0",
+    "attribution": "Wikidata (https://www.wikidata.org), CC0 1.0 public domain dedication"
+  },
+  "files": [
+    {
+      "name": "base.p000.json",
+      "query": "SELECT ?s ?cricinfo_id ?label WHERE { ?s wdt:P31 wd:Q5 ; wdt:P2697 ?cricinfo_id . OPTIONAL { ?s rdfs:label ?label FILTER(lang(?label) = \"en\") } } ORDER BY ?s ?cricinfo_id LIMIT 30000 OFFSET 0",
+      "stored_as": "base.p000.json.zst",
+      "compressed": true,
+      "rows": 30000,
+      "raw_bytes": 9579923,
+      "raw_sha256": "9cf456a40c04697db09715f550d940a1cfa2e9297d3ec9ad84b52d9fc6876e22",
+      "stored_bytes": 477175,
+      "stored_sha256": "4ffb00703bf2d72d3ad1cb8b745ae5107abcdd812f7459c395cd7bfa30fbb109"
+    },
+    {
+      "name": "base.p001.json",
+      "query": "SELECT ?s ?cricinfo_id ?label WHERE { ?s wdt:P31 wd:Q5 ; wdt:P2697 ?cricinfo_id . OPTIONAL { ?s rdfs:label ?label FILTER(lang(?label) = \"en\") } } ORDER BY ?s ?cricinfo_id LIMIT 30000 OFFSET 30000",
+      "stored_as": "base.p001.json.zst",
+      "compressed": true,
+      "rows": 1715,
+      "raw_bytes": 548323,
+      "raw_sha256": "8eadf4ad1a0c64b39b23a07f74e8b4fd6b6a3203e822f52dfe5fa01268c4ca77",
+      "stored_bytes": 29848,
+      "stored_sha256": "b20b7603c8ef04c2ac4d53ac1a1ff054a00360ed7b59caa7e8e1038eaa5d066a"
+    },
+    {
+      "name": "birthplace.p000.json",
+      "query": "SELECT ?s ?cricinfo_id ?place ?place_label ?place_country_label WHERE { ?s wdt:P31 wd:Q5 ; wdt:P2697 ?cricinfo_id . ?s wdt:P19 ?place .\n        OPTIONAL { ?place rdfs:label ?place_label FILTER(lang(?place_label) = \"en\") }\n        OPTIONAL { ?place wdt:P17 ?pc . ?pc rdfs:label ?place_country_label FILTER(lang(?place_country_label) = \"en\") } }\n        ORDER BY ?s ?cricinfo_id ?place ?place_country_label LIMIT 30000 OFFSET 0",
+      "stored_as": "birthplace.p000.json.zst",
+      "compressed": true,
+      "rows": 23892,
+      "raw_bytes": 13308067,
+      "raw_sha256": "ffb75d3f62cfbcb7a6f39cd8f984356070042ee1f2257aa024d1ef68e365d779",
+      "stored_bytes": 368429,
+      "stored_sha256": "980c77db7e6e9f7853cba98b7f0b7f7d2513e5ea4e00dd3af6df8c477197eaa0"
+    },
+    {
+      "name": "citizenship.p000.json",
+      "query": "SELECT ?s ?cricinfo_id ?country ?country_label WHERE { ?s wdt:P31 wd:Q5 ; wdt:P2697 ?cricinfo_id . ?s wdt:P27 ?country .\n        OPTIONAL { ?country rdfs:label ?country_label FILTER(lang(?country_label) = \"en\") } } ORDER BY ?s ?cricinfo_id ?country LIMIT 30000 OFFSET 0",
+      "stored_as": "citizenship.p000.json.zst",
+      "compressed": true,
+      "rows": 26772,
+      "raw_bytes": 11726682,
+      "raw_sha256": "cd0a2b05892873a2b2d391895fd9ec07377273cf50182a878efece0434ace650",
+      "stored_bytes": 236551,
+      "stored_sha256": "74fae56cbd77d21ce09164adaaa2f8f5282e74f4ab8983021783eb8ffc1562f0"
+    },
+    {
+      "name": "dob.p000.json",
+      "query": "SELECT ?s ?cricinfo_id ?dob ?precision WHERE { ?s wdt:P31 wd:Q5 ; wdt:P2697 ?cricinfo_id .\n        ?s p:P569/psv:P569 ?n . ?n wikibase:timeValue ?dob ; wikibase:timePrecision ?precision . } ORDER BY ?s ?cricinfo_id ?dob LIMIT 30000 OFFSET 0",
+      "stored_as": "dob.p000.json.zst",
+      "compressed": true,
+      "rows": 30000,
+      "raw_bytes": 15301190,
+      "raw_sha256": "c039ea2db739ed73710b25763b16e48caf9942d1fb53eab4d07b73975ca85695",
+      "stored_bytes": 413997,
+      "stored_sha256": "63788df8bacbab6c4e3f12f77db63b6926b451c3bd42164ac871eee62d21752b"
+    },
+    {
+      "name": "dob.p001.json",
+      "query": "SELECT ?s ?cricinfo_id ?dob ?precision WHERE { ?s wdt:P31 wd:Q5 ; wdt:P2697 ?cricinfo_id .\n        ?s p:P569/psv:P569 ?n . ?n wikibase:timeValue ?dob ; wikibase:timePrecision ?precision . } ORDER BY ?s ?cricinfo_id ?dob LIMIT 30000 OFFSET 30000",
+      "stored_as": "dob.p001.json.zst",
+      "compressed": true,
+      "rows": 969,
+      "raw_bytes": 494305,
+      "raw_sha256": "b9e0c3feb5191789f9f8b3842fa3d667b39f08060e165bcf11c0fe7ee1a3eead",
+      "stored_bytes": 13722,
+      "stored_sha256": "feb5e69539361025aa8bf8a9076746ed70dad1c9d42e3d2f3aabbc9fe5e45c6f"
+    },
+    {
+      "name": "handedness.p000.json",
+      "query": "SELECT ?s ?cricinfo_id ?prop ?value ?value_label WHERE { ?s wdt:P31 wd:Q5 ; wdt:P2697 ?cricinfo_id .\n        { ?s wdt:P552 ?value . BIND(\"P552\" AS ?prop) } UNION { ?s wdt:P741 ?value . BIND(\"P741\" AS ?prop) }\n        OPTIONAL { ?value rdfs:label ?value_label FILTER(lang(?value_label) = \"en\") } } ORDER BY ?s ?cricinfo_id ?prop ?value LIMIT 30000 OFFSET 0",
+      "stored_as": "handedness.p000.json.zst",
+      "compressed": true,
+      "rows": 55,
+      "raw_bytes": 28526,
+      "raw_sha256": "76c3ac624f5481548414ff7806b7ac811b72a4304d92dcbad7b66c1fcdf36203",
+      "stored_bytes": 908,
+      "stored_sha256": "17f0c695f22a7ea50c2018dadc805a2441a22e0679bb7677604ff165dc14ff0c"
+    },
+    {
+      "name": "height.p000.json",
+      "query": "SELECT ?s ?cricinfo_id ?amount ?unit WHERE { ?s wdt:P31 wd:Q5 ; wdt:P2697 ?cricinfo_id .\n        ?s p:P2048/psv:P2048 ?n . ?n wikibase:quantityAmount ?amount ; wikibase:quantityUnit ?unit . }\n        ORDER BY ?s ?cricinfo_id ?amount ?unit LIMIT 30000 OFFSET 0",
+      "stored_as": "height.p000.json.zst",
+      "compressed": true,
+      "rows": 77,
+      "raw_bytes": 35197,
+      "raw_sha256": "6b45b5d43edae55b0ed9539b387a3e3905780ca17e3e2f1dbdb859265a5918d4",
+      "stored_bytes": 1232,
+      "stored_sha256": "b6c8971ea6c90e28c3ce588b20f910932fa88745ff197916d0f7c9c6e5602496"
+    },
+    {
+      "name": "position.p000.json",
+      "query": "SELECT ?s ?cricinfo_id ?value ?value_label WHERE { ?s wdt:P31 wd:Q5 ; wdt:P2697 ?cricinfo_id . ?s wdt:P413 ?value .\n        OPTIONAL { ?value rdfs:label ?value_label FILTER(lang(?value_label) = \"en\") } } ORDER BY ?s ?cricinfo_id ?value LIMIT 30000 OFFSET 0",
+      "stored_as": "position.p000.json.zst",
+      "compressed": true,
+      "rows": 434,
+      "raw_bytes": 186854,
+      "raw_sha256": "cfe9ba1ccb875f6145f4ef8db906309bfd008085cc1a5316d97a2518a16bb4c3",
+      "stored_bytes": 5274,
+      "stored_sha256": "4c1e5594e70af6e29b4a7d7d7553500540170d488b6948032f172b1a28b18e01"
+    },
+    {
+      "name": "sex.p000.json",
+      "query": "SELECT ?s ?cricinfo_id ?sex ?sex_label WHERE { ?s wdt:P31 wd:Q5 ; wdt:P2697 ?cricinfo_id . ?s wdt:P21 ?sex . OPTIONAL { ?sex rdfs:label ?sex_label FILTER(lang(?sex_label) = \"en\") } }\n        ORDER BY ?s ?cricinfo_id ?sex LIMIT 30000 OFFSET 0",
+      "stored_as": "sex.p000.json.zst",
+      "compressed": true,
+      "rows": 30000,
+      "raw_bytes": 12698009,
+      "raw_sha256": "ae0d05d7b47c274b1bb82ea92812f374d923b1e3d5af14bfb125540c80db693a",
+      "stored_bytes": 251808,
+      "stored_sha256": "e318452664230d13cb7ba77dcd2fd17912d414287f7ca0ebe7bde2fb2bb26436"
+    },
+    {
+      "name": "sex.p001.json",
+      "query": "SELECT ?s ?cricinfo_id ?sex ?sex_label WHERE { ?s wdt:P31 wd:Q5 ; wdt:P2697 ?cricinfo_id . ?s wdt:P21 ?sex . OPTIONAL { ?sex rdfs:label ?sex_label FILTER(lang(?sex_label) = \"en\") } }\n        ORDER BY ?s ?cricinfo_id ?sex LIMIT 30000 OFFSET 30000",
+      "stored_as": "sex.p001.json.zst",
+      "compressed": true,
+      "rows": 1710,
+      "raw_bytes": 723671,
+      "raw_sha256": "46b6adb00ba7aa6b29baed6d60b3b62b2e3a7e0402b14baaba48d172376e9d80",
+      "stored_bytes": 14188,
+      "stored_sha256": "af3c822fbb1625edc5d82f145e1073052da00d95b6381ead2e3f8e0516ac3d62"
+    }
+  ]
+}

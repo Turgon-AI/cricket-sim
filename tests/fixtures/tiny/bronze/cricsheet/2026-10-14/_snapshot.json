@@ -1,0 +1,43 @@
+{
+  "source": "cricsheet",
+  "snapshot_id": "2026-10-14",
+  "ingested_at_utc": "2026-10-16T00:00:00Z",
+  "upstream": {
+    "fixture_subset_of": "2026-10-14",
+    "matches": [
+      "1022353",
+      "1085975",
+      "1144528",
+      "1144530",
+      "1181768",
+      "1187669",
+      "1223872",
+      "1384439",
+      "1389401",
+      "433606"
+    ]
+  },
+  "files": [
+    {
+      "name": "all_json.zip",
+      "stored_as": "all_json.zip",
+      "compressed": false,
+      "stored_bytes": 83434,
+      "stored_sha256": "12f5b7aa8730a4cdbc34dc3390f1e30dcb5d2da84a3e9b8a76e35d74ccbb0278"
+    },
+    {
+      "name": "names.csv",
+      "stored_as": "names.csv",
+      "compressed": false,
+      "stored_bytes": 5718,
+      "stored_sha256": "d4de4e628e4e9b2b64706f954b3648cf84d04a3a63ebcea5f25bca4a1f8c8192"
+    },
+    {
+      "name": "people.csv",
+      "stored_as": "people.csv",
+      "compressed": false,
+      "stored_bytes": 15711,
+      "stored_sha256": "eef4e84cdabd9ddca7f5fed3768aeab033d7de582b7ba1521341c5bca3330073"
+    }
+  ]
+}

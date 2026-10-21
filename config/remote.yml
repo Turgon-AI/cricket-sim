@@ -1,0 +1,3 @@
+# Off-machine backup of bronze snapshots. Any rclone remote works; swap without code changes.
+rclone_remote: backup
+remote_path: cricket-sim/bronze

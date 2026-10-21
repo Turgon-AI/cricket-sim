@@ -1,0 +1,60 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.report_cricsheet_known_missing
+name: report_cricsheet_known_missing
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: >-
+    Lists the in-scope matches Cricsheet itself says it is missing, which explains part of the coverage gap in report_international_coverage.
+  limitations: >-
+    Copied from Cricsheet's 'missing' web page: entries have only a date and a teams string, no match number or
+    id. Only men's Test and ODI lists and the IPL competition list are kept (currently no IPL entries); T20Is are
+    not covered.
+schema:
+- name: report_cricsheet_known_missing
+  physicalName: data/gold/report_cricsheet_known_missing.parquet
+  physicalType: table
+  logicalType: object
+  description: >-
+    Men's Tests and ODIs (and IPL matches, if any) since 2001 on Cricsheet's list of matches it knows it lacks.
+  dataGranularityDescription: One row per entry on Cricsheet's missing list in scope.
+  properties:
+  - name: list_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Cricsheet list the entry is on, as Cricsheet titles it: 'Test', 'Odi', or the IPL competition.
+    required: true
+  - name: start_date
+    logicalType: date
+    physicalType: DATE
+    description: Date of the missing match as listed by Cricsheet.
+    required: true
+    quality:
+    - name: in_scope_dates
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < DATE '2001-01-01'
+      mustBe: 0
+  - name: teams
+    logicalType: string
+    physicalType: VARCHAR
+    description: Teams as Cricsheet writes them, 'Team A vs Team B'.
+    required: true
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 300
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: report
+- property: sources
+  value:
+  - cricsheet_missing
+- property: upstream
+  value:
+  - cricsheet_missing

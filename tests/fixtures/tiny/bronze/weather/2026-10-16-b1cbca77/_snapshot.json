@@ -1,0 +1,185 @@
+{
+  "source": "weather",
+  "snapshot_id": "2026-10-16-b1cbca77",
+  "ingested_at_utc": "2026-10-16T00:00:00Z",
+  "upstream": {
+    "geo_snapshot_id": "2026-10-16-36f02dbb",
+    "geo_manifest_sha256": "0eeb4e609412900490c8a70942f424d5ad5ce620e639d3c95bb4cc6d85f43679",
+    "plan_sha256": "b1cbca778558da91044b9b7b804be6bf513a7630346d9949d508d8d4e113be68",
+    "weighted_calls_this_run": 116.0,
+    "n_failures": 0,
+    "allow_gaps": false,
+    "licence": "CC-BY-4.0 (data); free API tier is for non-commercial use only",
+    "attribution": "Weather data by Open-Meteo.com (https://open-meteo.com), CC BY 4.0; contains modified Copernicus ERA5 reanalysis data",
+    "redistributable": true
+  },
+  "files": [
+    {
+      "name": "brisbane-cricket-ground__2021-01-15__2021-01-19.json",
+      "stored_as": "brisbane-cricket-ground__2021-01-15__2021-01-19.json.zst",
+      "compressed": true,
+      "raw_sha256": "e6f10ef1263193bbdb108c1c9fb718e691a866b3164f2acd2f18a85f80fc5572",
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "params": {
+        "end_date": "2021-01-19",
+        "hourly": "temperature_2m,relative_humidity_2m,dew_point_2m,cloud_cover,wind_speed_10m,wind_direction_10m,precipitation,surface_pressure",
+        "latitude": -27.48583,
+        "longitude": 153.03806,
+        "start_date": "2021-01-15",
+        "timezone": "auto"
+      },
+      "stored_bytes": 2167,
+      "stored_sha256": "fb8290f68d2f8b28be00634e294fe9ff145bbb882d3f261b34d0bc9957afbb36"
+    },
+    {
+      "name": "eden-park__2019-11-10__2019-11-10.json",
+      "stored_as": "eden-park__2019-11-10__2019-11-10.json.zst",
+      "compressed": true,
+      "raw_sha256": "f2441f264cbde1026c87ae72d8041a62f1163749011a92f4d3eb1494f593a44a",
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "params": {
+        "end_date": "2019-11-10",
+        "hourly": "temperature_2m,relative_humidity_2m,dew_point_2m,cloud_cover,wind_speed_10m,wind_direction_10m,precipitation,surface_pressure",
+        "latitude": -36.87528,
+        "longitude": 174.745,
+        "start_date": "2019-11-10",
+        "timezone": "auto"
+      },
+      "stored_bytes": 969,
+      "stored_sha256": "e61d4d294b017797268fea6322298eca7050413cf8068da425a63c974ae1ddd1"
+    },
+    {
+      "name": "edgbaston__2017-06-02__2017-06-15.json",
+      "stored_as": "edgbaston__2017-06-02__2017-06-15.json.zst",
+      "compressed": true,
+      "raw_sha256": "32e276b45449a1430b58591f45f20e4f96e46c113830b01825024dacff30fc83",
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "params": {
+        "end_date": "2017-06-15",
+        "hourly": "temperature_2m,relative_humidity_2m,dew_point_2m,cloud_cover,wind_speed_10m,wind_direction_10m,precipitation,surface_pressure",
+        "latitude": 52.4558,
+        "longitude": -1.90249,
+        "start_date": "2017-06-02",
+        "timezone": "auto"
+      },
+      "stored_bytes": 4570,
+      "stored_sha256": "8be19b58a261a65748aafcdfe5c1f4f342363a42ef6c652ed9de8e6188bb1b3d"
+    },
+    {
+      "name": "failures.json",
+      "stored_as": "failures.json",
+      "compressed": false,
+      "stored_bytes": 3,
+      "stored_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "name": "lords__2019-07-14__2019-07-26.json",
+      "stored_as": "lords__2019-07-14__2019-07-26.json.zst",
+      "compressed": true,
+      "raw_sha256": "6b6f8bd9e708a1d11121e6a58a7c24f4ad7482ce0b54c43df238beaf9a8c2f91",
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "params": {
+        "end_date": "2019-07-26",
+        "hourly": "temperature_2m,relative_humidity_2m,dew_point_2m,cloud_cover,wind_speed_10m,wind_direction_10m,precipitation,surface_pressure",
+        "latitude": 51.5294,
+        "longitude": -0.1727,
+        "start_date": "2019-07-14",
+        "timezone": "auto"
+      },
+      "stored_bytes": 4291,
+      "stored_sha256": "9c0cae522236c649756a73695378e0cdf11514b267b0d0f4b830b9c7640e77b2"
+    },
+    {
+      "name": "narendra-modi-stadium__2023-11-19__2023-11-19.json",
+      "stored_as": "narendra-modi-stadium__2023-11-19__2023-11-19.json.zst",
+      "compressed": true,
+      "raw_sha256": "56d7aea9d75a9754a5d45ca4f0c7889a4eb4d676cd26122b7f3a3ddb6360f643",
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "params": {
+        "end_date": "2023-11-19",
+        "hourly": "temperature_2m,relative_humidity_2m,dew_point_2m,cloud_cover,wind_speed_10m,wind_direction_10m,precipitation,surface_pressure",
+        "latitude": 23.09167,
+        "longitude": 72.5975,
+        "start_date": "2023-11-19",
+        "timezone": "auto"
+      },
+      "stored_bytes": 924,
+      "stored_sha256": "eb207cf76e8b8010bbcfb2b83c353191c0e98dc7c334ae50de82eed17e13b8e8"
+    },
+    {
+      "name": "old-trafford__2019-07-06__2019-07-10.json",
+      "stored_as": "old-trafford__2019-07-06__2019-07-10.json.zst",
+      "compressed": true,
+      "raw_sha256": "8c10c2e8d7836ee5fbecea761a435f54f54b7d21ebc75bca171a8bbd1853defd",
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "params": {
+        "end_date": "2019-07-10",
+        "hourly": "temperature_2m,relative_humidity_2m,dew_point_2m,cloud_cover,wind_speed_10m,wind_direction_10m,precipitation,surface_pressure",
+        "latitude": 53.45639,
+        "longitude": -2.28667,
+        "start_date": "2019-07-06",
+        "timezone": "auto"
+      },
+      "stored_bytes": 2095,
+      "stored_sha256": "27a14ef80e3db611983d93d8ca82b5d79add830e0cebbfdc9c794de50b6df363"
+    },
+    {
+      "name": "plan.json",
+      "stored_as": "plan.json",
+      "compressed": false,
+      "stored_bytes": 4112,
+      "stored_sha256": "adea3ad9176e6d26965d795f50a390079c8f82efbc728fa9133d141b934ff958"
+    },
+    {
+      "name": "rajiv-gandhi-international-stadium__2019-04-29__2019-05-12.json",
+      "stored_as": "rajiv-gandhi-international-stadium__2019-04-29__2019-05-12.json.zst",
+      "compressed": true,
+      "raw_sha256": "208db4022630bea7c0085b9f353ee6951cacdbb37317f9463a177dbcd416697b",
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "params": {
+        "end_date": "2019-05-12",
+        "hourly": "temperature_2m,relative_humidity_2m,dew_point_2m,cloud_cover,wind_speed_10m,wind_direction_10m,precipitation,surface_pressure",
+        "latitude": 17.4065,
+        "longitude": 78.55044,
+        "start_date": "2019-04-29",
+        "timezone": "auto"
+      },
+      "stored_bytes": 4606,
+      "stored_sha256": "980455d0558a62c8d05e9a2447ef3e963c503fa369bcc04c5fd20e117a4a5a0d"
+    },
+    {
+      "name": "saurashtra-cricket-association-stadium__2024-02-15__2024-02-18.json",
+      "stored_as": "saurashtra-cricket-association-stadium__2024-02-15__2024-02-18.json.zst",
+      "compressed": true,
+      "raw_sha256": "f8a7c0098936a9dde673db65404773cc9025ac47d90b26b4b06f8705bcaeab2b",
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "params": {
+        "end_date": "2024-02-18",
+        "hourly": "temperature_2m,relative_humidity_2m,dew_point_2m,cloud_cover,wind_speed_10m,wind_direction_10m,precipitation,surface_pressure",
+        "latitude": 22.363,
+        "longitude": 70.71,
+        "start_date": "2024-02-15",
+        "timezone": "auto"
+      },
+      "stored_bytes": 1840,
+      "stored_sha256": "291eb2e66230131f73af6e069e2d2fb959a1fd67254c2ca8fda1687e0892f134"
+    },
+    {
+      "name": "wankhede-stadium__2011-04-02__2011-04-15.json",
+      "stored_as": "wankhede-stadium__2011-04-02__2011-04-15.json.zst",
+      "compressed": true,
+      "raw_sha256": "e0b08fb61e8a7b075ca5f7b8fff76a88ca80bad56458330795b64c35d722f11b",
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "params": {
+        "end_date": "2011-04-15",
+        "hourly": "temperature_2m,relative_humidity_2m,dew_point_2m,cloud_cover,wind_speed_10m,wind_direction_10m,precipitation,surface_pressure",
+        "latitude": 18.93892,
+        "longitude": 72.82572,
+        "start_date": "2011-04-02",
+        "timezone": "auto"
+      },
+      "stored_bytes": 4163,
+      "stored_sha256": "2ef515cef42d6d70d61a141d7f68ffaa3495a59425356dd4c3ef65db35c051d2"
+    }
+  ]
+}

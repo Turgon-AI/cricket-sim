@@ -1,0 +1,172 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.wikipedia_fixtures
+name: wikipedia_fixtures
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: A reference list of every numbered men's Test, ODI and T20I from Wikipedia's 'International cricket in
+    YYYY' pages, used as a yardstick to see which official internationals Cricsheet has and which it lacks.
+  limitations: 'Source: Wikipedia season pages pinned by revision id, licence CC BY-SA 4.0 (derived tables must
+    stay CC BY-SA). Parsed by a heuristic wikitext reader, so errors exist: it is incomplete (it holds only about
+    42% of numbered T20Is; a manual check also found 56 ODI and 9 Test numbers missing from the pages), team names are
+    sometimes inferred from section headings (see teams_source), and one ''CAM'' code is wrongly read as Cameroon
+    where Cambodia is meant (2 rows) and one ODI (3139) has the same team twice. 9 Cricinfo ids appear on more than
+    one match number. 17 future fixtures (to Oct 2026) have no result. Women''s matches are excluded. Cricinfo match
+    ids are taken from scorecard links and 1,221 of them are not in Cricsheet.'
+  usage: Compare with matches via cricinfo_match_id = match_id, falling back to date and teams.
+schema:
+- name: wikipedia_fixtures
+  physicalName: data/silver/wikipedia_fixtures.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per (match_format, match_number) after de-duplicating rows that appear on more than one page.
+    6,258 rows (3,365 ODIs, 1,771 T20Is, 1,122 Tests).
+  dataGranularityDescription: One row per numbered international (match_format, match_number).
+  properties:
+  - name: match_format
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''Test'', ''ODI'' or ''T20I''. Part of the key.'
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    quality:
+    - name: valid_format
+      metric: invalidValues
+      arguments:
+        validValues:
+        - Test
+        - ODI
+        - T20I
+      mustBe: 0
+  - name: match_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Official sequence number of the match within its format (e.g. ODI 4787). Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+    customProperties:
+    - property: unit
+      value: match count (official number)
+    quality:
+    - name: positive_number
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 1
+      mustBe: 0
+  - name: cricinfo_match_id
+    logicalType: integer
+    physicalType: BIGINT
+    description: ESPNcricinfo match id parsed from the scorecard link on the page; usually equals the Cricsheet
+      match_id (about 98% of linked rows). NULL when the row has no usable link (about 2%). Can be wrong where the
+      parser attached an id to a neighbouring row (9 ids appear on more than one number).
+  - name: date_text
+    logicalType: string
+    physicalType: VARCHAR
+    description: Date cell as shown on the page, e.g. '27 September'.
+  - name: start_date
+    logicalType: date
+    physicalType: DATE
+    description: First day of the match resolved from date_text and the season page; for split-season pages July-December
+      is the first year and January-June the second.
+  - name: team1
+    logicalType: string
+    physicalType: VARCHAR
+    description: First team, mapped to Cricsheet's team naming. NULL when none could be read (21 rows).
+  - name: team2
+    logicalType: string
+    physicalType: VARCHAR
+    description: Second team, same convention.
+  - name: teams_source
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How team1/team2 were derived: ''row'' (team templates in the row), ''header'' (captain columns),
+      ''heading'' or ''heading_multi_host'' (section title, home team first, less reliable), ''heading_corrected''
+      (title fixed using winners), ''none''.'
+  - name: result_text
+    logicalType: string
+    physicalType: VARCHAR
+    description: Result cell as plain text (links and templates removed), e.g. 'New Zealand by 7 wickets'. Empty
+      string for future matches.
+  - name: result_class
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Coarse class of result_text: ''result'', ''draw'', ''tie'', ''no_result'', ''abandoned'' or ''unknown''
+      (not parseable or no result yet).'
+    quality:
+    - name: valid_result_class
+      metric: invalidValues
+      arguments:
+        validValues:
+        - result
+        - draw
+        - tie
+        - no_result
+        - abandoned
+        - unknown
+      mustBe: 0
+  - name: is_abandoned_no_ball
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True for matches abandoned without a ball bowled (13 rows).
+  - name: involves_afghanistan
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True when 'Afghanistan' appears anywhere in the row text or team columns. Cricsheet withholds Afghanistan's
+      matches, so these explain absences.
+  - name: page_title
+    logicalType: string
+    physicalType: VARCHAR
+    description: Title of the Wikipedia season page the row came from.
+  - name: page_revid
+    logicalType: integer
+    physicalType: BIGINT
+    description: Wikipedia revision id of that page (the pinned version).
+  - name: section_heading
+    logicalType: string
+    physicalType: VARCHAR
+    description: Section heading on the page above the table, e.g. 'New Zealand in Zimbabwe'.
+  - name: qa_flags
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Comma-separated parser warnings: ''same_team'', ''winner_not_in_teams''. NULL when none (all but
+      one row).'
+  - name: duplicates
+    logicalType: integer
+    physicalType: INTEGER
+    description: How many extra rows with the same (format, number) were found on other pages and discarded (0 to
+      2).
+    quality:
+    - name: duplicates_0_to_2
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 2
+      mustBe: 0
+  - name: duplicate_conflict
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True when the discarded duplicates disagreed with the kept row on id, date or teams (22 rows).
+  - name: conflict_fields
+    logicalType: string
+    physicalType: VARCHAR
+    description: Which of 'cricinfo_match_id', 'start_date', 'teams' disagreed. NULL if no conflict.
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 4000
+  - name: conflict_fields_iff_conflict
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE duplicate_conflict <> (conflict_fields IS NOT NULL)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: reference
+- property: sources
+  value:
+  - wiki_fixtures
+- property: upstream
+  value: []

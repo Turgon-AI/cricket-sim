@@ -1,0 +1,24 @@
+# Player-attribute sources (kept apart from sources.yml). `redistributable` drives what the export may contain.
+wikidata_players:
+  description: "Wikidata humans carrying an ESPNcricinfo player ID (P2697): birth date and place, citizenship, height, sex, handedness, position"
+  endpoint: https://query.wikidata.org/sparql
+  snapshot_id: auto   # <UTC date>-<sha8 of the queries>; a sealed snapshot is never overwritten
+  licence: CC0-1.0
+  redistributable: true
+  attribution: "Wikidata (https://www.wikidata.org), CC0 1.0 public domain dedication"
+  # Descriptive User-Agent. Never put personal contact details (email, name) here.
+  user_agent: "cricket-sim/0.1 (non-commercial research; python-requests)"
+  page_size: 30000
+  pause_seconds: 2
+  timeout_seconds: 180
+  # Wikidata properties used. Only cricinfo_id is mandatory; the rest are sparse.
+  properties:
+    cricinfo_id: P2697
+    dob: P569
+    place_of_birth: P19
+    citizenship: P27
+    height: P2048
+    sex: P21
+    handedness: P552
+    playing_hand: P741
+    position: P413

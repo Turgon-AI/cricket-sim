@@ -1,0 +1,176 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.fact_match_weather_hourly
+name: fact_match_weather_hourly
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: >-
+    Hourly weather at the ground for every in-scope match day, so conditions (heat, humidity, dew, cloud, wind,
+    rain) can be related to play.
+  limitations: >-
+    ERA5/ERA5-Land reanalysis via the Open-Meteo archive: modelled weather on a grid of roughly 10-30 km, not a
+    station at the ground. It under-resolves short showers (it misses the evening rain that stopped the 2019 World
+    Cup semi-final at Old Trafford), so do not treat precipitation_mm as a record of rain interruptions; island
+    and coastal grounds are maritime-damped. It is observed weather, not the forecast teams had at the toss. Each
+    each match day covers the 12 hours before a fixed format-default start through the default end in local time
+    (Tests 10:00-18:00, ODIs 10:00-22:00, T20Is 14:00-23:00, IPL 15:30-23:30). The window is an estimate and does
+    not use ball timestamps. Days without weather have no rows (every in-scope match has some). Location quality
+    per venue is in dim_venue.weather_location_quality (7 venues are city centroids).
+schema:
+- name: fact_match_weather_hourly
+  physicalName: data/gold/fact_match_weather_hourly.parquet
+  physicalType: table
+  logicalType: object
+  description: >-
+    Open-Meteo hourly weather (temperature, humidity, dew point, cloud, wind, precipitation, surface pressure) at
+    each in-scope match's venue for available hours around a fixed format-default window on each match day, with UTC
+    and local timestamps.
+  dataGranularityDescription: >-
+    One row per match, match day and hour, keyed by (match_id, match_day_number, utc_datetime).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Cricsheet match identifier (the name of the match's file in Cricsheet's download, e.g. '1000851'). For most
+      internationals it equals the ESPNcricinfo match id, but do not rely on that; use map_match_ids. Joins to dim_match.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: dim_match.match_id
+  - name: match_day_number
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Day of the match the hour belongs to, from 1 (Tests run to 5, occasionally 6).
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: venue_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Canonical venue identifier of the match's ground. Joins to dim_venue.venue_id.
+    required: true
+    relationships:
+    - to: dim_venue.venue_id
+  - name: utc_datetime
+    logicalType: timestamp
+    physicalType: TIMESTAMP
+    description: >-
+      Hour in UTC (timestamp without zone). For half-hour time zones (e.g. India, +05:30) the hours fall at :30
+      past in UTC.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: local_datetime
+    logicalType: timestamp
+    physicalType: TIMESTAMP
+    description: >-
+      Same instant in the venue's local time (dim_venue.timezone, daylight saving applied per hour), as a timestamp
+      without zone.
+    required: true
+  - name: temperature_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Air temperature at 2 m above ground at that hour.
+    customProperties:
+    - property: unit
+      value: degrees C
+    quality:
+    - name: plausible_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -30 AND 55
+      mustBe: 0
+  - name: relative_humidity_pct
+    logicalType: number
+    physicalType: DOUBLE
+    description: Relative humidity at 2 m.
+    customProperties:
+    - property: unit
+      value: '%'
+    quality:
+    - name: between_0_and_100
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  - name: dew_point_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Dew point at 2 m (dew forms on the outfield as air temperature approaches it).
+    customProperties:
+    - property: unit
+      value: degrees C
+  - name: cloud_cover_pct
+    logicalType: number
+    physicalType: DOUBLE
+    description: Total cloud cover.
+    customProperties:
+    - property: unit
+      value: '%'
+    quality:
+    - name: between_0_and_100
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  - name: wind_speed_kmh
+    logicalType: number
+    physicalType: DOUBLE
+    description: Wind speed at 10 m above ground.
+    customProperties:
+    - property: unit
+      value: km/h
+    quality:
+    - name: non_negative
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 0
+      mustBe: 0
+  - name: wind_direction_deg
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Direction the wind blows FROM at 10 m, in degrees clockwise from north (0/360 = north, 90 = east).
+    customProperties:
+    - property: unit
+      value: degrees
+    quality:
+    - name: between_0_and_360
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 360
+      mustBe: 0
+  - name: precipitation_mm
+    logicalType: number
+    physicalType: DOUBLE
+    description: Total precipitation (rain + snow water equivalent) in the hour ending at this timestamp.
+    customProperties:
+    - property: unit
+      value: mm
+    quality:
+    - name: non_negative
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 0
+      mustBe: 0
+  - name: surface_pressure_hpa
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Air pressure at ground level (not reduced to sea level, so high-altitude grounds read well below 1013).
+    customProperties:
+    - property: unit
+      value: hPa
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: fact
+- property: sources
+  value:
+  - weather
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - match_weather_hourly
+  - matches

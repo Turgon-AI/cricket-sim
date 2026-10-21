@@ -1,0 +1,47 @@
+# Every upstream source. `redistributable` drives what the export may contain.
+cricsheet:
+  description: Ball-by-ball scoring for every match Cricsheet holds (backbone)
+  licence: ODC-BY-1.0
+  redistributable: true
+  attribution: "Cricsheet (https://cricsheet.org), Open Data Commons Attribution License"
+  files:
+    all_json.zip: https://cricsheet.org/downloads/all_json.zip
+    people.csv: https://cricsheet.org/register/people.csv
+    names.csv: https://cricsheet.org/register/names.csv
+
+ari:
+  description: Cricinfo line/length/shot/wagon tracking joined to Cricsheet keys
+  kaggle_handle: ariadaikalam/the-ultimate-ball-by-ball-cricket-dataset
+  kaggle_version: 11
+  licence: "Cricsheet-derived: ODC-BY-1.0; Cricinfo-derived: non-commercial, credit ESPNcricinfo"
+  # Only the Cricinfo-derived files are restricted; we never re-publish them.
+  redistributable: false
+  attribution: "Ari Adaikalam, The Ultimate Ball-by-Ball Cricket Dataset (Kaggle); tracking data (c) ESPNcricinfo"
+  files:
+    - cricinfo_tracking.csv
+    - cricinfo_text_predictions.csv
+    - matches.csv
+    - players.csv
+    - coverage_report.csv
+    - player_external_ids.csv
+    - schema.json
+    - manifest.json
+
+hawkeye:
+  description: Hawk-Eye ball speed and pitch/stump/field coordinates from the ICC feed (frozen Feb 2022)
+  repo: alittlefitness/HawkeyeStats
+  commit: 0310d869d2eb8ec61f15b748ea6b65ea4fa49d53
+  licence: none stated (all rights reserved by default)
+  redistributable: false
+  attribution: "alittlefitness/HawkeyeStats (GitHub), data from ICC / Hawk-Eye"
+  files:
+    - mensIPLHawkeyeStats.csv
+    - mensODIHawkeyeStats.csv
+    - mensTestHawkeyeStats.csv
+
+cricsheet_missing:
+  description: Cricsheet's list of Tests, ODIs and league matches it knows it lacks (no T20I list)
+  url: https://cricsheet.org/missing/
+  licence: ODC-BY-1.0
+  redistributable: true
+  attribution: "Cricsheet (https://cricsheet.org/missing/)"

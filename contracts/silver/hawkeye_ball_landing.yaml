@@ -1,0 +1,97 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.hawkeye_ball_landing
+name: hawkeye_ball_landing
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Where Hawk-Eye recorded each linked ball ending up on the field, for internal analysis.
+  limitations: 'HawkeyeStats has no licence: never exported. Coordinates are a unitless 0-100 grid of the broadcast
+    field graphic, striker near (50, 50); the (0, 0) and (5, 5) ''no location'' sentinels are NULL. Covers only
+    balls linked to a HawkeyeStats row (IPL, ODI and Test, up to Feb 2022). Recorded after the ball.'
+schema:
+- name: hawkeye_ball_landing
+  physicalName: data/silver/hawkeye_ball_landing.parquet
+  physicalType: table
+  logicalType: object
+  description: 'Where the ball ended up on the field graphic according to Hawk-Eye, for balls linked to a HawkeyeStats
+    row. Unlicensed source: never exported.'
+  dataGranularityDescription: One row per Cricsheet delivery that has at least one of these values (sparse).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (the same id as the Cricinfo match id for most internationals). Joins to matches.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number within the match, as numbered by Cricsheet (1 to 4; super overs are numbered as
+      further innings). Part of the ball key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Position of the delivery within its innings, counting every delivery including wides and no-balls,
+      starting at 1 (Ari's key convention, equal to balls.delivery_number). Together with match_id and innings it
+      joins this row to balls.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+    customProperties:
+    - property: unit
+      value: deliveries
+  - name: field_x
+    logicalType: number
+    physicalType: DOUBLE
+    description: Hawk-Eye field-graphic horizontal position of where the ball went, on a unitless 0 to 100 grid
+      with the striker near (50, 50) and the boundary at radius about 45 to 50. The feed's (0, 0) and (5, 5) 'no
+      location' sentinels are NULL here. Exists only for linked Hawk-Eye balls.
+    customProperties:
+    - property: timingClass
+      value: result
+    - property: unit
+      value: field-graphic grid units (0-100)
+    quality:
+    - name: field_x_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  - name: field_y
+    logicalType: number
+    physicalType: DOUBLE
+    description: Hawk-Eye field-graphic vertical position, on the same unitless 0 to 100 grid as field_x. NULL on
+      the same rows as field_x (the pair is NULL together except for one stray row).
+    customProperties:
+    - property: timingClass
+      value: result
+    - property: unit
+      value: field-graphic grid units (0-100)
+    quality:
+    - name: field_y_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - hawkeye
+- property: upstream
+  value:
+  - stg_hawkeye_balls
+  - hawkeye_match_link
+  - balls
+- property: timingClass
+  value: result

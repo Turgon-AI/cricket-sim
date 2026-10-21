@@ -1,0 +1,118 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.reviews
+name: reviews
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Decision Review System (DRS) reviews: who asked, which batter and umpire, and whether the on-field decision
+    was upheld or struck down.'
+  limitations: Cricsheet (ODC-BY 1.0); format documented at https://cricsheet.org/format/json/. Only reviews that
+    Cricsheet recorded (4,845 matches from 2008 onwards); matches listing 'reviews' in cricsheet_missing have none.
+    umpire is NULL on 302 reviews, and review_type is NULL on 61% of rows (only 'wicket' is ever given). umpires_call
+    is NULL, not false, when the decision was upheld or the call was not an umpire's call. A review is attached
+    to the delivery it concerned.
+  usage: Join to balls on (match_id, innings, delivery_number); balls.has_review is true on exactly these rows.
+schema:
+- name: reviews
+  physicalName: data/silver/reviews.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per DRS review.
+  dataGranularityDescription: One row per review, at most one per delivery (match_id, innings, delivery_number).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id; foreign key to matches. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Delivery the review concerned. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: review_by
+    logicalType: string
+    physicalType: VARCHAR
+    description: Team that asked for the review.
+  - name: umpire
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the umpire whose decision was reviewed. NULL when unknown.
+  - name: umpire_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier of that umpire; foreign key to people.identifier. NULL when umpire
+      is NULL.
+    relationships:
+    - to: people.identifier
+  - name: batter
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the batter the review concerned.
+  - name: batter_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier of that batter; foreign key to people.identifier.
+    relationships:
+    - to: people.identifier
+  - name: decision
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Outcome: Cricsheet''s verdict on the review: ''upheld'', ''struck down'' (the on-field decision
+      stood) or ''technical failure'' (2 rows).'
+    quality:
+    - name: valid_decision
+      metric: invalidValues
+      arguments:
+        validValues:
+        - upheld
+        - struck down
+        - technical failure
+      mustBe: 0
+  - name: umpires_call
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True when the review was struck down because the on-field decision stood as an umpire's call. NULL
+      otherwise.
+  - name: review_type
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''wicket'' when Cricsheet gives the type; NULL (61%) otherwise.'
+    quality:
+    - name: valid_type
+      metric: invalidValues
+      arguments:
+        validValues:
+        - wicket
+      mustBe: 0
+  quality:
+  - name: umpires_call_only_when_struck_down
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE umpires_call IS NOT NULL AND decision <> 'struck down'
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - cricsheet
+- property: upstream
+  value: []

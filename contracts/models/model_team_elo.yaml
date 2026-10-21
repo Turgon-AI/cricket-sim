@@ -1,0 +1,62 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.models.model_team_elo
+name: model_team_elo
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: A simple, transparent pre-match strength rating for every ODI side, used as a model input.
+  limitations: Rates men's ODIs only, from the first match in Cricsheet's coverage, so early ratings are unsettled
+    (see rated_before). Ignores margin of victory, venue and team selection.
+schema:
+- name: model_team_elo
+  physicalName: data/models/model_team_elo.parquet
+  physicalType: table
+  logicalType: object
+  description: Pre-match Elo rating of both teams in every in-scope ODI, computed only from results on earlier dates
+    (start 1500, K = 24, a tie counts half, no-results ignored).
+  dataGranularityDescription: One row per team per ODI.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: team
+    logicalType: string
+    physicalType: VARCHAR
+    description: Team name as in dim_match.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: elo_before
+    logicalType: number
+    physicalType: DOUBLE
+    description: Elo rating before the match, from earlier dates only.
+    customProperties:
+    - property: unit
+      value: Elo points
+  - name: rated_before
+    logicalType: integer
+    physicalType: INTEGER
+    description: Decided ODIs (wins, losses, ties) the team had played before this match's date; small numbers mean
+      an unsettled rating.
+    customProperties:
+    - property: unit
+      value: matches
+customProperties:
+- property: layer
+  value: models
+- property: kind
+  value: model
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - dim_match

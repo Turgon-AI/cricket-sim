@@ -1,0 +1,220 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.match_weather_hourly
+name: match_weather_hourly
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Provides hourly weather around a format-default window for each match day (including the 12 hours before
+    its estimated start), independent of ball timestamps.
+  limitations: 'Weather is modelled reanalysis (ERA5 via Open-Meteo, CC BY 4.0, free API for non-commercial use)
+    for the venue''s point, not a station measurement; where the point is a city centre or unverified (see venues.weather_location_quality)
+    it can differ from the ground. Only match days with weather are present: 8,520 of 23,132 matches (11,550 match-days),
+    because 273 venues are not located and venues outside the weather plan have no data, and match days too new
+    for the weather archive would be missing (none in the current build). The window is a fixed format default for every match day;
+    exact play timestamps are used only in internal summaries. It does not know about day/night matches, rain delays
+    or actual play, and ERA5
+    missed the evening rain that stopped the 2019 World Cup semi-final, so it is not rain truth. The key includes
+    utc_datetime because a Test day''s play window can cross midnight into the next day''s window.'
+schema:
+- name: match_weather_hourly
+  physicalName: data/silver/match_weather_hourly.parquet
+  physicalType: table
+  logicalType: object
+  description: Hourly weather values around a format-default time window for each match day, covering the 12 hours
+    before the estimated start and the estimated playing window.
+  dataGranularityDescription: One row per match, match day and UTC hour (match_id, match_day_number, utc_datetime),
+    246,234 rows over 11,550 match-days.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id. Joins to matches.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: match_day_number
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 1-based index of the match day among the match's Cricsheet dates (a one-day match is always 1).
+      Part of the key because Tests span several days.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+    customProperties:
+    - property: unit
+      value: day
+  - name: venue_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Canonical venue of the match. Joins to venues.venue_id; use it to see how reliable the weather
+      location is (venues.weather_location_quality).
+    relationships:
+    - to: venues.venue_id
+  - name: venue_version
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Venue version whose point the weather was placed at (joins to venue_versions with venue_id).
+    required: true
+  - name: utc_datetime
+    logicalType: timestamp
+    physicalType: TIMESTAMP
+    description: Timestamp of the hourly weather record in UTC (naive timestamp, no zone). Mostly on the hour, or
+      at :30 or :15 past for half-hour timezones. Precipitation at this timestamp is the total for the hour ending
+      at it. Part of the key because a Test day's window can cross midnight into the next day's window, so one (match_id,
+      utc_datetime) can occur under two match days (no such case in the current build).
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: local_datetime
+    logicalType: timestamp
+    physicalType: TIMESTAMP
+    description: The same instant in the venue's local time (naive timestamp), computed with the venue's IANA zone
+      at that instant so daylight saving is handled.
+  - name: phase
+    logicalType: string
+    physicalType: VARCHAR
+    description: "'playing' for hours inside the match day's format-default window and 'pre_match' for the 12 hourly
+      accumulations before it starts. Defaults are Test 10:00-18:00, ODI 10:00-22:00, T20 14:00-23:00,
+      IPL 15:30-23:30 local. This is an estimate and does not use ball timestamps."
+    quality:
+    - name: valid_phase
+      metric: invalidValues
+      arguments:
+        validValues:
+        - pre_match
+        - playing
+      mustBe: 0
+  - name: temperature_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Air temperature at 2 m in degrees Celsius (ERA5 reanalysis via Open-Meteo, a gridded model value
+      for the venue point, not a station reading).
+    customProperties:
+    - property: unit
+      value: degrees C
+    quality:
+    - name: temperature_plausible
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -60 AND 60
+      mustBe: 0
+  - name: relative_humidity_pct
+    logicalType: number
+    physicalType: DOUBLE
+    description: Relative humidity at 2 m, in percent.
+    customProperties:
+    - property: unit
+      value: '%'
+    quality:
+    - name: humidity_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  - name: dew_point_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Dew point temperature at 2 m in degrees Celsius.
+    customProperties:
+    - property: unit
+      value: degrees C
+    quality:
+    - name: dew_point_plausible
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -80 AND 40
+      mustBe: 0
+  - name: cloud_cover_pct
+    logicalType: number
+    physicalType: DOUBLE
+    description: Total cloud cover in percent.
+    customProperties:
+    - property: unit
+      value: '%'
+    quality:
+    - name: cloud_cover_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  - name: wind_speed_kmh
+    logicalType: number
+    physicalType: DOUBLE
+    description: Wind speed at 10 m in km/h.
+    customProperties:
+    - property: unit
+      value: km/h
+    quality:
+    - name: wind_speed_plausible
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 200
+      mustBe: 0
+  - name: wind_direction_deg
+    logicalType: number
+    physicalType: DOUBLE
+    description: Direction the wind blows FROM at 10 m, in degrees clockwise from north (meteorological convention,
+      0 and 360 are both north).
+    customProperties:
+    - property: unit
+      value: degrees
+    quality:
+    - name: wind_direction_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 360
+      mustBe: 0
+  - name: precipitation_mm
+    logicalType: number
+    physicalType: DOUBLE
+    description: Precipitation (rain, melted snow) total for the hour ending at utc_datetime, in millimetres. ERA5
+      can miss localised evening storms, so it is not proof that play was or was not interrupted.
+    customProperties:
+    - property: unit
+      value: mm
+    quality:
+    - name: precipitation_non_negative
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 500
+      mustBe: 0
+  - name: surface_pressure_hpa
+    logicalType: number
+    physicalType: DOUBLE
+    description: Surface (station-level) air pressure in hectopascals.
+    customProperties:
+    - property: unit
+      value: hPa
+    quality:
+    - name: pressure_plausible
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 450 AND 1100
+      mustBe: 0
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 180
+  - name: local_within_timezone_bounds
+    type: sql
+    description: Local time is within -12 to +14 hours of UTC.
+    query: SELECT count(*) FROM ${table} WHERE local_datetime - utc_datetime NOT BETWEEN INTERVAL '-12 hours' AND
+      INTERVAL '14 hours'
+    mustBe: 0
+  - name: venue_version_is_the_match_version
+    type: sql
+    description: The weather rows use the venue and venue version of their match (match_venues).
+    query: SELECT count(*) FROM ${table} w JOIN ${table:match_venues} mv USING (match_id) WHERE w.venue_version <>
+      mv.venue_version OR w.venue_id <> mv.venue_id
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - weather
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - matches
+  - venues

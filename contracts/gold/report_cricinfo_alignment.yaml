@@ -1,0 +1,98 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.report_cricinfo_alignment
+name: report_cricinfo_alignment
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Prove that Ari's Cricinfo rows and Cricsheet's deliveries with the same key are the same ball.
+  limitations: 'Uses DRS reviews because both sources record them independently; a key shifted by one ball would
+    move Cricinfo''s review events onto the next Cricsheet ball. Matches with fewer than 3 reviews cannot be judged.
+    Built from restricted data: never exported.'
+schema:
+- name: report_cricinfo_alignment
+  physicalName: data/gold/report_cricinfo_alignment.parquet
+  physicalType: table
+  logicalType: object
+  description: 'Per match with Cricinfo tracking: how many tracking rows land on a Cricsheet ball, and whether Cricinfo''s
+    DRS-review events sit on the balls Cricsheet records reviews for, or on the next ball.'
+  dataGranularityDescription: One row per match that has Cricinfo tracking.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: tracking_rows
+    logicalType: integer
+    physicalType: BIGINT
+    description: Cricinfo tracking rows for the match.
+    customProperties:
+    - property: unit
+      value: rows
+  - name: unmatched_rows
+    logicalType: integer
+    physicalType: BIGINT
+    description: Tracking rows whose (innings, delivery_number) has no Cricsheet delivery.
+    customProperties:
+    - property: unit
+      value: rows
+  - name: drs_events
+    logicalType: integer
+    physicalType: BIGINT
+    description: Tracking rows whose Cricinfo events mention a DRS review.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: drs_same_ball
+    logicalType: integer
+    physicalType: BIGINT
+    description: Of those, rows where Cricsheet records a review on the same ball.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: drs_next_ball
+    logicalType: integer
+    physicalType: BIGINT
+    description: Of those, rows where Cricsheet records a review on the NEXT ball instead (what a one-ball key shift
+      would produce).
+    customProperties:
+    - property: unit
+      value: balls
+  - name: alignment_suspect
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True when a match has 3+ review events and more of them match the next ball than the same ball.
+  quality:
+  - name: every_row_lands_on_a_ball
+    type: sql
+    query: SELECT coalesce(sum(unmatched_rows), 0) FROM ${table}
+    mustBe: 0
+  - name: no_suspect_matches
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE alignment_suspect
+    mustBe: 0
+  - name: reviews_agree_on_the_same_ball
+    type: sql
+    description: At least 90% of Cricinfo's DRS events sit on a ball Cricsheet records a review for.
+    query: SELECT coalesce(100.0 * sum(drs_same_ball) / nullif(sum(drs_events), 0), 100) FROM ${table}
+    mustBeGreaterOrEqualTo: 90
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: report
+- property: sources
+  value:
+  - ari
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - stg_ari_tracking
+  - balls
+  - reviews

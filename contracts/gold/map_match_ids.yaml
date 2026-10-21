@@ -1,0 +1,156 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.map_match_ids
+name: map_match_ids
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Openly licensed crosswalk between the Cricsheet match id, the ESPNcricinfo match id and the official
+    international match number, for joining this dataset to other cricket data.
+  limitations: Internationals only (Tests, ODIs, full-member T20Is in scope) that could be linked to the Wikipedia
+    reference list; IPL matches and unlinked internationals are absent. Licensed CC BY-SA 4.0 because the reference
+    list comes from Wikipedia. cricinfo_match_id is kept only when the reference's ESPNcricinfo id is the Cricsheet
+    match's own id, so it is one-to-one; the raw reference id is in report_international_coverage. Some matches have
+    numbers_agree = false, where Cricsheet's number differs from the reference's.
+schema:
+- name: map_match_ids
+  physicalName: data/gold/map_match_ids.parquet
+  physicalType: table
+  logicalType: object
+  description: 'One row per in-scope international linked to the Wikipedia reference list: Cricsheet id, Cricsheet''s
+    and the reference''s match numbers, the ESPNcricinfo id, how the link was made and how well dates and numbers
+    agree.'
+  dataGranularityDescription: One row per linked in-scope international (each Cricsheet match appears at most once).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match identifier (the name of the match's file in Cricsheet's download, e.g. '1000851').
+      For most internationals it equals the ESPNcricinfo match id, but do not rely on that; use map_match_ids. Joins
+      to dim_match.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: dim_match.match_id
+  - name: segment
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''Test'', ''ODI'' or ''T20I''.'
+    required: true
+    quality:
+    - name: valid_segment
+      metric: invalidValues
+      arguments:
+        validValues:
+        - Test
+        - ODI
+        - T20I
+      mustBe: 0
+  - name: cricsheet_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Official match number as Cricsheet gives it (dim_match.match_type_number).
+    required: true
+  - name: reference_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Official match number on the Wikipedia 'International cricket in YYYY' season page.
+    required: true
+  - name: cricinfo_match_id
+    logicalType: integer
+    physicalType: BIGINT
+    description: ESPNcricinfo match id from the reference list, kept only when it equals this Cricsheet match_id (the
+      link is confirmed). NULL when the reference gives no id or gives another match's id.
+    unique: true
+  - name: link_method
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How the reference match was linked to Cricsheet: ''cricinfo_id'' (Cricsheet match id equals the
+      reference''s ESPNcricinfo id), ''number_and_teams'' (same official number and same two teams), or ''date_and_teams''
+      (same two teams only), all three needing the two teams (unordered) to agree and start dates within one day; or
+      ''reviewed_override'' (a hand-checked link listed with its reason in config/link_overrides.yml, for reference
+      rows with no or mistyped teams or a wrong date cell). Links are one-to-one.'
+    required: true
+    quality:
+    - name: valid_link_method
+      metric: invalidValues
+      arguments:
+        validValues:
+        - cricinfo_id
+        - number_and_teams
+        - date_and_teams
+        - reviewed_override
+      mustBe: 0
+  - name: numbers_agree
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if cricsheet_number equals reference_number.
+    required: true
+  - name: date_diff_days
+    logicalType: integer
+    physicalType: BIGINT
+    description: Absolute difference between Cricsheet's and the reference's start dates (0 or 1; more only for a
+      reviewed_override).
+    required: true
+    customProperties:
+    - property: unit
+      value: days
+    quality:
+    - name: within_one_day
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1 AND link_method <> 'reviewed_override'
+      mustBe: 0
+  - name: page_title
+    logicalType: string
+    physicalType: VARCHAR
+    description: Title of the English Wikipedia season page this row was taken from (CC BY-SA 4.0 source).
+    required: true
+  - name: page_revid
+    logicalType: integer
+    physicalType: BIGINT
+    description: Wikipedia revision id of that page, the pinned version (oldid in the page URL). Together with page_title
+      it identifies the exact source page revision.
+    required: true
+  quality:
+  - name: numbers_agree_consistent
+    description: numbers_agree is exactly cricsheet_number = reference_number
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE numbers_agree <> (cricsheet_number = reference_number)
+    mustBe: 0
+  - name: reference_row_linked_once
+    description: one-to-one on the reference side too (each Cricsheet match once is the primary key)
+    type: sql
+    query: SELECT count(*) - count(DISTINCT (segment, reference_number)) FROM ${table}
+    mustBe: 0
+  - name: cricinfo_id_is_the_match_id
+    description: a kept ESPNcricinfo id is the Cricsheet match's own id
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE cricinfo_match_id IS NOT NULL AND CAST(cricinfo_match_id AS VARCHAR)
+      <> match_id
+    mustBe: 0
+  - name: teams_agree_unless_reviewed
+    description: the linked Cricsheet teams equal the reference teams, except for reviewed_override links (reference
+      teams missing or mistyped on Wikipedia)
+    type: sql
+    query: SELECT count(*) FROM ${table} m JOIN ${table:report_international_coverage} c ON c.segment = m.segment AND
+      c.match_number = m.reference_number JOIN ${table:dim_match} d ON d.match_id = m.match_id WHERE NOT coalesce(c.team1
+      IS NOT NULL AND list_sort([c.team1, c.team2]) = list_sort([d.team1, d.team2]), false) AND m.link_method <>
+      'reviewed_override'
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: map
+- property: sources
+  value:
+  - wiki_fixtures
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - report_international_coverage
+  - dim_match

@@ -1,0 +1,159 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.staging.stg_ari_players
+name: stg_ari_players
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Typed copy of Ari Adaikalam''s player file: Cricinfo profile attributes (batting hand, bowling style,
+    role, country) keyed by Cricsheet person id. It is the only source in the project for batting hand and bowling
+    style across all matches.'
+  limitations: 'RESTRICTED THIRD-PARTY DATA. This comes from Ari Adaikalam''s Kaggle dataset ''The Ultimate Ball-by-Ball
+    Cricket Dataset''. The Cricinfo-derived parts are non-commercial and must credit ESPNcricinfo. It must not be
+    republished or exported; use for analysis and charts only. Profiles are Cricinfo''s current snapshot, not as-of
+    the match date: roles, styles and country can differ from what applied years ago, and career-span years leak
+    future information. Styles are static per career. The file covers 9,374 of the 18,651 Cricsheet people (players
+    only, no umpires, and many minor players absent).'
+  usage: Join to people on player_id = identifier. Internal use only.
+schema:
+- name: stg_ari_players
+  physicalName: data/staging/stg_ari_players.parquet
+  physicalType: table
+  logicalType: object
+  description: One Cricinfo-derived profile per player known to Ari's dataset.
+  dataGranularityDescription: One row per player (player_id).
+  properties:
+  - name: player_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier (8 hex characters), the same value as people.identifier. Primary key.
+      All 9,374 ids exist in the Cricsheet register.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: people.identifier
+  - name: name
+    logicalType: string
+    physicalType: VARCHAR
+    description: Player name as Cricsheet writes it (initials plus surname).
+  - name: cricinfo_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: The player's ESPNcricinfo profile id, kept as text. NULL for 1 player.
+  - name: full_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: Full name from the player's Cricinfo profile. NULL for 15 players.
+  - name: gender
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''male'' or ''female'' as per Cricinfo profile. NULL for 15 players.'
+    quality:
+    - name: valid_gender
+      metric: invalidValues
+      arguments:
+        validValues:
+        - male
+        - female
+      mustBe: 0
+  - name: country
+    logicalType: string
+    physicalType: VARCHAR
+    description: Country the player represents according to Cricinfo (current profile). NULL for 22 players.
+  - name: batting_style
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''right-hand bat'' or ''left-hand bat''. NULL for 232 players. One static value per career: switch-hitters
+      and changes of hand are not recorded.'
+    quality:
+    - name: valid_batting_style
+      metric: invalidValues
+      arguments:
+        validValues:
+        - right-hand bat
+        - left-hand bat
+      mustBe: 0
+  - name: bowling_style
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricinfo bowling style in lowercase, for example 'right-arm medium', 'right-arm offbreak', 'slow
+      left-arm orthodox', 'legbreak googly'. A few players have two styles joined by a comma. NULL for 1,723 players
+      (non-bowlers and unknown).
+  - name: playing_role
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Cricinfo playing role: batter, opening batter, top-order batter, middle-order batter, wicketkeeper,
+      wicketkeeper batter, allrounder, batting allrounder, bowling allrounder or bowler. NULL for 5,019 players
+      (54%).'
+    quality:
+    - name: valid_role
+      metric: invalidValues
+      arguments:
+        validValues:
+        - batter
+        - opening batter
+        - top-order batter
+        - middle-order batter
+        - wicketkeeper
+        - wicketkeeper batter
+        - allrounder
+        - batting allrounder
+        - bowling allrounder
+        - bowler
+      mustBe: 0
+  - name: fielding_style
+    logicalType: string
+    physicalType: VARCHAR
+    description: In practice only a wicketkeeper flag ('wicketkeeper' or 'occasional wicketkeeper', plus 4 other
+      values). NULL for 90% of players, so NULL does not mean the player is not a keeper.
+  - name: first_international_year
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Calendar year of the player's first international match from Cricinfo's career span. NULL for players
+      with no international career (about 13%).
+    customProperties:
+    - property: unit
+      value: calendar year
+    quality:
+    - name: year_plausible
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1877 AND 2026
+      mustBe: 0
+  - name: last_international_year
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Calendar year of the player's last international match, as of the Ari snapshot. NULL when first_international_year
+      is NULL.
+    customProperties:
+    - property: unit
+      value: calendar year
+  - name: major_teams
+    logicalType: string
+    physicalType: VARCHAR
+    description: Teams the player is known for on Cricinfo, separated by commas. NULL for 26 players.
+  - name: image_url
+    logicalType: string
+    physicalType: VARCHAR
+    description: URL of the player's Cricinfo profile picture. NULL for 53% of players. A link to Cricinfo content;
+      not to be republished.
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 90
+  - name: years_in_order
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE first_international_year > last_international_year
+    mustBe: 0
+customProperties:
+- property: layer
+  value: staging
+- property: kind
+  value: staging
+- property: sources
+  value:
+  - ari
+- property: upstream
+  value: []

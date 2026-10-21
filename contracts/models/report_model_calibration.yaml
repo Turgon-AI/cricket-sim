@@ -1,0 +1,101 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.models.report_model_calibration
+name: report_model_calibration
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Reliability tables: when the model says 30%, does it happen about 30% of the time?'
+  limitations: Win-probability bins are tenths of the probability range. Ball-outcome bins are 4-point-wide (0-4%,
+    4-8%, ...) because those probabilities rarely exceed 40%; the last bin collects everything above.
+schema:
+- name: report_model_calibration
+  physicalName: data/models/report_model_calibration.parquet
+  physicalType: table
+  logicalType: object
+  description: Held-out predictions grouped into probability bins, with the mean predicted probability and the observed
+    rate in each bin, for the win-probability models (per innings and era) and for selected ball outcomes (wicket,
+    four, six, dot).
+  dataGranularityDescription: One row per target x slice x model x era x bin.
+  properties:
+  - name: target
+    logicalType: string
+    physicalType: VARCHAR
+    description: win_probability or ball_outcome.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: slice
+    logicalType: string
+    physicalType: VARCHAR
+    description: innings_1 / innings_2, or the outcome class (wicket, 4, 6, dot).
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: model
+    logicalType: string
+    physicalType: VARCHAR
+    description: Which model (see report_model_scores).
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: era
+    logicalType: string
+    physicalType: VARCHAR
+    description: 2008-2014, 2015-2020, 2021-, or all.
+    primaryKey: true
+    primaryKeyPosition: 4
+    required: true
+  - name: bin
+    logicalType: integer
+    physicalType: BIGINT
+    description: Probability bin number, 0 = lowest.
+    primaryKey: true
+    primaryKeyPosition: 5
+    required: true
+  - name: balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Balls in the bin.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: mean_predicted
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean predicted probability in the bin.
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: observed_rate
+    logicalType: number
+    physicalType: DOUBLE
+    description: Share of those balls where the event happened (ties count 0.5).
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+customProperties:
+- property: layer
+  value: models
+- property: kind
+  value: report
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - model_ball_win_probability
+  - model_ball_outcome

@@ -1,0 +1,269 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.staging.stg_hawkeye_balls
+name: stg_hawkeye_balls
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Typed union of the three HawkeyeStats CSV files (IPL, men''s ODI, men''s Test): ball speed and pitch,
+    stumps and field coordinates from the ICC Hawk-Eye feed. It is the raw input for linking Hawk-Eye to Cricsheet
+    and for the delivery-tracking layer in silver.'
+  limitations: 'RESTRICTED THIRD-PARTY DATA. The source repository alittlefitness/HawkeyeStats states no licence,
+    so all rights are reserved: it must not be republished or exported; analysis and charts only. Coverage is limited
+    to 2011-2021 IPL, ODI and Test matches (1,767 matches; no T20Is, no women''s cricket, nothing after Nov 2021),
+    and Hawk-Eye was present on a selected set of big series and well-televised hosts, so it is not representative.
+    It also does not track every ball (pitch coordinates missing on 27% of rows, speed on 29.5%). Staging keeps
+    the source''s sentinels and junk values (-1 speeds, 0/(5,5) field points, 1e18-sized coordinates) untouched;
+    silver nulls them. ''NA'' bowling style stays as text.'
+  usage: Do not read for modelling directly; use silver hawkeye_match_link and the delivery layer, which only keep
+    verified, in-range values.
+schema:
+- name: stg_hawkeye_balls
+  physicalName: data/staging/stg_hawkeye_balls.parquet
+  physicalType: table
+  logicalType: object
+  description: Hawk-Eye tracking record per delivery from the ICC feed, 1,115,694 rows over 628 IPL, 822 ODI and
+    317 Test matches.
+  dataGranularityDescription: One row per delivery in a Hawk-Eye match (competition, hawkeye_match_id, delivery_code).
+  properties:
+  - name: competition
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Which source file the row came from, derived from the file name: ''mensIPL'', ''mensODI'' or ''mensTest''.
+      Part of the key (Hawk-Eye match ids are only unique within a competition). There are no T20Is and no women''s
+      matches.'
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    quality:
+    - name: valid_competition
+      metric: invalidValues
+      arguments:
+        validValues:
+        - mensIPL
+        - mensODI
+        - mensTest
+      mustBe: 0
+  - name: hawkeye_match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Hawk-Eye / ICC feed match id, as text. Not a Cricsheet id: it is linked to a Cricsheet match in
+      silver hawkeye_match_link. Part of the key.'
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_code
+    logicalType: string
+    physicalType: VARCHAR
+    description: Delivery position as 'innings.over.sequence', for example '2.10.8'. Innings 1 to 4 (in limited-overs
+      matches 3 and 4 are super overs); the over is 1-based; the sequence counts every delivery in the over including
+      wides and no-balls. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+    quality:
+    - name: code_shape
+      metric: invalidValues
+      arguments:
+        pattern: '[1-4][.][0-9]+[.][0-9]+'
+      mustBe: 0
+  - name: legal_ball_in_over
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Legal-ball counter within the over (1 to 6); a wide or no-ball repeats the number of the ball that
+      replaces it. 55 rows hold 7 to 12, which looks like a source oddity.
+    quality:
+    - name: at_least_one
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 1
+      mustBe: 0
+  - name: batter_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the striker as spelled in the ICC feed.
+  - name: batter_pulse_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: ICC Pulselive person id of the striker, as text. Links to people.key_pulse or key_pulse_2.
+  - name: right_handed_bat
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the striker bats right-handed, false if left-handed. NULL on 16 rows. This is the only
+      per-ball source of batting hand.
+  - name: non_striker_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the non-striker as spelled in the ICC feed.
+  - name: non_striker_pulse_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: ICC Pulselive person id of the non-striker, as text.
+  - name: bowler_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the bowler as spelled in the ICC feed.
+  - name: bowler_pulse_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: ICC Pulselive person id of the bowler, as text. Links to people.key_pulse or key_pulse_2.
+  - name: right_arm_bowler
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the bowler bowls with the right arm, false for left arm. NULL on 133 rows.
+  - name: bowling_style
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Hawk-Eye bowling category: FAST_SEAM, MEDIUM_SEAM, SEAM, OFF_SPIN, LEG_SPIN, ORTHODOX, UNORTHODOX,
+      or the literal text ''NA'' when unknown (99,339 rows, 8.9%). ''NA'' is left unconverted here.'
+    quality:
+    - name: valid_style
+      metric: invalidValues
+      arguments:
+        validValues:
+        - FAST_SEAM
+        - MEDIUM_SEAM
+        - SEAM
+        - OFF_SPIN
+        - LEG_SPIN
+        - ORTHODOX
+        - UNORTHODOX
+        - NA
+      mustBe: 0
+  - name: ball_speed_mps
+    logicalType: number
+    physicalType: DOUBLE
+    description: Ball speed in metres per second. The value -1 means 'not tracked' (329,610 rows, 29.5%) and 2 rows
+      are 0; these sentinels are NOT converted to NULL in staging. A handful of tracked values are implausible (45
+      rows below 13.9 m/s = 50 km/h, 3 above 45.8 m/s = 165 km/h). Silver converts to km/h and removes these.
+    customProperties:
+    - property: unit
+      value: m/s
+    quality:
+    - name: sentinel_or_positive
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < -1
+      mustBe: 0
+  - name: dismissal_details
+    logicalType: string
+    physicalType: VARCHAR
+    description: Text of the dismissal when a wicket fell on the ball (for example 'b Mitchell Starc', 'c Quinton
+      de Kock b Kagiso Rabada'); NULL otherwise (97.5% of rows). Free text built from the feed, not a normalised
+      dismissal kind.
+  - name: runs_total
+    logicalType: integer
+    physicalType: INTEGER
+    description: Total runs off the delivery including extras (0 to 7). NULL on one row where the source value is
+      corrupt (source text is not a number).
+    customProperties:
+    - property: unit
+      value: runs
+    quality:
+    - name: runs_0_to_7
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 7
+      mustBe: 0
+  - name: runs_batter
+    logicalType: integer
+    physicalType: INTEGER
+    description: Runs scored off the bat on the delivery (0 to 7).
+    customProperties:
+    - property: unit
+      value: runs
+    quality:
+    - name: runs_0_to_7
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 7
+      mustBe: 0
+  - name: runs_bowler
+    logicalType: integer
+    physicalType: INTEGER
+    description: Runs charged to the bowler on the delivery (0 to 7); excludes byes and leg-byes.
+    customProperties:
+    - property: unit
+      value: runs
+    quality:
+    - name: runs_0_to_7
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 7
+      mustBe: 0
+  - name: extras_code
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Extras on the delivery: ''Wd'' wide, ''Nb'' no-ball, ''B'' byes, ''Lb'' leg-byes, ''NbB'' no-ball
+      with byes, ''NbLb'' no-ball with leg-byes, ''WdB'' wide with byes; NULL when none (97.3%). One row has the
+      junk value ''0''.'
+  - name: pitch_x
+    logicalType: number
+    physicalType: DOUBLE
+    description: Where the ball pitched, lateral distance from the line of middle stump. Fixed field frame, NOT
+      mirrored for left-handed batters (so 'off side' flips with handedness). NULL where the source had 'NA' (27%).
+      Extreme junk values (up to 1e18 in magnitude; 48 rows with |x| > 3 m) are left in staging for silver to null.
+    customProperties:
+    - property: unit
+      value: metres from middle stump
+  - name: pitch_y
+    logicalType: number
+    physicalType: DOUBLE
+    description: Where the ball pitched, distance from the batter's stumps along the pitch. NULL where the source
+      had 'NA'. Junk values (down to -4e16) are left in staging; 2,394 rows lie outside -2 to 25 m.
+    customProperties:
+    - property: unit
+      value: metres from batter's stumps
+  - name: stumps_x
+    logicalType: number
+    physicalType: DOUBLE
+    description: Lateral position of the ball at the stumps plane, from middle stump. Not mirrored for handedness.
+      NULL where untracked. Junk values left in staging (108 rows with |x| > 3 m).
+    customProperties:
+    - property: unit
+      value: metres from middle stump
+  - name: stumps_y
+    logicalType: number
+    physicalType: DOUBLE
+    description: Height of the ball at the stumps plane above the ground. NULL where untracked. Junk values left
+      in staging (426 rows outside 0 to 4 m, down to -3e19).
+    customProperties:
+    - property: unit
+      value: metres above ground
+  - name: field_x
+    logicalType: number
+    physicalType: DOUBLE
+    description: Where the ball went on a unitless 0 to 100 field-graphic grid (striker near 50,50, boundary at
+      radius about 45-50). The pair (0,0) (43,175 rows) and (5,5) (214,390 rows) are 'no location' sentinels and
+      are NOT converted to NULL in staging. NULL on 10.6% of rows.
+    customProperties:
+    - property: unit
+      value: unitless grid (0-100)
+    quality:
+    - name: grid_0_to_100
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  - name: field_y
+    logicalType: number
+    physicalType: DOUBLE
+    description: Second coordinate of the field-graphic grid; same sentinels and caveats as field_x.
+    customProperties:
+    - property: unit
+      value: unitless grid (0-100)
+    quality:
+    - name: grid_0_to_100
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 400
+customProperties:
+- property: layer
+  value: staging
+- property: kind
+  value: staging
+- property: sources
+  value:
+  - hawkeye
+- property: upstream
+  value: []

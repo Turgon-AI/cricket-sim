@@ -1,0 +1,417 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.venue_versions
+name: venue_versions
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'What the venue context knew about each ground over time: one row per venue version with the geocoder''s
+    inputs, the point found from them and the sanity checks. The weather of a match is placed at the point of the version
+    valid on its start date.'
+  limitations: 'This build uses venue_context: asof (590 venues, 1,296 versions): the versions use only matches up to each date. With
+    venue_context: snapshot each venue would have one version built from every match in the snapshot, so a later spelling
+    could move an early match''s point. silver venues is the latest version of each venue. Counts in the column
+    descriptions are venue counts from the one-version-per-venue (snapshot) view, a guide only: over all 1,296 versions
+    they are larger.'
+schema:
+- name: venue_versions
+  physicalName: data/silver/venue_versions.parquet
+  physicalType: table
+  logicalType: object
+  description: 'One row per (venue_id, venue_version): the venue as the geocoder saw it from valid_from to valid_to.'
+  dataGranularityDescription: One row per venue version (venue_id, venue_version).
+  properties:
+  - name: venue_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Stable slug of the ground's normalised core name (the text before the first comma in Cricsheet's venue
+      string), with a city suffix where one name is shared by different grounds; does not depend on match counts or scope.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: venues.venue_id
+  - name: venue_version
+    logicalType: integer
+    physicalType: SMALLINT
+    description: '1, 2, ... in date order. With venue_context: snapshot every venue has only version 1; with
+      venue_context: asof (used in this build) a new version starts on the first date the venue''s geocoder inputs (display name, city, search
+      names, places) or home team change.'
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: valid_from
+    logicalType: date
+    physicalType: DATE
+    description: First match start date this version covers. Version 1 starts at the venue's first match and also covers
+      any earlier date.
+    required: true
+  - name: valid_to
+    logicalType: date
+    physicalType: DATE
+    description: Last day this version covers (the day before the next version starts); NULL for the latest version.
+  - name: inputs_as_of
+    logicalType: date
+    physicalType: DATE
+    description: 'Last match date whose matches built this version''s inputs. Equal to valid_from with venue_context: asof
+      (nothing after the version''s start is used); the venue''s last match date with venue_context: snapshot.'
+    required: true
+  - name: search_names
+    logicalType: array
+    physicalType: VARCHAR[]
+    description: 'Core names of the spellings seen up to valid_from (asof) or in the whole snapshot (snapshot): the names
+      the geocoder searches.'
+    required: true
+  - name: places
+    logicalType: array
+    physicalType: VARCHAR[]
+    description: Cities and venue-string suffixes seen for the venue in this version, used to confirm a Wikidata match.
+    required: true
+  - name: name
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Display name of the ground: the most common Cricsheet spelling among its aliases, or a manual override.'
+  - name: city
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Display city: the most common city among its aliases, or a manual override. NULL for 52 venues with no
+      city in Cricsheet.'
+  - name: country
+    logicalType: string
+    physicalType: VARCHAR
+    description: Country the ground is in, confirmed by testing the point against that country's bounding box; derived from
+      a manual override, the home team, or the geocoder's label. NULL when the venue has no coordinates.
+  - name: home_team
+    logicalType: string
+    physicalType: VARCHAR
+    description: The team that played in at least half of the ground's international matches, given at least 3 internationals
+      and no tie. NULL at neutral or little-used grounds.
+  - name: lat
+    logicalType: number
+    physicalType: DOUBLE
+    description: Latitude of the ground's point in decimal degrees (WGS84). May be a city centre rather than the ground
+      (see geocode_confidence and weather_location_quality). NULL for the 273 venues that could not be located.
+    customProperties:
+    - property: unit
+      value: degrees north
+    quality:
+    - name: lat_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -90 AND 90
+      mustBe: 0
+  - name: lon
+    logicalType: number
+    physicalType: DOUBLE
+    description: Longitude of the ground's point in decimal degrees (WGS84). NULL when lat is NULL.
+    customProperties:
+    - property: unit
+      value: degrees east
+    quality:
+    - name: lon_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -180 AND 180
+      mustBe: 0
+  - name: elevation_m
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Elevation above sea level in metres: a manual value, else Wikidata''s declared elevation, else the Open-Meteo
+      90 m terrain-model value at the point (see elevation_source). NULL when none exist (all unlocated venues and 49 located
+      ones).'
+    customProperties:
+    - property: unit
+      value: m above sea level
+    quality:
+    - name: elevation_plausible
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -450 AND 5000
+      mustBe: 0
+  - name: elevation_source
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Where elevation_m came from: ''manual'', ''wikidata'' or ''open-meteo 90 m DEM at the point''. NULL when
+      elevation_m is NULL.'
+    quality:
+    - name: valid_elevation_source
+      metric: invalidValues
+      arguments:
+        validValues:
+        - manual
+        - wikidata
+        - open-meteo 90 m DEM at the point
+      mustBe: 0
+  - name: elevation_dem_m
+    logicalType: number
+    physicalType: DOUBLE
+    description: Terrain-model elevation returned by the weather service for its request point, kept only when that point
+      is within 100 m of the venue point. NULL otherwise.
+    customProperties:
+    - property: unit
+      value: m above sea level
+  - name: timezone
+    logicalType: string
+    physicalType: VARCHAR
+    description: IANA timezone of the venue (e.g. 'Asia/Dubai'), from an override or the weather service. NULL for the 323
+      venues outside the weather plan. Ocean 'Etc/' zones are rejected by a check.
+  - name: wikidata_qid
+    logicalType: string
+    physicalType: VARCHAR
+    description: Wikidata item id of the ground when the coordinates came from or were matched to Wikidata. NULL otherwise.
+  - name: osm_ref
+    logicalType: string
+    physicalType: VARCHAR
+    description: OpenStreetMap element (e.g. 'way/224984783') when a pinned OSM element supplied the point. NULL for 564
+      venues.
+  - name: geocode_source
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How the point was found: ''wikidata'' (matched to a cricket-ground item), ''wikidata_pinned'', ''osm_pinned''
+      (a chosen OSM element), ''nominatim'' (OSM search for the ground), ''nominatim_city'' (OSM search that only found
+      the city) or ''manual''. NULL when not located.'
+    quality:
+    - name: valid_geocode_source
+      metric: invalidValues
+      arguments:
+        validValues:
+        - wikidata
+        - wikidata_pinned
+        - osm_pinned
+        - nominatim
+        - nominatim_city
+        - manual
+      mustBe: 0
+  - name: geocode_confidence
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Confidence in the point: ''high'', ''medium'', ''low'' (city-level search) or ''manual''. NULL when not
+      located.'
+    quality:
+    - name: valid_geocode_confidence
+      metric: invalidValues
+      arguments:
+        validValues:
+        - high
+        - medium
+        - low
+        - manual
+      mustBe: 0
+  - name: geocode_matched_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: Free text naming what the point was matched to and by which rule, e.g. 'Adelaide Oval (exact_name)'. NULL
+      when not located.
+  - name: in_geo_plan
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: TRUE if the venue was in the geocoding and weather request plan (271 venues). Venues outside it can only
+      get coordinates from a bulk Wikidata list and get no weather, timezone or DEM elevation.
+  - name: geocode_gap
+    logicalType: string
+    physicalType: VARCHAR
+    description: Reason a pinned OSM or Wikidata lookup failed to fetch. NULL in the current data (no failures).
+  - name: country_check
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Sanity check that the point lies inside the expected country''s box: ''pass'', ''fail'' or ''unknown''
+      (no coordinates or no country evidence). Every located venue currently passes.'
+    quality:
+    - name: valid_country_check
+      metric: invalidValues
+      arguments:
+        validValues:
+        - pass
+        - fail
+        - unknown
+      mustBe: 0
+  - name: country_evidence
+    logicalType: string
+    physicalType: VARCHAR
+    description: Plain-text evidence the country check used (override, home team or geocoder label), or 'no coordinates'.
+  - name: elevation_check
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Whether elevation_m is within max(150 m, 15%) of the city''s reference elevation: ''pass'', ''fail'' or
+      ''unknown'' (no elevation or no city reference).'
+    quality:
+    - name: valid_elevation_check
+      metric: invalidValues
+      arguments:
+        validValues:
+        - pass
+        - fail
+        - unknown
+      mustBe: 0
+  - name: city_elevation_m
+    logicalType: number
+    physicalType: DOUBLE
+    description: Reference elevation of the venue's city from a small hand-made table, used by the elevation check. NULL
+      when the city is not in the table.
+    customProperties:
+    - property: unit
+      value: m above sea level
+  - name: timezone_check
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''pass'' if timezone is a real place zone (not an Etc/ ocean zone), ''fail'' if not, ''unknown'' if there
+      is no timezone.'
+    quality:
+    - name: valid_timezone_check
+      metric: invalidValues
+      arguments:
+        validValues:
+        - pass
+        - fail
+        - unknown
+      mustBe: 0
+  - name: sea_check
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''fail'' when the terrain model gives exactly 0 m (the point may be in the sea) unless the venue is marked
+      coastal; ''pass'' otherwise; ''unknown'' without a DEM value. One venue fails and is acknowledged.'
+    quality:
+    - name: valid_sea_check
+      metric: invalidValues
+      arguments:
+        validValues:
+        - pass
+        - fail
+        - unknown
+      mustBe: 0
+  - name: anchor_check
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''pass'' if the point is within 30 km of the city-level geocode, ''fail'' if farther, ''unknown'' when
+      no usable city anchor exists. The 7 failures are acknowledged in the overrides.'
+    quality:
+    - name: valid_anchor_check
+      metric: invalidValues
+      arguments:
+        validValues:
+        - pass
+        - fail
+        - unknown
+      mustBe: 0
+  - name: acknowledged_checks
+    logicalType: string
+    physicalType: VARCHAR
+    description: Comma-separated names of failed checks that were reviewed and accepted in the override file (currently
+      'sea' or 'anchor'). NULL for 579 venues.
+  - name: needs_review
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: 'TRUE when any reason for doubt exists: geocode confidence is missing or low, the country, elevation or
+      timezone check is unknown or failed, or an override asks for review. 365 venues are flagged.'
+  - name: review_reasons
+    logicalType: string
+    physicalType: VARCHAR
+    description: Semicolon-separated reasons behind needs_review; NULL when needs_review is FALSE.
+  - name: weather_location_quality
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How much to trust weather taken at this point: ''verified_ground'' (trusted point, no review needed),
+      ''unverified_point'' (a point exists but needs review) or ''city_centroid'' (city centre only). NULL when the venue
+      has no coordinates.'
+    quality:
+    - name: valid_weather_location_quality
+      metric: invalidValues
+      arguments:
+        validValues:
+        - verified_ground
+        - unverified_point
+        - city_centroid
+      mustBe: 0
+  - name: note
+    logicalType: string
+    physicalType: VARCHAR
+    description: Free-text note from the manual override file explaining a correction or a caveat. NULL for 546 venues.
+  - name: n_matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: Number of Cricsheet matches at the venue whose start date falls in this version (all aliases combined,
+      no scope).
+    customProperties:
+    - property: unit
+      value: matches
+    quality:
+    - name: n_matches_positive
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 100000
+      mustBe: 0
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 4
+  - name: located_iff_has_confidence
+    type: sql
+    description: lat, lon and geocode confidence are present or absent together.
+    query: SELECT count(*) FROM ${table} WHERE (lat IS NULL) <> (lon IS NULL) OR (lat IS NULL) <> (geocode_confidence IS
+      NULL) OR (lat IS NULL) <> (weather_location_quality IS NULL)
+    mustBe: 0
+  - name: located_versions_never_fail_country_check
+    type: sql
+    description: No located version fails the country-box check (a failure stops the build). 'unknown' is allowed
+      for a version (with venue_context asof, an early version may have no home team and no geocoder label yet) and
+      is flagged needs_review; silver venues (the latest versions) must pass.
+    query: SELECT count(*) FROM ${table} WHERE lat IS NOT NULL AND (country_check NOT IN ('pass', 'unknown') OR (country_check
+      = 'unknown' AND NOT needs_review))
+    mustBe: 0
+  - name: no_ocean_timezone
+    type: sql
+    description: No Etc/ ocean zone or bare UTC/GMT as a venue timezone.
+    query: SELECT count(*) FROM ${table} WHERE timezone LIKE 'Etc/%' OR timezone IN ('UTC', 'GMT')
+    mustBe: 0
+  - name: verified_ground_needs_no_review
+    type: sql
+    description: A verified ground is never flagged for review.
+    query: SELECT count(*) FROM ${table} WHERE weather_location_quality = 'verified_ground' AND needs_review
+    mustBe: 0
+  - name: versions_numbered_in_date_order
+    type: sql
+    description: versions are 1..n per venue, valid_from strictly increasing, and each valid_to is the day before the next
+      version starts (NULL on the last).
+    query: SELECT count(*) FROM (SELECT venue_version, valid_from, valid_to, row_number() OVER w AS rn, lead(valid_from)
+      OVER w AS next_from FROM ${table} WINDOW w AS (PARTITION BY venue_id ORDER BY venue_version)) WHERE venue_version
+      <> rn OR (next_from IS NULL) <> (valid_to IS NULL) OR (next_from IS NOT NULL AND (next_from <= valid_from OR valid_to
+      <> next_from - 1))
+    mustBe: 0
+  - name: latest_version_is_the_venue
+    type: sql
+    description: silver venues holds the latest version of each venue (same point and checks).
+    query: SELECT count(*) FROM ${table} v JOIN ${table:venues} c USING (venue_id) WHERE v.valid_to IS NULL AND (v.lat IS
+      DISTINCT FROM c.lat OR v.lon IS DISTINCT FROM c.lon OR v.name IS DISTINCT FROM c.name OR v.geocode_confidence IS DISTINCT
+      FROM c.geocode_confidence OR v.country IS DISTINCT FROM c.country)
+    mustBe: 0
+  - name: every_venue_has_versions
+    type: sql
+    description: every venue has exactly one open-ended (latest) version.
+    query: SELECT (SELECT count(*) FROM ${table:venues}) - count(*) FILTER (valid_to IS NULL) FROM ${table}
+    mustBe: 0
+  - name: search_names_only_from_matches_up_to_inputs_as_of
+    type: sql
+    description: 'search_names are exactly the core names (text before the first comma) of the venue''s spellings in matches
+      up to inputs_as_of: no later spelling reaches the geocoder.'
+    query: SELECT count(*) FROM ${table} v WHERE v.search_names <> (SELECT list_sort(list(DISTINCT trim(split_part(m.venue,
+      ',', 1)))) FROM ${table:matches} m JOIN ${table:match_venues} mv USING (match_id) WHERE mv.venue_id = v.venue_id AND
+      m.start_date <= v.inputs_as_of)
+    mustBe: 0
+  - name: asof_inputs_start_with_the_version
+    type: sql
+    description: 'A version''s inputs use no match after its start, except the single snapshot-wide version (venue_context:
+      snapshot).'
+    query: SELECT count(*) FROM ${table} WHERE inputs_as_of > valid_from AND NOT (venue_version = 1 AND valid_to IS NULL)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: entity
+- property: sources
+  value:
+  - venues_geo
+  - weather
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - matches

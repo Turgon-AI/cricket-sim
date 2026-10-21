@@ -1,0 +1,58 @@
+# Open "context" sources (venues, weather). Kept apart from config/sources.yml.
+# Every source here is openly licensed and may be republished with attribution (OSM-derived data: ODbL share-alike).
+#
+# snapshot_id: auto  ->  <UTC date>-<sha8 of the request plan>. A new plan, or a re-fetch on another day, always
+# gets a new snapshot; a sealed snapshot is never overwritten. Lock deliberately (ingest locks what it seals).
+
+# Sent as the HTTP User-Agent to every service below. Descriptive, no personal contact details.
+user_agent: "cricket-sim/0.1 (non-commercial cricket research)"
+
+# Which matches ingest fetches geocodes and weather for. This is a network budget, NOT a scope: silver is built
+# over every Cricsheet match; matches outside the plan simply have null weather with a reason.
+# A rule matches when all its keys equal the match's Cricsheet values. `all: true` plans every match.
+plan_selection:
+  gender: male
+  from_date: "2001-01-01"
+  any_of:
+    - {match_type: Test, team_type: international}
+    - {match_type: ODI, team_type: international}
+    - {match_type: T20, team_type: international}
+    - {event_name: Indian Premier League}
+
+venues_geo:
+  description: >-
+    Venue coordinates (Wikidata SPARQL bulk query, pinned Wikidata entities / OSM elements, then OSM Nominatim
+    fallback). One self-describing file per request,
+    plus plan.json (the request plan) and failures.json.
+  snapshot_id: auto
+  endpoints:
+    wikidata_sparql: https://query.wikidata.org/sparql
+    nominatim: https://nominatim.openstreetmap.org/search
+    nominatim_lookup: https://nominatim.openstreetmap.org/lookup   # resolves pinned OSM elements (osm_ref)
+  licence: "Wikidata: CC0-1.0. OpenStreetMap (Nominatim): ODbL-1.0 (share-alike)"
+  redistributable: true
+  attribution: "Venue coordinates: Wikidata (CC0). Geocoding: (c) OpenStreetMap contributors, ODbL (https://www.openstreetmap.org/copyright)"
+  nominatim_min_interval_seconds: 1.1   # usage policy: max 1 request/second
+
+weather:
+  description: >-
+    Open-Meteo historical archive (ERA5/ERA5-Land reanalysis), hourly. Requested with timezone=auto, but the build
+    converts every hour back to UTC with the response's utc_offset_seconds and re-localises with zoneinfo.
+  snapshot_id: auto
+  endpoint: https://archive-api.open-meteo.com/v1/archive
+  hourly:
+    - temperature_2m
+    - relative_humidity_2m
+    - dew_point_2m
+    - cloud_cover
+    - wind_speed_10m
+    - wind_direction_10m
+    - precipitation
+    - surface_pressure
+  licence: "CC-BY-4.0 (data); free API tier is for non-commercial use only"
+  redistributable: true
+  attribution: "Weather data by Open-Meteo.com (https://open-meteo.com), CC BY 4.0; contains modified Copernicus ERA5 reanalysis data"
+  min_interval_seconds: 0.7
+  max_window_days: 14          # one API call weighs about days/14, so 14-day windows cost 1 call
+  archive_lag_days: 6          # archive is not complete for the most recent days
+  max_weighted_calls_per_run: 8000

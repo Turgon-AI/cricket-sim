@@ -1,0 +1,68 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.match_players
+name: match_players
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: The squad list for each side in each match (the players Cricsheet names), so participation can be known
+    even for players who never batted, bowled or fielded on a recorded ball.
+  limitations: 'Cricsheet (ODC-BY 1.0); format documented at https://cricsheet.org/format/json/. Lists the named
+    XI plus any substitutes/impact players Cricsheet includes, 9 to 14 per team. It does not say who actually played
+    a role: a listed player may not bat or bowl, and a substitute fielder may not be listed. The same person can
+    appear under different names in different matches; use player_id.'
+  usage: Join to people on player_id = identifier.
+schema:
+- name: match_players
+  physicalName: data/silver/match_players.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per (match, team, player) from the match's players list, with the register id.
+  dataGranularityDescription: One row per player named for a team in a match (match_id, team, player).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id; foreign key to matches. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: team
+    logicalType: string
+    physicalType: VARCHAR
+    description: Team the player is listed for; always team1 or team2 of the match. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: player
+    logicalType: string
+    physicalType: VARCHAR
+    description: Player's name as used in that match. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: player_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier from the match registry; foreign key to people.identifier. Never NULL
+      in this data.
+    relationships:
+    - to: people.identifier
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 100
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - cricsheet
+- property: upstream
+  value: []

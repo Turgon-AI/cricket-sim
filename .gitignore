@@ -1,0 +1,7 @@
+# Data never goes in git: bronze is backed up via rclone, silver/gold are rebuilt.
+data/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store

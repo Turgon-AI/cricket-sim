@@ -1,0 +1,219 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.staging.stg_ari_predictions
+name: stg_ari_predictions
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Typed copy of Ari Adaikalam''s text-predicted labels: line, length, shot and direction inferred from
+    Cricinfo commentary for balls where Cricinfo has no tracked value. It feeds the separate ''predicted'' per-ball
+    layer in silver and is never merged with the recorded labels.'
+  limitations: 'RESTRICTED THIRD-PARTY DATA. This comes from Ari Adaikalam''s Kaggle dataset ''The Ultimate Ball-by-Ball
+    Cricket Dataset''. The Cricinfo-derived parts are non-commercial and must credit ESPNcricinfo. It must not be
+    republished or exported; use for analysis and charts only. The values are model predictions made from Cricinfo
+    commentary text, not observations, and they cannot be checked in-house: the 1.65M rows overlap Cricinfo''s recorded
+    labels on only a few thousand balls, and where they do the prediction is empty. Inferred predictions (explicit
+    = false) default heavily to the most common class (good length). A label is present more often for dots than
+    for wickets, so presence depends on the outcome. Use explicit = true labels only, as noisy labels, and keep
+    them separate from recorded labels.'
+  usage: Join to silver balls on (match_id, innings, delivery_number). Do not use for anything that is published.
+schema:
+- name: stg_ari_predictions
+  physicalName: data/staging/stg_ari_predictions.parquet
+  physicalType: table
+  logicalType: object
+  description: Commentary-derived predicted line, length, shot and direction, each with a confidence, for 1,654,041
+    deliveries in 8,563 matches.
+  dataGranularityDescription: One row per delivery (match_id, innings, delivery_number) with commentary text for
+    which Ari's model produced at least one prediction.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (text), the same value as matches.match_id. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings of the match in the order batted (1 to 6 in this file). Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+    quality:
+    - name: innings_1_to_6
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 6
+      mustBe: 0
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Position of the delivery within the innings, counting every delivery including wides and no-balls,
+      from 1. Part of the key; matches silver balls.delivery_number.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: line
+    logicalType: string
+    physicalType: VARCHAR
+    description: Line predicted from the ball's commentary text by Ari's model, always one of Cricinfo's own line
+      labels. NULL where the commentary gives no reading (19,751 rows).
+    quality:
+    - name: valid_line
+      metric: invalidValues
+      arguments:
+        validValues:
+        - outside offstump
+        - wide outside offstump
+        - on the stumps
+        - down leg
+        - wide down leg
+      mustBe: 0
+  - name: line_confidence
+    logicalType: number
+    physicalType: DOUBLE
+    description: Model probability, 0 to 1, that the predicted line equals what Cricinfo would have recorded (assessed
+      by Ari on held-out matches). NULL exactly when line is NULL.
+    customProperties:
+    - property: unit
+      value: probability 0-1
+    quality:
+    - name: confidence_0_to_1
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: line_explicit
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the commentary text contains words pointing to this line, false if the model inferred it
+      from the wider text and context. NULL exactly when line is NULL.
+  - name: length
+    logicalType: string
+    physicalType: VARCHAR
+    description: Length predicted from the commentary text, always one of Cricinfo's own length labels. NULL where
+      the commentary gives no reading (20,300 rows).
+    quality:
+    - name: valid_length
+      metric: invalidValues
+      arguments:
+        validValues:
+        - full toss
+        - yorker
+        - full
+        - good length
+        - short of a good length
+        - short
+      mustBe: 0
+  - name: length_confidence
+    logicalType: number
+    physicalType: DOUBLE
+    description: Model probability, 0 to 1, that the predicted length equals the Cricinfo label. NULL exactly when
+      length is NULL.
+    customProperties:
+    - property: unit
+      value: probability 0-1
+    quality:
+    - name: confidence_0_to_1
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: length_explicit
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the commentary words point to this length, false if inferred. 79% of predicted lengths
+      are inferred, and 73% of those are 'good length' (the default class). NULL exactly when length is NULL.
+  - name: shot
+    logicalType: string
+    physicalType: VARCHAR
+    description: Shot name predicted from the commentary text, one of Cricinfo's shot labels. NULL where the commentary
+      gives no reading (82% of rows).
+  - name: shot_confidence
+    logicalType: number
+    physicalType: DOUBLE
+    description: Model probability, 0 to 1, that the predicted shot equals the Cricinfo label. NULL exactly when
+      shot is NULL.
+    customProperties:
+    - property: unit
+      value: probability 0-1
+    quality:
+    - name: confidence_0_to_1
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: shot_explicit
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the commentary words point to this shot, false if inferred. NULL exactly when shot is NULL.
+  - name: direction
+    logicalType: string
+    physicalType: VARCHAR
+    description: Shot direction predicted from the commentary text, one of Cricinfo's eight direction names. NULL
+      where the commentary gives no reading (83% of rows).
+    quality:
+    - name: valid_direction
+      metric: invalidValues
+      arguments:
+        validValues:
+        - fine leg
+        - square leg
+        - mid wicket
+        - mid on
+        - mid off
+        - cover
+        - point
+        - third man
+      mustBe: 0
+  - name: direction_confidence
+    logicalType: number
+    physicalType: DOUBLE
+    description: Model probability, 0 to 1, that the predicted direction equals the Cricinfo label. NULL exactly
+      when direction is NULL.
+    customProperties:
+    - property: unit
+      value: probability 0-1
+    quality:
+    - name: confidence_0_to_1
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: direction_explicit
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the commentary words point to this direction, false if inferred. NULL exactly when direction
+      is NULL.
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 1000
+  - name: label_and_confidence_together
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (line IS NULL) <> (line_confidence IS NULL) OR (length IS NULL) <>
+      (length_confidence IS NULL) OR (shot IS NULL) <> (shot_confidence IS NULL) OR (direction IS NULL) <> (direction_confidence
+      IS NULL)
+    mustBe: 0
+  - name: label_and_explicit_together
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (line IS NULL) <> (line_explicit IS NULL) OR (length IS NULL) <>
+      (length_explicit IS NULL) OR (shot IS NULL) <> (shot_explicit IS NULL) OR (direction IS NULL) <> (direction_explicit
+      IS NULL)
+    mustBe: 0
+  - name: at_least_one_prediction
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE line IS NULL AND length IS NULL AND shot IS NULL AND direction IS
+      NULL
+    mustBe: 0
+customProperties:
+- property: layer
+  value: staging
+- property: kind
+  value: staging
+- property: sources
+  value:
+  - ari
+- property: upstream
+  value: []

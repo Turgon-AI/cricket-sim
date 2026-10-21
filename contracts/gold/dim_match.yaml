@@ -1,0 +1,369 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.dim_match
+name: dim_match
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: >-
+    The match dimension: one row per in-scope match with its segment, teams, toss, result, officials, canonical
+    venue and quality verdict. Every fact and report table joins to it on match_id.
+  limitations: >-
+    Scope (config/scope.yml): men's matches from 2001-01-01 in four segments: Tests, ODIs, T20Is where both teams
+    are ICC full members, and the IPL. Cricsheet is incomplete: it withholds Afghanistan's matches and lacks some
+    internationals (see report_international_coverage and report_cricsheet_known_missing). Team, venue and official
+    names are Cricsheet's spellings and change over time (e.g. 'Delhi Daredevils' and 'Delhi Capitals'); use venue_id
+    for grounds. match_type_number is not unique (2 ODI numbers repeat in scope), so never use it as a key. 3 matches
+    fail passes_quality.
+schema:
+- name: dim_match
+  physicalName: data/gold/dim_match.parquet
+  physicalType: table
+  logicalType: object
+  description: >-
+    Every in-scope match from Cricsheet with its segment, competition, dates, venue (raw name and canonical venue_id),
+    teams, toss, result and margin, rain-rule and tie-break details, officials and data-quality verdict.
+  dataGranularityDescription: One row per in-scope match.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Cricsheet match identifier (the name of the match's file in Cricsheet's download, e.g. '1000851'). For most
+      internationals it equals the ESPNcricinfo match id, but do not rely on that; use map_match_ids.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: segment
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Which part of the scope the match belongs to: 'Test', 'ODI', 'T20I' (both teams ICC full members) or 'IPL'
+      (Indian Premier League).
+    required: true
+    quality:
+    - name: valid_segment
+      metric: invalidValues
+      arguments:
+        validValues:
+        - Test
+        - ODI
+        - T20I
+        - IPL
+      mustBe: 0
+  - name: match_type
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Cricsheet match type: ''Test'', ''ODI'' or ''T20'' (T20Is and IPL matches are both ''T20'').'
+    required: true
+    quality:
+    - name: valid_match_type
+      metric: invalidValues
+      arguments:
+        validValues:
+        - Test
+        - ODI
+        - T20
+      mustBe: 0
+  - name: match_type_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: >-
+      Official international match number (Test No., ODI No., T20I No.) as Cricsheet gives it. NULL for IPL matches.
+      Not unique: a handful of numbers are shared by two matches.
+  - name: gender
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''male'' for every row in the current scope.'
+    required: true
+    quality:
+    - name: valid_gender
+      metric: invalidValues
+      arguments:
+        validValues:
+        - male
+      mustBe: 0
+  - name: team_type
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''international'' for Tests, ODIs and T20Is; ''club'' for IPL.'
+    required: true
+    quality:
+    - name: valid_team_type
+      metric: invalidValues
+      arguments:
+        validValues:
+        - international
+        - club
+      mustBe: 0
+  - name: event_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Competition or series name as Cricsheet gives it (e.g. 'Indian Premier League', 'ICC Cricket World Cup').
+      NULL when Cricsheet records none.
+  - name: event_match_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: >-
+      Match number within the event or series. NULL when Cricsheet gives none or a non-numeric one.
+  - name: event_stage
+    logicalType: string
+    physicalType: VARCHAR
+    description: Knockout stage when given, e.g. 'Final', 'Semi Final', 'Qualifier 1'; NULL otherwise.
+  - name: season
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Season label as Cricsheet writes it: a year (''2019'') or a split season (''2007/08''). Text.'
+  - name: season_year
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Calendar year of start_date (not derived from season).
+    required: true
+  - name: start_date
+    logicalType: date
+    physicalType: DATE
+    description: First day of the match (local date at the venue).
+    required: true
+    quality:
+    - name: in_scope_dates
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < DATE '2001-01-01'
+      mustBe: 0
+  - name: end_date
+    logicalType: date
+    physicalType: DATE
+    description: Last scheduled or played day of the match; equals start_date for one-day matches.
+    required: true
+  - name: n_dates
+    logicalType: integer
+    physicalType: SMALLINT
+    description: >-
+      Number of distinct dates Cricsheet lists for the match (1 for most one-day matches, 2-3 when a reserve day
+      was used; 2-6 for Tests).
+    required: true
+    customProperties:
+    - property: unit
+      value: days
+  - name: venue_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Canonical venue identifier (a slug of the ground's name, e.g. 'm-chinnaswamy-stadium'), the same for every
+      spelling of the ground. Joins to dim_venue.venue_id.
+    required: true
+    relationships:
+    - to: dim_venue.venue_id
+  - name: venue_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Venue name exactly as Cricsheet spells it for this match (spellings of one ground vary between matches; see
+      map_venue_alias).
+    required: true
+  - name: city
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      City as Cricsheet gives it for this match; NULL when Cricsheet omits it (the venue string then usually contains
+      no city).
+  - name: team1
+    logicalType: string
+    physicalType: VARCHAR
+    description: First team as listed by Cricsheet (no home/away meaning).
+    required: true
+  - name: team2
+    logicalType: string
+    physicalType: VARCHAR
+    description: Second team as listed by Cricsheet.
+    required: true
+  - name: toss_winner
+    logicalType: string
+    physicalType: VARCHAR
+    description: Team that won the toss.
+    required: true
+  - name: toss_decision
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'What the toss winner chose: ''bat'' or ''field''.'
+    required: true
+    quality:
+    - name: valid_toss_decision
+      metric: invalidValues
+      arguments:
+        validValues:
+        - bat
+        - field
+      mustBe: 0
+  - name: result
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Set only when there is no outright winner: 'draw', 'tie' or 'no result'. NULL when a team won (see winner).
+    quality:
+    - name: valid_result
+      metric: invalidValues
+      arguments:
+        validValues:
+        - draw
+        - tie
+        - no result
+      mustBe: 0
+  - name: winner
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Team that won in regulation play. NULL for draws, ties (even if a super over or bowl-out then decided it;
+      see winner_after_tiebreak) and no-results.
+  - name: win_by_runs
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Winning margin in runs when the side batting first won; NULL otherwise.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: win_by_wickets
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Winning margin in wickets when the chasing side won; NULL otherwise.
+    customProperties:
+    - property: unit
+      value: wickets
+  - name: win_by_innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: >-
+      1 when a Test was won by an innings (the margin then also appears in win_by_runs); NULL otherwise.
+  - name: method
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      How a result was reached when not by normal play: 'D/L' (Duckworth-Lewis(-Stern) rain rule) or 'Awarded'.
+      NULL for normal results.
+  - name: winner_after_tiebreak
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      The team that won the match overall: equals winner, or, for a tie settled by a super over or bowl-out, the
+      tie-break winner. NULL for draws, no-results and ties that were not broken.
+  - name: tiebreak_method
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''super_over'' or ''bowl_out'' when a tie was broken that way; NULL otherwise.'
+    quality:
+    - name: valid_tiebreak
+      metric: invalidValues
+      arguments:
+        validValues:
+        - super_over
+        - bowl_out
+      mustBe: 0
+  - name: scheduled_overs
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Overs per side scheduled before the match (50 for ODIs, 20 for T20s). NULL for Tests. Checked
+      against match_type on every build; the 5 in-scope T20Is that Cricsheet labels 50 overs are set to 20 in silver.
+    customProperties:
+    - property: unit
+      value: overs
+  - name: balls_per_over
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Balls per over (6 throughout the current scope).
+    required: true
+    customProperties:
+    - property: unit
+      value: balls
+  - name: n_innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Number of innings Cricsheet records for the match, super overs included.
+    required: true
+  - name: player_of_match
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Player(s) of the match, '|'-separated Cricsheet names. NULL when not awarded or not recorded.
+  - name: umpires
+    logicalType: string
+    physicalType: VARCHAR
+    description: On-field umpires, '|'-separated Cricsheet names.
+    required: true
+  - name: tv_umpires
+    logicalType: string
+    physicalType: VARCHAR
+    description: TV (third) umpire(s), '|'-separated. NULL when not recorded.
+  - name: match_referees
+    logicalType: string
+    physicalType: VARCHAR
+    description: Match referee(s), '|'-separated. NULL when not recorded.
+  - name: supersubs
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Substitutes under the 2005-06 ODI 'supersub' rule, as JSON {team: player}. NULL for all other matches.
+  - name: passes_quality
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: >-
+      True if the match passes every consistency check in report_match_quality (no check failed and the match was
+      not awarded). Never NULL.
+    required: true
+  - name: cricsheet_missing_fields
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Cricsheet's own note of data it lacks for this match (e.g. powerplays), as JSON. NULL when Cricsheet notes
+      nothing missing.
+  - name: cricsheet_data_version
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet JSON format version of the match file (e.g. '1.2.0').
+    required: true
+  - name: cricsheet_revision
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Cricsheet's revision number of the match file (1 = original; higher = corrected since).
+    required: true
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 4
+  - name: end_not_before_start
+    description: a match never ends before it starts
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE end_date < start_date
+    mustBe: 0
+  - name: teams_consistent
+    description: toss winner and winner are one of the two teams
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE toss_winner NOT IN (team1, team2) OR (winner IS NOT NULL AND winner
+      NOT IN (team1, team2))
+    mustBe: 0
+  - name: winner_xor_result
+    description: exactly one of winner and result is set
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (winner IS NULL) = (result IS NULL)
+    mustBe: 0
+  - name: scheduled_overs_match_format
+    description: T20 is 20 overs, ODI 50 and Test has no over limit
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (match_type = 'T20' AND scheduled_overs IS DISTINCT FROM 20) OR
+      (match_type = 'ODI' AND scheduled_overs IS DISTINCT FROM 50) OR (match_type = 'Test' AND scheduled_overs IS NOT NULL)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: dim
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - matches
+  - int_match_quality
+  - match_venues

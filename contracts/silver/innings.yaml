@@ -1,0 +1,136 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.innings
+name: innings
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Innings-level facts that are not on individual deliveries: who batted, whether the innings was a super
+    over, declared or forfeited, the chase target and any penalty runs.'
+  limitations: 'Cricsheet (ODC-BY 1.0); format documented at https://cricsheet.org/format/json/. Target fields are
+    only present for the chasing innings of limited-overs matches (and some rain-revised ones): 36% of rows have
+    a target. A target set over fewer overs than scheduled means the chase was rain-revised. 14 forfeited innings
+    have no deliveries. Two matches contradict their own data (a target of 169 against a first innings of 166 in
+    UAE v Bhutan 2024, match 1457218; and a 7-ball over in match 1298152).'
+  usage: Join to balls on (match_id, innings).
+schema:
+- name: innings
+  physicalName: data/silver/innings.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per innings of every match as listed in the Cricsheet file, numbered 1.. in the order batted.
+  dataGranularityDescription: One row per innings (match_id, innings).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id; foreign key to matches. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number in order batted (super overs follow the main innings). Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+    quality:
+    - name: innings_1_to_8
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 8
+      mustBe: 0
+  - name: team
+    logicalType: string
+    physicalType: VARCHAR
+    description: Team batting in the innings; always team1 or team2 of the match.
+  - name: is_super_over
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the innings is a super over (228 innings).
+  - name: declared
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the batting side declared the innings closed (Tests and multi-day matches).
+  - name: forfeited
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the batting side forfeited the innings (14 innings). Never true together with declared.
+  - name: target_runs
+    logicalType: integer
+    physicalType: INTEGER
+    description: Runs the chasing side needed to win (as set at the start of or revised during the chase, including
+      Duckworth-Lewis-Stern targets). NULL for innings without a target.
+    customProperties:
+    - property: unit
+      value: runs
+    quality:
+    - name: positive_target
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 1
+      mustBe: 0
+  - name: target_overs
+    logicalType: string
+    physicalType: VARCHAR
+    description: Overs available for the chase as Cricsheet text in cricket notation (e.g. '20', '37.4' = 37 overs
+      and 4 balls). NULL when no target.
+  - name: target_balls
+    logicalType: integer
+    physicalType: INTEGER
+    description: target_overs converted to balls using the match's balls_per_over ('37.4' becomes 226, not 37.4
+      x 6). NULL when no target.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: penalty_runs_pre
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Penalty runs added to the batting side's total before the innings began. NULL when none.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: penalty_runs_post
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Penalty runs added after the innings ended. NULL when none.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: miscounted_overs
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'JSON text of overs where the umpires miscounted the legal balls, keyed by 0-based over number,
+      e.g. {"45": {"balls": 5}} (balls actually bowled, optional umpire). NULL when none (614 innings). Parse with
+      a JSON function.'
+  - name: absent_hurt
+    logicalType: string
+    physicalType: VARCHAR
+    description: Names of players who did not bat or field in the innings because absent hurt, joined by '|'. NULL
+      when none.
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 14
+  - name: not_declared_and_forfeited
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE declared AND forfeited
+    mustBe: 0
+  - name: target_fields_together
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (target_runs IS NULL) <> (target_overs IS NULL) OR (target_runs IS
+      NULL) <> (target_balls IS NULL)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - cricsheet
+- property: upstream
+  value: []

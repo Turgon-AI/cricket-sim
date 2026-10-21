@@ -1,0 +1,152 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.cricinfo_ball_labels
+name: cricinfo_ball_labels
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Holds the line, length, shot and shot-control labels that Cricinfo commentators assign to each ball,
+    kept apart from everything known before the ball so they are never mistaken for pre-ball information.
+  limitations: 'Sparse per-ball layer: a row exists only for balls where the source has a value, so a missing row
+    means ''not recorded'', never ''zero'' or ''no''. These are human labels written by Cricinfo commentators AFTER
+    they saw the outcome. Measured against Hawk-Eye, the same bounce point gets a more extreme length label when
+    the ball was hit for four (by 9 to 18 percentage points), and shot control nearly encodes the wicket (about
+    13% of ''not in control'' balls are wickets against 0.2% of ''in control'' balls). They must never be used as
+    pre-ball or decision inputs; use them only as noisy, outcome-dependent measurements.
+    Coverage is uneven: line and length are absent before 2014 and for most matches between smaller teams, so missingness
+    is at match level and depends on era, format and team tier; where a match has line labels they are present on
+    about 99% of balls. Shot labels are present more widely but are missing more often on wicket balls. The shot
+    vocabulary changed in 2014 (for example ''forward defence'', ''no shot'', ''leg glance'' before; ''defended'',
+    ''left alone'', ''flick'' after), and pre-2014 shot labels are noisy. Line is expressed relative to the batter.
+    Cricinfo-derived (via Ari Adaikalam''s dataset), non-commercial licence: never exported.'
+schema:
+- name: cricinfo_ball_labels
+  physicalName: data/silver/cricinfo_ball_labels.parquet
+  physicalType: table
+  logicalType: object
+  description: Cricinfo commentator labels of line, length, shot played and shot control for each ball, recorded
+    after the outcome.
+  dataGranularityDescription: One row per ball (match_id, innings, delivery_number) with at least one non-NULL label,
+    4,399,294 rows over 9,214 matches.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (the same id as the Cricinfo match id for most internationals). Joins to matches.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number within the match, as numbered by Cricsheet (1 to 4; super overs are numbered as
+      further innings). Part of the ball key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Position of the delivery within its innings, counting every delivery including wides and no-balls,
+      starting at 1 (Ari's key convention, equal to balls.delivery_number). Together with match_id and innings it
+      joins this row to balls.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+    customProperties:
+    - property: unit
+      value: deliveries
+  - name: line_cricinfo
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Commentator''s label of the line of the delivery relative to the batter: ''wide outside offstump'',
+      ''outside offstump'', ''on the stumps'', ''down leg'' or ''wide down leg''. Written after the outcome was
+      known. NULL when not labelled (all matches before 2014 and many later ones).'
+    customProperties:
+    - property: timingClass
+      value: observer_label
+    quality:
+    - name: valid_line
+      metric: invalidValues
+      arguments:
+        validValues:
+        - wide outside offstump
+        - outside offstump
+        - on the stumps
+        - down leg
+        - wide down leg
+      mustBe: 0
+  - name: length_cricinfo
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Commentator''s label of the length of the delivery: ''full toss'', ''yorker'', ''full'', ''good
+      length'', ''short of a good length'' or ''short''. Written after the outcome was known, so it leans towards
+      the result. NULL when not labelled.'
+    customProperties:
+    - property: timingClass
+      value: observer_label
+    quality:
+    - name: valid_length
+      metric: invalidValues
+      arguments:
+        validValues:
+        - full toss
+        - yorker
+        - full
+        - good length
+        - short of a good length
+        - short
+      mustBe: 0
+  - name: shot_cricinfo
+    logicalType: string
+    physicalType: VARCHAR
+    description: Commentator's label of the shot played (about 40 values, e.g. 'cover drive', 'pull', 'left alone').
+      The vocabulary changed completely in 2014, so the same stroke has different labels before and after. NULL
+      when not labelled.
+    customProperties:
+    - property: timingClass
+      value: observer_label
+  - name: shot_control_cricinfo
+    logicalType: string
+    physicalType: VARCHAR
+    description: Whether the commentator judged the batter 'in control' or 'not in control' of the shot. Written
+      after the outcome and strongly tied to it (close to a copy of the wicket outcome); never use as a model input.
+      NULL when not labelled.
+    customProperties:
+    - property: timingClass
+      value: observer_label
+    quality:
+    - name: valid_control
+      metric: invalidValues
+      arguments:
+        validValues:
+        - in control
+        - not in control
+      mustBe: 0
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 3000
+  - name: at_least_one_label
+    type: sql
+    description: Rows are kept only where at least one label exists.
+    query: SELECT count(*) FROM ${table} WHERE coalesce(line_cricinfo, length_cricinfo, shot_cricinfo, shot_control_cricinfo)
+      IS NULL
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - ari
+- property: upstream
+  value:
+  - stg_ari_tracking
+- property: timingClass
+  value: observer_label

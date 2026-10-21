@@ -1,0 +1,21 @@
+# Scope is applied in GOLD only. Silver keeps everything, so widening scope never needs a re-ingest.
+gender: male
+from_date: "2001-01-01"
+full_members: [Afghanistan, Australia, Bangladesh, England, India, Ireland, New Zealand, Pakistan,
+               South Africa, Sri Lanka, West Indies, Zimbabwe]
+segments:
+  - name: Test
+    match_type: Test
+    team_type: international
+  - name: ODI
+    match_type: ODI
+    team_type: international
+  # T20Is between two full members only: the reference list cannot verify associate T20Is
+  # (61% of all men's T20Is since 2019), so their coverage cannot be claimed.
+  - name: T20I
+    match_type: T20
+    team_type: international
+    both_teams_in: full_members
+  - name: IPL
+    match_type: T20
+    event_name: Indian Premier League

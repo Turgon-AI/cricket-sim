@@ -1,0 +1,68 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.map_venue_alias
+name: map_venue_alias
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Crosswalk from every (venue, city) spelling Cricsheet uses to the canonical venue_id, so matches at the
+    same ground can be grouped and other datasets keyed on Cricsheet's venue strings can be joined.
+  limitations: Covers every Cricsheet match of every format and gender, not only the scope, so many venue_ids here
+    (grounds used only outside scope) have no row in dim_venue. Spellings are mapped by a normalised-name rule plus
+    manual merges and splits (config/venue_overrides.yml); a rare wrong merge or split is possible.
+schema:
+- name: map_venue_alias
+  physicalName: data/gold/map_venue_alias.parquet
+  physicalType: table
+  logicalType: object
+  description: Every distinct (venue, city) string pair in Cricsheet with the canonical venue_id it maps to and
+    how often it occurs.
+  dataGranularityDescription: One row per distinct (venue, city) pair in Cricsheet; city can be NULL.
+  properties:
+  - name: venue
+    logicalType: string
+    physicalType: VARCHAR
+    description: Venue name exactly as Cricsheet spells it (leading spaces and typos preserved).
+    required: true
+  - name: city
+    logicalType: string
+    physicalType: VARCHAR
+    description: City exactly as Cricsheet gives it alongside that venue string; NULL when Cricsheet gives none.
+  - name: venue_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Canonical venue identifier this spelling maps to (see dim_venue.venue_id).
+    required: true
+  - name: n_matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: Number of Cricsheet matches (all, not only in scope) that use this exact (venue, city) pair.
+    required: true
+    customProperties:
+    - property: unit
+      value: matches
+    quality:
+    - name: positive
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 1
+      mustBe: 0
+  quality:
+  - name: one_row_per_spelling
+    description: each (venue, city) pair appears once, so it maps to one venue_id
+    type: sql
+    query: SELECT count(*) - count(DISTINCT (venue, city)) FROM ${table}
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: map
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - venue_aliases

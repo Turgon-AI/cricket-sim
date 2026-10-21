@@ -1,0 +1,20 @@
+{
+  "source": "cricsheet_missing",
+  "snapshot_id": "2026-10-15",
+  "ingested_at_utc": "2026-10-15T09:43:25Z",
+  "upstream": {
+    "url": "https://cricsheet.org/missing/"
+  },
+  "files": [
+    {
+      "name": "missing.html",
+      "url": "https://cricsheet.org/missing/",
+      "stored_as": "missing.html.zst",
+      "compressed": true,
+      "raw_bytes": 153388,
+      "raw_sha256": "9691dc385b25881938560c70aeb118fc385af59c91979ee1cc6edf45440c6bca",
+      "stored_bytes": 17924,
+      "stored_sha256": "116819a2fe1078f83d8d06cfe787028deb3a06535323acb607d9a8a26aa87c1c"
+    }
+  ]
+}

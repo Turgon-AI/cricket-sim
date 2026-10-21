@@ -1,0 +1,6291 @@
+{
+ "config_sha256": {
+  "venue_overrides.yml": "71b7657e6e9c94d6b30424fbef689126c6c9883593e5dc811bc9ee919eed8224",
+  "venue_reference.yml": "61832cd2a96e4106e04318772fbe31542b4644665a1d135d36b5fbd6b6c9379e"
+ },
+ "cricsheet_snapshot": "2026-10-14",
+ "kind": "venues_geo request plan",
+ "selection": {
+  "any_of": [
+   {
+    "match_type": "Test",
+    "team_type": "international"
+   },
+   {
+    "match_type": "ODI",
+    "team_type": "international"
+   },
+   {
+    "match_type": "T20",
+    "team_type": "international"
+   },
+   {
+    "event_name": "Indian Premier League"
+   }
+  ],
+  "from_date": "2001-01-01",
+  "gender": "male"
+ },
+ "venues": [
+  {
+   "aliases": [
+    [
+     "7he Sevens Stadium, Dubai",
+     "Dubai"
+    ]
+   ],
+   "city": "Dubai",
+   "n_selected_matches": 3,
+   "name": "7he Sevens Stadium",
+   "places": [
+    "Dubai"
+   ],
+   "search_names": [
+    "7he Sevens Stadium"
+   ],
+   "venue_id": "7he-sevens-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Achimota Senior Secondary School A Field, Accra",
+     "Accra"
+    ]
+   ],
+   "city": "Accra",
+   "n_selected_matches": 14,
+   "name": "Achimota Senior Secondary School A Field",
+   "places": [
+    "Accra"
+   ],
+   "search_names": [
+    "Achimota Senior Secondary School A Field"
+   ],
+   "venue_id": "achimota-senior-secondary-school-a-field"
+  },
+  {
+   "aliases": [
+    [
+     "Achimota Senior Secondary School B Field, Accra",
+     "Accra"
+    ]
+   ],
+   "city": "Accra",
+   "n_selected_matches": 12,
+   "name": "Achimota Senior Secondary School B Field",
+   "places": [
+    "Accra"
+   ],
+   "search_names": [
+    "Achimota Senior Secondary School B Field"
+   ],
+   "venue_id": "achimota-senior-secondary-school-b-field"
+  },
+  {
+   "aliases": [
+    [
+     "Adelaide Oval",
+     null
+    ],
+    [
+     "Adelaide Oval",
+     "Adelaide"
+    ]
+   ],
+   "city": "Adelaide",
+   "n_selected_matches": 66,
+   "name": "Adelaide Oval",
+   "places": [
+    "Adelaide"
+   ],
+   "search_names": [
+    "Adelaide Oval"
+   ],
+   "venue_id": "adelaide-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Affies Park",
+     "Windhoek"
+    ]
+   ],
+   "city": "Windhoek",
+   "n_selected_matches": 1,
+   "name": "Affies Park",
+   "places": [
+    "Windhoek"
+   ],
+   "search_names": [
+    "Affies Park"
+   ],
+   "venue_id": "affies-park"
+  },
+  {
+   "aliases": [
+    [
+     "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1)",
+     null
+    ],
+    [
+     "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1)",
+     "Al Amarat"
+    ]
+   ],
+   "city": "Al Amarat",
+   "n_selected_matches": 139,
+   "name": "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1)",
+   "places": [
+    "Al Amarat"
+   ],
+   "search_names": [
+    "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1)"
+   ],
+   "venue_id": "al-amerat-cricket-ground-oman-cricket-ministry-turf-1"
+  },
+  {
+   "aliases": [
+    [
+     "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 2)",
+     null
+    ],
+    [
+     "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 2)",
+     "Al Amarat"
+    ]
+   ],
+   "city": "Al Amarat",
+   "n_selected_matches": 34,
+   "name": "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 2)",
+   "places": [
+    "Al Amarat"
+   ],
+   "search_names": [
+    "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 2)"
+   ],
+   "venue_id": "al-amerat-cricket-ground-oman-cricket-ministry-turf-2"
+  },
+  {
+   "aliases": [
+    [
+     "Amini Park",
+     "Port Moresby"
+    ],
+    [
+     "Amini Park, Port Moresby",
+     "Port Moresby"
+    ]
+   ],
+   "city": "Port Moresby",
+   "n_selected_matches": 23,
+   "name": "Amini Park",
+   "places": [
+    "Port Moresby"
+   ],
+   "search_names": [
+    "Amini Park"
+   ],
+   "venue_id": "amini-park"
+  },
+  {
+   "aliases": [
+    [
+     "Antigua Recreation Ground",
+     "St John's"
+    ],
+    [
+     "Antigua Recreation Ground, St John's",
+     "Antigua"
+    ],
+    [
+     "Antigua Recreation Ground, St John's, Antigua",
+     "St John's"
+    ]
+   ],
+   "city": "Antigua",
+   "n_selected_matches": 7,
+   "name": "Antigua Recreation Ground",
+   "places": [
+    "Antigua",
+    "St John's"
+   ],
+   "search_names": [
+    "Antigua Recreation Ground"
+   ],
+   "venue_id": "antigua-recreation-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Arbab Niaz Stadium",
+     "Peshawar"
+    ]
+   ],
+   "city": "Peshawar",
+   "n_selected_matches": 3,
+   "name": "Arbab Niaz Stadium",
+   "places": [
+    "Peshawar"
+   ],
+   "search_names": [
+    "Arbab Niaz Stadium"
+   ],
+   "venue_id": "arbab-niaz-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Arnos Vale Ground",
+     "Kingstown"
+    ],
+    [
+     "Arnos Vale Ground, Kingstown",
+     "St Vincent"
+    ],
+    [
+     "Arnos Vale Ground, Kingstown, St Vincent",
+     "Kingstown"
+    ]
+   ],
+   "city": "Kingstown",
+   "n_selected_matches": 21,
+   "name": "Arnos Vale Ground",
+   "places": [
+    "Kingstown",
+    "St Vincent"
+   ],
+   "search_names": [
+    "Arnos Vale Ground"
+   ],
+   "venue_id": "arnos-vale-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Arun Jaitley Stadium",
+     null
+    ],
+    [
+     "Arun Jaitley Stadium",
+     "Delhi"
+    ],
+    [
+     "Arun Jaitley Stadium, Delhi",
+     "Delhi"
+    ],
+    [
+     "Feroz Shah Kotla",
+     "Delhi"
+    ]
+   ],
+   "city": "Delhi",
+   "n_selected_matches": 141,
+   "name": "Arun Jaitley Stadium",
+   "places": [
+    "Delhi"
+   ],
+   "search_names": [
+    "Arun Jaitley Stadium",
+    "Feroz Shah Kotla"
+   ],
+   "venue_id": "arun-jaitley-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Asgiriya Stadium",
+     "Kandy"
+    ]
+   ],
+   "city": "Kandy",
+   "n_selected_matches": 3,
+   "name": "Asgiriya Stadium",
+   "places": [
+    "Kandy"
+   ],
+   "search_names": [
+    "Asgiriya Stadium"
+   ],
+   "venue_id": "asgiriya-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Ballpark Ground, Graz",
+     "Graz"
+    ]
+   ],
+   "city": "Graz",
+   "n_selected_matches": 2,
+   "name": "Ballpark Ground",
+   "places": [
+    "Graz"
+   ],
+   "search_names": [
+    "Ballpark Ground"
+   ],
+   "venue_id": "ballpark-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Bangabandhu National Stadium",
+     "Dhaka"
+    ],
+    [
+     "Bangabandhu National Stadium, Dhaka",
+     "Dhaka"
+    ]
+   ],
+   "city": "Dhaka",
+   "n_selected_matches": 7,
+   "name": "Bangabandhu National Stadium",
+   "places": [
+    "Dhaka"
+   ],
+   "search_names": [
+    "Bangabandhu National Stadium"
+   ],
+   "venue_id": "bangabandhu-national-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Barabati Stadium",
+     null
+    ],
+    [
+     "Barabati Stadium",
+     "Cuttack"
+    ],
+    [
+     "Barabati Stadium, Cuttack",
+     "Cuttack"
+    ]
+   ],
+   "city": "Cuttack",
+   "n_selected_matches": 19,
+   "name": "Barabati Stadium",
+   "places": [
+    "Cuttack"
+   ],
+   "search_names": [
+    "Barabati Stadium"
+   ],
+   "venue_id": "barabati-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Barsapara Cricket Stadium",
+     "Guwahati"
+    ],
+    [
+     "Barsapara Cricket Stadium, Guwahati",
+     "Guwahati"
+    ]
+   ],
+   "city": "Guwahati",
+   "n_selected_matches": 16,
+   "name": "Barsapara Cricket Stadium",
+   "places": [
+    "Guwahati"
+   ],
+   "search_names": [
+    "Barsapara Cricket Stadium"
+   ],
+   "venue_id": "barsapara-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Basin Reserve",
+     "Wellington"
+    ],
+    [
+     "Basin Reserve, Wellington",
+     "Wellington"
+    ]
+   ],
+   "city": "Wellington",
+   "n_selected_matches": 34,
+   "name": "Basin Reserve",
+   "places": [
+    "Wellington"
+   ],
+   "search_names": [
+    "Basin Reserve"
+   ],
+   "venue_id": "basin-reserve"
+  },
+  {
+   "aliases": [
+    [
+     "Bay Oval",
+     null
+    ],
+    [
+     "Bay Oval",
+     "Mount Maunganui"
+    ],
+    [
+     "Bay Oval, Mount Maunganui",
+     "Mount Maunganui"
+    ]
+   ],
+   "city": "Mount Maunganui",
+   "n_selected_matches": 38,
+   "name": "Bay Oval",
+   "places": [
+    "Mount Maunganui"
+   ],
+   "search_names": [
+    "Bay Oval"
+   ],
+   "venue_id": "bay-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Bayer Uerdingen Cricket Ground",
+     "Krefeld"
+    ]
+   ],
+   "city": "Krefeld",
+   "n_selected_matches": 39,
+   "name": "Bayer Uerdingen Cricket Ground",
+   "places": [
+    "Krefeld"
+   ],
+   "search_names": [
+    "Bayer Uerdingen Cricket Ground"
+   ],
+   "venue_id": "bayer-uerdingen-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Bayuemas Oval",
+     "Kuala Lumpur"
+    ],
+    [
+     "Bayuemas Oval, Kuala Lumpur",
+     "Kuala Lumpur"
+    ]
+   ],
+   "city": "Kuala Lumpur",
+   "n_selected_matches": 90,
+   "name": "Bayuemas Oval",
+   "places": [
+    "Kuala Lumpur"
+   ],
+   "search_names": [
+    "Bayuemas Oval"
+   ],
+   "venue_id": "bayuemas-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Belgrano Athletic Club Ground, Buenos Aires",
+     "Buenos Aires"
+    ]
+   ],
+   "city": "Buenos Aires",
+   "n_selected_matches": 10,
+   "name": "Belgrano Athletic Club Ground",
+   "places": [
+    "Buenos Aires"
+   ],
+   "search_names": [
+    "Belgrano Athletic Club Ground"
+   ],
+   "venue_id": "belgrano-athletic-club-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Bellerive Oval",
+     "Hobart"
+    ],
+    [
+     "Bellerive Oval, Hobart",
+     "Hobart"
+    ]
+   ],
+   "city": "Hobart",
+   "n_selected_matches": 41,
+   "name": "Bellerive Oval",
+   "places": [
+    "Hobart"
+   ],
+   "search_names": [
+    "Bellerive Oval"
+   ],
+   "venue_id": "bellerive-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Bermuda National Stadium",
+     "Hamilton"
+    ],
+    [
+     "National Stadium",
+     "Hamilton"
+    ],
+    [
+     "National Stadium, Hamilton",
+     "Hamilton"
+    ]
+   ],
+   "city": "Hamilton",
+   "n_selected_matches": 8,
+   "name": "Bermuda National Stadium",
+   "places": [
+    "Hamilton"
+   ],
+   "search_names": [
+    "Bermuda National Stadium",
+    "National Stadium"
+   ],
+   "venue_id": "bermuda-national-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Bert Sutcliffe Oval",
+     "Lincoln"
+    ],
+    [
+     "Bert Sutcliffe Oval, Lincoln",
+     "Lincoln"
+    ]
+   ],
+   "city": "Lincoln",
+   "n_selected_matches": 1,
+   "name": "Bert Sutcliffe Oval",
+   "places": [
+    "Lincoln"
+   ],
+   "search_names": [
+    "Bert Sutcliffe Oval"
+   ],
+   "venue_id": "bert-sutcliffe-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium",
+     null
+    ],
+    [
+     "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium",
+     "Lucknow"
+    ],
+    [
+     "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",
+     "Lucknow"
+    ]
+   ],
+   "city": "Lucknow",
+   "n_selected_matches": 38,
+   "name": "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium",
+   "places": [
+    "Lucknow"
+   ],
+   "search_names": [
+    "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium"
+   ],
+   "venue_id": "bharat-ratna-shri-atal-bihari-vajpayee-ekana-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Boland Bank Park",
+     "Paarl"
+    ],
+    [
+     "Boland Bank Park, Paarl",
+     "Paarl"
+    ],
+    [
+     "Boland Park",
+     "Paarl"
+    ],
+    [
+     "Boland Park, Paarl",
+     "Paarl"
+    ]
+   ],
+   "city": "Paarl",
+   "n_selected_matches": 14,
+   "name": "Boland Park",
+   "places": [
+    "Paarl"
+   ],
+   "search_names": [
+    "Boland Bank Park",
+    "Boland Park"
+   ],
+   "venue_id": "boland-park"
+  },
+  {
+   "aliases": [
+    [
+     "Botkyrka Cricket Center, Stockholm",
+     "Stockholm"
+    ]
+   ],
+   "city": "Stockholm",
+   "n_selected_matches": 17,
+   "name": "Botkyrka Cricket Center",
+   "places": [
+    "Stockholm"
+   ],
+   "search_names": [
+    "Botkyrka Cricket Center"
+   ],
+   "venue_id": "botkyrka-cricket-center"
+  },
+  {
+   "aliases": [
+    [
+     "Botswana Cricket Association Oval 1",
+     "Gaborone"
+    ],
+    [
+     "Botswana Cricket Association Oval 1, Gaborone",
+     "Gaborone"
+    ]
+   ],
+   "city": "Gaborone",
+   "n_selected_matches": 16,
+   "name": "Botswana Cricket Association Oval 1",
+   "places": [
+    "Gaborone"
+   ],
+   "search_names": [
+    "Botswana Cricket Association Oval 1"
+   ],
+   "venue_id": "botswana-cricket-association-oval-1"
+  },
+  {
+   "aliases": [
+    [
+     "Botswana Cricket Association Oval 2",
+     "Gaborone"
+    ],
+    [
+     "Botswana Cricket Association Oval 2, Gaborone",
+     "Gaborone"
+    ]
+   ],
+   "city": "Gaborone",
+   "n_selected_matches": 10,
+   "name": "Botswana Cricket Association Oval 2",
+   "places": [
+    "Gaborone"
+   ],
+   "search_names": [
+    "Botswana Cricket Association Oval 2"
+   ],
+   "venue_id": "botswana-cricket-association-oval-2"
+  },
+  {
+   "aliases": [
+    [
+     "Brabourne Stadium",
+     "Mumbai"
+    ],
+    [
+     "Brabourne Stadium, Mumbai",
+     "Mumbai"
+    ]
+   ],
+   "city": "Mumbai",
+   "n_selected_matches": 35,
+   "name": "Brabourne Stadium",
+   "places": [
+    "Mumbai"
+   ],
+   "search_names": [
+    "Brabourne Stadium"
+   ],
+   "venue_id": "brabourne-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Bready",
+     "Derry"
+    ],
+    [
+     "Bready Cricket Club, Magheramason",
+     "Bready"
+    ],
+    [
+     "Bready Cricket Club, Magheramason",
+     "Londonderry"
+    ],
+    [
+     "Bready Cricket Club, Magheramason, Bready",
+     "Bready"
+    ]
+   ],
+   "city": "Bready",
+   "n_selected_matches": 9,
+   "name": "Bready Cricket Club",
+   "places": [
+    "Bready",
+    "Derry",
+    "Londonderry",
+    "Magheramason"
+   ],
+   "search_names": [
+    "Bready",
+    "Bready Cricket Club"
+   ],
+   "venue_id": "bready-cricket-club"
+  },
+  {
+   "aliases": [
+    [
+     "Brian Lara Stadium, Tarouba",
+     "Trinidad"
+    ],
+    [
+     "Brian Lara Stadium, Tarouba, Trinidad",
+     "Tarouba"
+    ]
+   ],
+   "city": "Tarouba",
+   "n_selected_matches": 15,
+   "name": "Brian Lara Stadium",
+   "places": [
+    "Tarouba",
+    "Trinidad"
+   ],
+   "search_names": [
+    "Brian Lara Stadium"
+   ],
+   "venue_id": "brian-lara-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Brisbane Cricket Ground",
+     "Brisbane"
+    ],
+    [
+     "Brisbane Cricket Ground, Woolloongabba",
+     "Brisbane"
+    ],
+    [
+     "Brisbane Cricket Ground, Woolloongabba, Brisbane",
+     "Brisbane"
+    ]
+   ],
+   "city": "Brisbane",
+   "n_selected_matches": 62,
+   "name": "Brisbane Cricket Ground",
+   "places": [
+    "Brisbane",
+    "Woolloongabba"
+   ],
+   "search_names": [
+    "Brisbane Cricket Ground"
+   ],
+   "venue_id": "brisbane-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Buffalo Park",
+     "East London"
+    ],
+    [
+     "Buffalo Park, East London",
+     "East London"
+    ],
+    [
+     "Buffalo Park, KuGumpo City",
+     "KuGompo City"
+    ]
+   ],
+   "city": "East London",
+   "n_selected_matches": 15,
+   "name": "Buffalo Park",
+   "places": [
+    "East London",
+    "KuGompo City",
+    "KuGumpo City"
+   ],
+   "search_names": [
+    "Buffalo Park"
+   ],
+   "venue_id": "buffalo-park"
+  },
+  {
+   "aliases": [
+    [
+     "Bulawayo Athletic Club",
+     null
+    ],
+    [
+     "Bulawayo Athletic Club",
+     "Bulawayo"
+    ]
+   ],
+   "city": "Bulawayo",
+   "n_selected_matches": 15,
+   "name": "Bulawayo Athletic Club",
+   "places": [
+    "Bulawayo"
+   ],
+   "search_names": [
+    "Bulawayo Athletic Club"
+   ],
+   "venue_id": "bulawayo-athletic-club"
+  },
+  {
+   "aliases": [
+    [
+     "Bundaberg Rum Stadium, Cairns",
+     "Cairns"
+    ],
+    [
+     "Cazaly's Stadium",
+     "Cairns"
+    ],
+    [
+     "Cazaly's Stadium, Cairns",
+     "Cairns"
+    ]
+   ],
+   "city": "Cairns",
+   "n_selected_matches": 7,
+   "name": "Bundaberg Rum Stadium",
+   "places": [
+    "Cairns"
+   ],
+   "search_names": [
+    "Bundaberg Rum Stadium",
+    "Cazaly's Stadium"
+   ],
+   "venue_id": "bundaberg-rum-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Cambusdoon New Ground",
+     "Ayr"
+    ],
+    [
+     "Cambusdoon New Ground, Ayr",
+     "Ayr"
+    ]
+   ],
+   "city": "Ayr",
+   "n_selected_matches": 3,
+   "name": "Cambusdoon New Ground",
+   "places": [
+    "Ayr"
+   ],
+   "search_names": [
+    "Cambusdoon New Ground"
+   ],
+   "venue_id": "cambusdoon-new-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Captain Roop Singh Stadium",
+     "Gwalior"
+    ],
+    [
+     "Captain Roop Singh Stadium, Gwalior",
+     "Gwalior"
+    ]
+   ],
+   "city": "Gwalior",
+   "n_selected_matches": 3,
+   "name": "Captain Roop Singh Stadium",
+   "places": [
+    "Gwalior"
+   ],
+   "search_names": [
+    "Captain Roop Singh Stadium"
+   ],
+   "venue_id": "captain-roop-singh-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Carisbrook",
+     "Dunedin"
+    ]
+   ],
+   "city": "Dunedin",
+   "n_selected_matches": 1,
+   "name": "Carisbrook",
+   "places": [
+    "Dunedin"
+   ],
+   "search_names": [
+    "Carisbrook"
+   ],
+   "venue_id": "carisbrook"
+  },
+  {
+   "aliases": [
+    [
+     "Carrara Oval",
+     null
+    ],
+    [
+     "Carrara Oval",
+     "Carrara"
+    ]
+   ],
+   "city": "Carrara",
+   "n_selected_matches": 3,
+   "name": "Carrara Oval",
+   "places": [
+    "Carrara"
+   ],
+   "search_names": [
+    "Carrara Oval"
+   ],
+   "venue_id": "carrara-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Castle Avenue",
+     "Dublin"
+    ],
+    [
+     "Castle Avenue, Dublin",
+     "Dublin"
+    ],
+    [
+     "Clontarf Cricket Club Ground",
+     "Dublin"
+    ],
+    [
+     "Clontarf Cricket Club Ground, Dublin",
+     "Dublin"
+    ]
+   ],
+   "city": "Dublin",
+   "n_selected_matches": 24,
+   "name": "Castle Avenue",
+   "places": [
+    "Dublin"
+   ],
+   "search_names": [
+    "Castle Avenue",
+    "Clontarf Cricket Club Ground"
+   ],
+   "venue_id": "castle-avenue"
+  },
+  {
+   "aliases": [
+    [
+     "Central Broward Regional Park Stadium Turf Ground",
+     "Lauderhill"
+    ],
+    [
+     "Central Broward Regional Park Stadium Turf Ground, Lauderhill",
+     "Lauderhill"
+    ]
+   ],
+   "city": "Lauderhill",
+   "n_selected_matches": 31,
+   "name": "Central Broward Regional Park Stadium Turf Ground",
+   "places": [
+    "Lauderhill"
+   ],
+   "search_names": [
+    "Central Broward Regional Park Stadium Turf Ground"
+   ],
+   "venue_id": "central-broward-regional-park-stadium-turf-ground"
+  },
+  {
+   "aliases": [
+    [
+     "City Oval",
+     "Pietermaritzburg"
+    ],
+    [
+     "City Oval, Pietermaritzburg",
+     "Pietermaritzburg"
+    ]
+   ],
+   "city": "Pietermaritzburg",
+   "n_selected_matches": 1,
+   "name": "City Oval",
+   "places": [
+    "Pietermaritzburg"
+   ],
+   "search_names": [
+    "City Oval"
+   ],
+   "venue_id": "city-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Civil Service Cricket Club, Stormont",
+     "Belfast"
+    ],
+    [
+     "Civil Service Cricket Club, Stormont, Belfast",
+     "Belfast"
+    ]
+   ],
+   "city": "Belfast",
+   "n_selected_matches": 34,
+   "name": "Civil Service Cricket Club",
+   "places": [
+    "Belfast",
+    "Stormont"
+   ],
+   "search_names": [
+    "Civil Service Cricket Club"
+   ],
+   "venue_id": "civil-service-cricket-club"
+  },
+  {
+   "aliases": [
+    [
+     "Clayton Panama, Panama City",
+     "Panama City"
+    ]
+   ],
+   "city": "Panama City",
+   "n_selected_matches": 7,
+   "name": "Clayton Panama",
+   "places": [
+    "Panama City"
+   ],
+   "search_names": [
+    "Clayton Panama"
+   ],
+   "venue_id": "clayton-panama"
+  },
+  {
+   "aliases": [
+    [
+     "Cobham Oval (New)",
+     "Whangarei"
+    ],
+    [
+     "Cobham Oval (New), Whangarei",
+     "Whangarei"
+    ]
+   ],
+   "city": "Whangarei",
+   "n_selected_matches": 2,
+   "name": "Cobham Oval (New)",
+   "places": [
+    "Whangarei"
+   ],
+   "search_names": [
+    "Cobham Oval (New)"
+   ],
+   "venue_id": "cobham-oval-new"
+  },
+  {
+   "aliases": [
+    [
+     "College Field",
+     "St Peter Port"
+    ],
+    [
+     "College Field, St Peter Port",
+     "St Peter Port"
+    ]
+   ],
+   "city": "St Peter Port",
+   "n_selected_matches": 6,
+   "name": "College Field",
+   "places": [
+    "St Peter Port"
+   ],
+   "search_names": [
+    "College Field"
+   ],
+   "venue_id": "college-field"
+  },
+  {
+   "aliases": [
+    [
+     "Coolidge Cricket Ground",
+     "Antigua"
+    ],
+    [
+     "Coolidge Cricket Ground, Antigua",
+     "Coolidge"
+    ]
+   ],
+   "city": "Coolidge",
+   "n_selected_matches": 11,
+   "name": "Coolidge Cricket Ground",
+   "places": [
+    "Antigua",
+    "Coolidge"
+   ],
+   "search_names": [
+    "Coolidge Cricket Ground"
+   ],
+   "venue_id": "coolidge-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "County Ground",
+     "Bristol"
+    ],
+    [
+     "County Ground, Bristol",
+     "Bristol"
+    ],
+    [
+     "The Royal & Sun Alliance County Ground, Bristol",
+     "Bristol"
+    ]
+   ],
+   "city": "Bristol",
+   "n_selected_matches": 20,
+   "name": "County Ground",
+   "places": [
+    "Bristol"
+   ],
+   "search_names": [
+    "County Ground",
+    "The Royal & Sun Alliance County Ground"
+   ],
+   "venue_id": "county-ground-bristol"
+  },
+  {
+   "aliases": [
+    [
+     "County Ground",
+     "Chelmsford"
+    ],
+    [
+     "County Ground, Chelmsford",
+     null
+    ],
+    [
+     "County Ground, Chelmsford",
+     "Chelmsford"
+    ]
+   ],
+   "city": "Chelmsford",
+   "n_selected_matches": 3,
+   "name": "County Ground",
+   "places": [
+    "Chelmsford"
+   ],
+   "search_names": [
+    "County Ground"
+   ],
+   "venue_id": "county-ground-chelmsford"
+  },
+  {
+   "aliases": [
+    [
+     "County Ground",
+     "Taunton"
+    ],
+    [
+     "County Ground, Taunton",
+     "Taunton"
+    ],
+    [
+     "The Cooper Associates County Ground",
+     "Taunton"
+    ],
+    [
+     "The Cooper Associates County Ground, Taunton",
+     "Taunton"
+    ],
+    [
+     "The County Ground, Taunton",
+     "Taunton"
+    ]
+   ],
+   "city": "Taunton",
+   "n_selected_matches": 3,
+   "name": "County Ground",
+   "places": [
+    "Taunton"
+   ],
+   "search_names": [
+    "County Ground",
+    "The Cooper Associates County Ground",
+    "The County Ground"
+   ],
+   "venue_id": "county-ground-taunton"
+  },
+  {
+   "aliases": [
+    [
+     "Beausejour Stadium, Gros Islet",
+     "St Lucia"
+    ],
+    [
+     "Daren Sammy National Cricket Stadium",
+     "Gros Islet"
+    ],
+    [
+     "Daren Sammy National Cricket Stadium, Gros Islet",
+     "St Lucia"
+    ],
+    [
+     "Daren Sammy National Cricket Stadium, Gros Islet, St Lucia",
+     "Gros Islet"
+    ],
+    [
+     "Daren Sammy National Cricket Stadium, St Lucia",
+     "Gros Islet"
+    ],
+    [
+     "Darren Sammy National Cricket Stadium, Gros Islet",
+     "St Lucia"
+    ],
+    [
+     "Darren Sammy National Cricket Stadium, St Lucia",
+     "Gros Islet"
+    ]
+   ],
+   "city": "St Lucia",
+   "n_selected_matches": 54,
+   "name": "Daren Sammy National Cricket Stadium",
+   "places": [
+    "Gros Islet",
+    "St Lucia"
+   ],
+   "search_names": [
+    "Beausejour Stadium",
+    "Daren Sammy National Cricket Stadium",
+    "Darren Sammy National Cricket Stadium"
+   ],
+   "venue_id": "daren-sammy-national-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Davies Park, Queenstown",
+     "Queenstown"
+    ]
+   ],
+   "city": "Queenstown",
+   "n_selected_matches": 1,
+   "name": "Davies Park",
+   "places": [
+    "Queenstown"
+   ],
+   "search_names": [
+    "Davies Park"
+   ],
+   "venue_id": "davies-park"
+  },
+  {
+   "aliases": [
+    [
+     "De Beers Diamond Oval",
+     "Kimberley"
+    ],
+    [
+     "De Beers Diamond Oval, Kimberley",
+     "Kimberley"
+    ],
+    [
+     "Diamond Oval",
+     "Kimberley"
+    ],
+    [
+     "Diamond Oval, Kimberley",
+     "Kimberley"
+    ]
+   ],
+   "city": "Kimberley",
+   "n_selected_matches": 11,
+   "name": "De Beers Diamond Oval",
+   "places": [
+    "Kimberley"
+   ],
+   "search_names": [
+    "De Beers Diamond Oval",
+    "Diamond Oval"
+   ],
+   "venue_id": "de-beers-diamond-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Desert Springs Cricket Ground",
+     "Almeria"
+    ],
+    [
+     "Desert Springs Cricket Ground, Almeria",
+     "Almeria"
+    ]
+   ],
+   "city": "Almeria",
+   "n_selected_matches": 29,
+   "name": "Desert Springs Cricket Ground",
+   "places": [
+    "Almeria"
+   ],
+   "search_names": [
+    "Desert Springs Cricket Ground"
+   ],
+   "venue_id": "desert-springs-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Docklands Stadium",
+     "Melbourne"
+    ],
+    [
+     "Docklands Stadium, Melbourne",
+     "Melbourne"
+    ]
+   ],
+   "city": "Melbourne",
+   "n_selected_matches": 5,
+   "name": "Docklands Stadium",
+   "places": [
+    "Melbourne"
+   ],
+   "search_names": [
+    "Docklands Stadium"
+   ],
+   "venue_id": "docklands-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Dr DY Patil Sports Academy",
+     "Mumbai"
+    ],
+    [
+     "Dr DY Patil Sports Academy, Mumbai",
+     "Mumbai"
+    ],
+    [
+     "Dr DY Patil Sports Academy, Mumbai",
+     "Navi Mumbai"
+    ],
+    [
+     "Dr DY Patil Sports Academy, Navi Mumbai",
+     "Navi Mumbai"
+    ]
+   ],
+   "city": "Navi Mumbai",
+   "n_selected_matches": 37,
+   "name": "Dr DY Patil Sports Academy",
+   "places": [
+    "Mumbai",
+    "Navi Mumbai"
+   ],
+   "search_names": [
+    "Dr DY Patil Sports Academy"
+   ],
+   "venue_id": "dr-dy-patil-sports-academy"
+  },
+  {
+   "aliases": [
+    [
+     "Andhra Cricket Association-Visakhapatnam District Cricket Association Stadium",
+     "Visakhapatnam"
+    ],
+    [
+     "Dr. Y.S. Rajasekhara Reddy ACA VDCA Cricket Stadium",
+     null
+    ],
+    [
+     "Dr. Y.S. Rajasekhara Reddy ACA-VDCA Cricket Stadium",
+     "Visakhapatnam"
+    ],
+    [
+     "Dr. Y.S. Rajasekhara Reddy ACA-VDCA Cricket Stadium, Visakhapatnam",
+     "Visakhapatnam"
+    ]
+   ],
+   "city": "Visakhapatnam",
+   "n_selected_matches": 36,
+   "name": "Dr. Y.S. Rajasekhara Reddy ACA-VDCA Cricket Stadium",
+   "places": [
+    "Visakhapatnam"
+   ],
+   "search_names": [
+    "Andhra Cricket Association-Visakhapatnam District Cricket Association Stadium",
+    "Dr. Y.S. Rajasekhara Reddy ACA VDCA Cricket Stadium",
+    "Dr. Y.S. Rajasekhara Reddy ACA-VDCA Cricket Stadium"
+   ],
+   "venue_id": "dr-y-s-rajasekhara-reddy-aca-vdca-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Dreux Sport Cricket Club",
+     "Dreux"
+    ]
+   ],
+   "city": "Dreux",
+   "n_selected_matches": 7,
+   "name": "Dreux Sport Cricket Club",
+   "places": [
+    "Dreux"
+   ],
+   "search_names": [
+    "Dreux Sport Cricket Club"
+   ],
+   "venue_id": "dreux-sport-cricket-club"
+  },
+  {
+   "aliases": [
+    [
+     "Dubai International Cricket Stadium",
+     null
+    ],
+    [
+     "Dubai International Cricket Stadium",
+     "Dubai"
+    ],
+    [
+     "Dubai Sports City Cricket Stadium",
+     null
+    ]
+   ],
+   "city": "Dubai",
+   "n_selected_matches": 214,
+   "name": "Dubai International Cricket Stadium",
+   "places": [
+    "Dubai"
+   ],
+   "search_names": [
+    "Dubai International Cricket Stadium",
+    "Dubai Sports City Cricket Stadium"
+   ],
+   "venue_id": "dubai-international-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Eden Gardens",
+     null
+    ],
+    [
+     "Eden Gardens",
+     "Kolkata"
+    ],
+    [
+     "Eden Gardens, Kolkata",
+     "Kolkata"
+    ]
+   ],
+   "city": "Kolkata",
+   "n_selected_matches": 151,
+   "name": "Eden Gardens",
+   "places": [
+    "Kolkata"
+   ],
+   "search_names": [
+    "Eden Gardens"
+   ],
+   "venue_id": "eden-gardens"
+  },
+  {
+   "aliases": [
+    [
+     "Eden Park",
+     null
+    ],
+    [
+     "Eden Park",
+     "Auckland"
+    ],
+    [
+     "Eden Park, Auckland",
+     "Auckland"
+    ]
+   ],
+   "city": "Auckland",
+   "n_selected_matches": 67,
+   "name": "Eden Park",
+   "places": [
+    "Auckland"
+   ],
+   "search_names": [
+    "Eden Park"
+   ],
+   "venue_id": "eden-park"
+  },
+  {
+   "aliases": [
+    [
+     "Edgbaston",
+     "Birmingham"
+    ],
+    [
+     "Edgbaston, Birmingham",
+     "Birmingham"
+    ]
+   ],
+   "city": "Birmingham",
+   "n_selected_matches": 62,
+   "name": "Edgbaston",
+   "places": [
+    "Birmingham"
+   ],
+   "search_names": [
+    "Edgbaston"
+   ],
+   "venue_id": "edgbaston"
+  },
+  {
+   "aliases": [
+    [
+     "Entebbe Cricket Oval",
+     null
+    ],
+    [
+     "Entebbe Cricket Oval",
+     "Entebbe"
+    ]
+   ],
+   "city": "Entebbe",
+   "n_selected_matches": 19,
+   "name": "Entebbe Cricket Oval",
+   "places": [
+    "Entebbe"
+   ],
+   "search_names": [
+    "Entebbe Cricket Oval"
+   ],
+   "venue_id": "entebbe-cricket-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Estonian National Cricket and Rugby Field",
+     "Tallinn"
+    ]
+   ],
+   "city": "Tallinn",
+   "n_selected_matches": 5,
+   "name": "Estonian National Cricket and Rugby Field",
+   "places": [
+    "Tallinn"
+   ],
+   "search_names": [
+    "Estonian National Cricket and Rugby Field"
+   ],
+   "venue_id": "estonian-national-cricket-and-rugby-field"
+  },
+  {
+   "aliases": [
+    [
+     "Europa Sports Complex",
+     "Gibraltar"
+    ]
+   ],
+   "city": "Gibraltar",
+   "n_selected_matches": 17,
+   "name": "Europa Sports Complex",
+   "places": [
+    "Gibraltar"
+   ],
+   "search_names": [
+    "Europa Sports Complex"
+   ],
+   "venue_id": "europa-sports-complex"
+  },
+  {
+   "aliases": [
+    [
+     "Faleata Oval No 2",
+     "Apia"
+    ],
+    [
+     "Faleata Oval No 2, Apia",
+     "Apia"
+    ]
+   ],
+   "city": "Apia",
+   "n_selected_matches": 12,
+   "name": "Faleata Oval No 2",
+   "places": [
+    "Apia"
+   ],
+   "search_names": [
+    "Faleata Oval No 2"
+   ],
+   "venue_id": "faleata-oval-no-2"
+  },
+  {
+   "aliases": [
+    [
+     "Forthill",
+     "Dundee"
+    ],
+    [
+     "Forthill, Dundee",
+     "Dundee"
+    ]
+   ],
+   "city": "Dundee",
+   "n_selected_matches": 16,
+   "name": "Forthill",
+   "places": [
+    "Dundee"
+   ],
+   "search_names": [
+    "Forthill"
+   ],
+   "venue_id": "forthill"
+  },
+  {
+   "aliases": [
+    [
+     "Gaddafi Stadium",
+     "Lahore"
+    ],
+    [
+     "Gaddafi Stadium, Lahore",
+     "Lahore"
+    ]
+   ],
+   "city": "Lahore",
+   "n_selected_matches": 69,
+   "name": "Gaddafi Stadium",
+   "places": [
+    "Lahore"
+   ],
+   "search_names": [
+    "Gaddafi Stadium"
+   ],
+   "venue_id": "gaddafi-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Gahanga B Ground, Rwanda",
+     "Kigali City"
+    ]
+   ],
+   "city": "Kigali City",
+   "n_selected_matches": 12,
+   "name": "Gahanga B Ground",
+   "places": [
+    "Kigali City",
+    "Rwanda"
+   ],
+   "search_names": [
+    "Gahanga B Ground"
+   ],
+   "venue_id": "gahanga-b-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Gahanga International Cricket Stadium",
+     "Kigali City"
+    ],
+    [
+     "Gahanga International Cricket Stadium, Rwanda",
+     "Kigali City"
+    ],
+    [
+     "Gahanga International Cricket Stadium. Rwanda",
+     null
+    ],
+    [
+     "Gahanga International Cricket Stadium. Rwanda",
+     "Kigali City"
+    ]
+   ],
+   "city": "Kigali City",
+   "n_selected_matches": 124,
+   "name": "Gahanga International Cricket Stadium",
+   "places": [
+    "Kigali City",
+    "Rwanda"
+   ],
+   "search_names": [
+    "Gahanga International Cricket Stadium",
+    "Gahanga International Cricket Stadium. Rwanda"
+   ],
+   "venue_id": "gahanga-international-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Galle International Stadium",
+     null
+    ],
+    [
+     "Galle International Stadium",
+     "Galle"
+    ]
+   ],
+   "city": "Galle",
+   "n_selected_matches": 42,
+   "name": "Galle International Stadium",
+   "places": [
+    "Galle"
+   ],
+   "search_names": [
+    "Galle International Stadium"
+   ],
+   "venue_id": "galle-international-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "GB Oval, Szodliget",
+     "Szodliget"
+    ]
+   ],
+   "city": "Szodliget",
+   "n_selected_matches": 16,
+   "name": "GB Oval",
+   "places": [
+    "Szodliget"
+   ],
+   "search_names": [
+    "GB Oval"
+   ],
+   "venue_id": "gb-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Gelephu International Cricket Ground",
+     "Gelephu"
+    ]
+   ],
+   "city": "Gelephu",
+   "n_selected_matches": 18,
+   "name": "Gelephu International Cricket Ground",
+   "places": [
+    "Gelephu"
+   ],
+   "search_names": [
+    "Gelephu International Cricket Ground"
+   ],
+   "venue_id": "gelephu-international-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Goldenacre",
+     "Edinburgh"
+    ],
+    [
+     "Goldenacre, Edinburgh",
+     "Edinburgh"
+    ]
+   ],
+   "city": "Edinburgh",
+   "n_selected_matches": 8,
+   "name": "Goldenacre",
+   "places": [
+    "Edinburgh"
+   ],
+   "search_names": [
+    "Goldenacre"
+   ],
+   "venue_id": "goldenacre"
+  },
+  {
+   "aliases": [
+    [
+     "Grainville",
+     "St Saviour"
+    ],
+    [
+     "Grainville, St Saviour",
+     "St Saviour"
+    ],
+    [
+     "Grainville, St Saviour, Jersey",
+     "St Saviour"
+    ]
+   ],
+   "city": "St Saviour",
+   "n_selected_matches": 3,
+   "name": "Grainville",
+   "places": [
+    "Jersey",
+    "St Saviour"
+   ],
+   "search_names": [
+    "Grainville"
+   ],
+   "venue_id": "grainville"
+  },
+  {
+   "aliases": [
+    [
+     "Grand Prairie Stadium",
+     "Dallas"
+    ],
+    [
+     "Grand Prairie Stadium",
+     "Grand Prairie"
+    ],
+    [
+     "Grand Prairie Stadium, Dallas",
+     "Dallas"
+    ]
+   ],
+   "city": "Dallas",
+   "n_selected_matches": 18,
+   "name": "Grand Prairie Stadium",
+   "places": [
+    "Dallas",
+    "Grand Prairie"
+   ],
+   "search_names": [
+    "Grand Prairie Stadium"
+   ],
+   "venue_id": "grand-prairie-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Grange Cricket Club Ground, Raeburn Place",
+     "Edinburgh"
+    ],
+    [
+     "Grange Cricket Club Ground, Raeburn Place, Edinburgh",
+     "Edinburgh"
+    ],
+    [
+     "Grange Cricket Club, Raeburn Place",
+     "Edinburgh"
+    ]
+   ],
+   "city": "Edinburgh",
+   "n_selected_matches": 33,
+   "name": "Grange Cricket Club Ground",
+   "places": [
+    "Edinburgh",
+    "Raeburn Place"
+   ],
+   "search_names": [
+    "Grange Cricket Club",
+    "Grange Cricket Club Ground"
+   ],
+   "venue_id": "grange-cricket-club-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Great Barrier Reef Arena, Mackay",
+     "Mackay"
+    ]
+   ],
+   "city": "Mackay",
+   "n_selected_matches": 3,
+   "name": "Great Barrier Reef Arena",
+   "places": [
+    "Mackay"
+   ],
+   "search_names": [
+    "Great Barrier Reef Arena"
+   ],
+   "venue_id": "great-barrier-reef-arena"
+  },
+  {
+   "aliases": [
+    [
+     "Green Park",
+     "Kanpur"
+    ],
+    [
+     "Green Park, Kanpur",
+     "Kanpur"
+    ]
+   ],
+   "city": "Kanpur",
+   "n_selected_matches": 17,
+   "name": "Green Park",
+   "places": [
+    "Kanpur"
+   ],
+   "search_names": [
+    "Green Park"
+   ],
+   "venue_id": "green-park"
+  },
+  {
+   "aliases": [
+    [
+     "Greenfield International Stadium",
+     "Thiruvananthapuram"
+    ],
+    [
+     "Greenfield International Stadium, Thiruvananthapuram",
+     "Thiruvananthapuram"
+    ]
+   ],
+   "city": "Thiruvananthapuram",
+   "n_selected_matches": 8,
+   "name": "Greenfield International Stadium",
+   "places": [
+    "Thiruvananthapuram"
+   ],
+   "search_names": [
+    "Greenfield International Stadium"
+   ],
+   "venue_id": "greenfield-international-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Guernsey Rovers Athletic Club Ground, Port Soif",
+     "Port  Soif"
+    ]
+   ],
+   "city": "Port  Soif",
+   "n_selected_matches": 13,
+   "name": "Guernsey Rovers Athletic Club Ground",
+   "places": [
+    "Port  Soif",
+    "Port Soif"
+   ],
+   "search_names": [
+    "Guernsey Rovers Athletic Club Ground"
+   ],
+   "venue_id": "guernsey-rovers-athletic-club-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Gymkhana Club Ground, Dar-es-Salaam",
+     "Dar-es-Salaam"
+    ]
+   ],
+   "city": "Dar-es-Salaam",
+   "n_selected_matches": 7,
+   "name": "Gymkhana Club Ground",
+   "places": [
+    "Dar-es-Salaam"
+   ],
+   "search_names": [
+    "Gymkhana Club Ground"
+   ],
+   "venue_id": "gymkhana-club-ground-dar-es-salaam"
+  },
+  {
+   "aliases": [
+    [
+     "Gymkhana Club Ground",
+     "Nairobi"
+    ],
+    [
+     "Gymkhana Club Ground, Nairobi",
+     "Nairobi"
+    ]
+   ],
+   "city": "Nairobi",
+   "n_selected_matches": 45,
+   "name": "Gymkhana Club Ground",
+   "places": [
+    "Nairobi"
+   ],
+   "search_names": [
+    "Gymkhana Club Ground"
+   ],
+   "venue_id": "gymkhana-club-ground-nairobi"
+  },
+  {
+   "aliases": [
+    [
+     "Hagley Oval",
+     null
+    ],
+    [
+     "Hagley Oval",
+     "Christchurch"
+    ],
+    [
+     "Hagley Oval, Christchurch",
+     "Christchurch"
+    ]
+   ],
+   "city": "Christchurch",
+   "n_selected_matches": 47,
+   "name": "Hagley Oval",
+   "places": [
+    "Christchurch"
+   ],
+   "search_names": [
+    "Hagley Oval"
+   ],
+   "venue_id": "hagley-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Happy Valley Ground",
+     "Episkopi"
+    ]
+   ],
+   "city": "Episkopi",
+   "n_selected_matches": 30,
+   "name": "Happy Valley Ground",
+   "places": [
+    "Episkopi"
+   ],
+   "search_names": [
+    "Happy Valley Ground"
+   ],
+   "venue_id": "happy-valley-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Happy Valley Ground 2",
+     "Episkopi"
+    ]
+   ],
+   "city": "Episkopi",
+   "n_selected_matches": 21,
+   "name": "Happy Valley Ground 2",
+   "places": [
+    "Episkopi"
+   ],
+   "search_names": [
+    "Happy Valley Ground 2"
+   ],
+   "venue_id": "happy-valley-ground-2"
+  },
+  {
+   "aliases": [
+    [
+     "Harare Sports Club",
+     null
+    ],
+    [
+     "Harare Sports Club",
+     "Harare"
+    ]
+   ],
+   "city": "Harare",
+   "n_selected_matches": 200,
+   "name": "Harare Sports Club",
+   "places": [
+    "Harare"
+   ],
+   "search_names": [
+    "Harare Sports Club"
+   ],
+   "venue_id": "harare-sports-club"
+  },
+  {
+   "aliases": [
+    [
+     "Hazelaarweg",
+     "Rotterdam"
+    ],
+    [
+     "Hazelaarweg, Rotterdam",
+     "Rotterdam"
+    ]
+   ],
+   "city": "Rotterdam",
+   "n_selected_matches": 13,
+   "name": "Hazelaarweg",
+   "places": [
+    "Rotterdam"
+   ],
+   "search_names": [
+    "Hazelaarweg"
+   ],
+   "venue_id": "hazelaarweg"
+  },
+  {
+   "aliases": [
+    [
+     "Headingley",
+     "Leeds"
+    ],
+    [
+     "Headingley, Leeds",
+     "Leeds"
+    ]
+   ],
+   "city": "Leeds",
+   "n_selected_matches": 40,
+   "name": "Headingley",
+   "places": [
+    "Leeds"
+   ],
+   "search_names": [
+    "Headingley"
+   ],
+   "venue_id": "headingley"
+  },
+  {
+   "aliases": [
+    [
+     "Himachal Pradesh Cricket Association Stadium",
+     "Dharamsala"
+    ],
+    [
+     "Himachal Pradesh Cricket Association Stadium",
+     "Dharmasala"
+    ],
+    [
+     "Himachal Pradesh Cricket Association Stadium, Dharamsala",
+     "Dharamsala"
+    ]
+   ],
+   "city": "Dharamsala",
+   "n_selected_matches": 39,
+   "name": "Himachal Pradesh Cricket Association Stadium",
+   "places": [
+    "Dharamsala",
+    "Dharmasala"
+   ],
+   "search_names": [
+    "Himachal Pradesh Cricket Association Stadium"
+   ],
+   "venue_id": "himachal-pradesh-cricket-association-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Holkar Cricket Stadium",
+     "Indore"
+    ],
+    [
+     "Holkar Cricket Stadium, Indore",
+     "Indore"
+    ]
+   ],
+   "city": "Indore",
+   "n_selected_matches": 22,
+   "name": "Holkar Cricket Stadium",
+   "places": [
+    "Indore"
+   ],
+   "search_names": [
+    "Holkar Cricket Stadium"
+   ],
+   "venue_id": "holkar-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Hurlingham Club Ground, Buenos Aires",
+     "Buenos Aires"
+    ]
+   ],
+   "city": "Buenos Aires",
+   "n_selected_matches": 15,
+   "name": "Hurlingham Club Ground",
+   "places": [
+    "Buenos Aires"
+   ],
+   "search_names": [
+    "Hurlingham Club Ground"
+   ],
+   "venue_id": "hurlingham-club-ground"
+  },
+  {
+   "aliases": [
+    [
+     "ICC Academy",
+     "Dubai"
+    ],
+    [
+     "ICC Academy, Dubai",
+     "Dubai"
+    ],
+    [
+     "ICC Global Cricket Academy",
+     "Dubai"
+    ]
+   ],
+   "city": "Dubai",
+   "n_selected_matches": 67,
+   "name": "ICC Academy",
+   "places": [
+    "Dubai"
+   ],
+   "search_names": [
+    "ICC Academy",
+    "ICC Global Cricket Academy"
+   ],
+   "venue_id": "icc-academy"
+  },
+  {
+   "aliases": [
+    [
+     "ICC Academy Ground No 2",
+     "Dubai"
+    ],
+    [
+     "ICC Academy Ground No 2, Dubai",
+     "Dubai"
+    ]
+   ],
+   "city": "Dubai",
+   "n_selected_matches": 5,
+   "name": "ICC Academy Ground No 2",
+   "places": [
+    "Dubai"
+   ],
+   "search_names": [
+    "ICC Academy Ground No 2"
+   ],
+   "venue_id": "icc-academy-ground-no-2"
+  },
+  {
+   "aliases": [
+    [
+     "Independence Park, Port Vila",
+     "Port Vila"
+    ]
+   ],
+   "city": "Port Vila",
+   "n_selected_matches": 10,
+   "name": "Independence Park",
+   "places": [
+    "Port Vila"
+   ],
+   "search_names": [
+    "Independence Park"
+   ],
+   "venue_id": "independence-park"
+  },
+  {
+   "aliases": [
+    [
+     "Indian Association Ground",
+     "Singapore"
+    ],
+    [
+     "Indian Association Ground, Singapore",
+     "Singapore"
+    ]
+   ],
+   "city": "Singapore",
+   "n_selected_matches": 19,
+   "name": "Indian Association Ground",
+   "places": [
+    "Singapore"
+   ],
+   "search_names": [
+    "Indian Association Ground"
+   ],
+   "venue_id": "indian-association-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Integrated Polytechnic Regional Centre",
+     "Kigali City"
+    ]
+   ],
+   "city": "Kigali City",
+   "n_selected_matches": 34,
+   "name": "Integrated Polytechnic Regional Centre",
+   "places": [
+    "Kigali City"
+   ],
+   "search_names": [
+    "Integrated Polytechnic Regional Centre"
+   ],
+   "venue_id": "integrated-polytechnic-regional-centre"
+  },
+  {
+   "aliases": [
+    [
+     "Iqbal Stadium",
+     "Faisalabad"
+    ],
+    [
+     "Iqbal Stadium, Faisalabad",
+     "Faisalabad"
+    ]
+   ],
+   "city": "Faisalabad",
+   "n_selected_matches": 11,
+   "name": "Iqbal Stadium",
+   "places": [
+    "Faisalabad"
+   ],
+   "search_names": [
+    "Iqbal Stadium"
+   ],
+   "venue_id": "iqbal-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Ishoj Cricket Club, Vejledalen",
+     "Ishoj"
+    ]
+   ],
+   "city": "Ishoj",
+   "n_selected_matches": 5,
+   "name": "Ishoj Cricket Club",
+   "places": [
+    "Ishoj",
+    "Vejledalen"
+   ],
+   "search_names": [
+    "Ishoj Cricket Club"
+   ],
+   "venue_id": "ishoj-cricket-club"
+  },
+  {
+   "aliases": [
+    [
+     "AMI Stadium",
+     "Christchurch"
+    ],
+    [
+     "Jade Stadium",
+     "Christchurch"
+    ],
+    [
+     "Jade Stadium, Christchurch",
+     "Christchurch"
+    ]
+   ],
+   "city": "Christchurch",
+   "n_selected_matches": 14,
+   "name": "Jade Stadium",
+   "places": [
+    "Christchurch"
+   ],
+   "search_names": [
+    "AMI Stadium",
+    "Jade Stadium"
+   ],
+   "venue_id": "jade-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Jaffery Sports Club Ground",
+     "Nairobi"
+    ]
+   ],
+   "city": "Nairobi",
+   "n_selected_matches": 1,
+   "name": "Jaffery Sports Club Ground",
+   "places": [
+    "Nairobi"
+   ],
+   "search_names": [
+    "Jaffery Sports Club Ground"
+   ],
+   "venue_id": "jaffery-sports-club-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Jimmy Powell Oval, Cayman Islands",
+     "George Town"
+    ]
+   ],
+   "city": "George Town",
+   "n_selected_matches": 30,
+   "name": "Jimmy Powell Oval",
+   "places": [
+    "Cayman Islands",
+    "George Town"
+   ],
+   "search_names": [
+    "Jimmy Powell Oval"
+   ],
+   "venue_id": "jimmy-powell-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Jinja Cricket Ground",
+     "Jinja"
+    ]
+   ],
+   "city": "Jinja",
+   "n_selected_matches": 2,
+   "name": "Jinja Cricket Ground",
+   "places": [
+    "Jinja"
+   ],
+   "search_names": [
+    "Jinja Cricket Ground"
+   ],
+   "venue_id": "jinja-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "JSCA International Stadium Complex",
+     null
+    ],
+    [
+     "JSCA International Stadium Complex",
+     "Ranchi"
+    ],
+    [
+     "JSCA International Stadium Complex, Ranchi",
+     "Ranchi"
+    ]
+   ],
+   "city": "Ranchi",
+   "n_selected_matches": 22,
+   "name": "JSCA International Stadium Complex",
+   "places": [
+    "Ranchi"
+   ],
+   "search_names": [
+    "JSCA International Stadium Complex"
+   ],
+   "venue_id": "jsca-international-stadium-complex"
+  },
+  {
+   "aliases": [
+    [
+     "Keenan Stadium",
+     "Jamshedpur"
+    ]
+   ],
+   "city": "Jamshedpur",
+   "n_selected_matches": 1,
+   "name": "Keenan Stadium",
+   "places": [
+    "Jamshedpur"
+   ],
+   "search_names": [
+    "Keenan Stadium"
+   ],
+   "venue_id": "keenan-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Kennington Oval",
+     "London"
+    ],
+    [
+     "Kennington Oval, London",
+     "London"
+    ],
+    [
+     "The Oval",
+     "London"
+    ]
+   ],
+   "city": "London",
+   "n_selected_matches": 90,
+   "name": "Kennington Oval",
+   "places": [
+    "London"
+   ],
+   "search_names": [
+    "Kennington Oval",
+    "The Oval"
+   ],
+   "venue_id": "kennington-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Kensington Oval",
+     "Bridgetown"
+    ],
+    [
+     "Kensington Oval, Barbados",
+     "Bridgetown"
+    ],
+    [
+     "Kensington Oval, Bridgetown",
+     "Barbados"
+    ],
+    [
+     "Kensington Oval, Bridgetown, Barbados",
+     "Bridgetown"
+    ]
+   ],
+   "city": "Bridgetown",
+   "n_selected_matches": 80,
+   "name": "Kensington Oval",
+   "places": [
+    "Barbados",
+    "Bridgetown"
+   ],
+   "search_names": [
+    "Kensington Oval"
+   ],
+   "venue_id": "kensington-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Kerava National Cricket Ground",
+     "Kerava"
+    ]
+   ],
+   "city": "Kerava",
+   "n_selected_matches": 44,
+   "name": "Kerava National Cricket Ground",
+   "places": [
+    "Kerava"
+   ],
+   "search_names": [
+    "Kerava National Cricket Ground"
+   ],
+   "venue_id": "kerava-national-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "King George V Sports Ground",
+     "Castel"
+    ],
+    [
+     "King George V Sports Ground, Castel",
+     "Castel"
+    ]
+   ],
+   "city": "Castel",
+   "n_selected_matches": 28,
+   "name": "King George V Sports Ground",
+   "places": [
+    "Castel"
+   ],
+   "search_names": [
+    "King George V Sports Ground"
+   ],
+   "venue_id": "king-george-v-sports-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Kingsmead",
+     "Durban"
+    ],
+    [
+     "Kingsmead, Durban",
+     "Durban"
+    ]
+   ],
+   "city": "Durban",
+   "n_selected_matches": 79,
+   "name": "Kingsmead",
+   "places": [
+    "Durban"
+   ],
+   "search_names": [
+    "Kingsmead"
+   ],
+   "venue_id": "kingsmead"
+  },
+  {
+   "aliases": [
+    [
+     "Kinrara Academy Oval",
+     "Kuala Lumpur"
+    ],
+    [
+     "Kinrara Academy Oval, Kuala Lumpur",
+     "Kuala Lumpur"
+    ]
+   ],
+   "city": "Kuala Lumpur",
+   "n_selected_matches": 25,
+   "name": "Kinrara Academy Oval",
+   "places": [
+    "Kuala Lumpur"
+   ],
+   "search_names": [
+    "Kinrara Academy Oval"
+   ],
+   "venue_id": "kinrara-academy-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Koge Cricket Club",
+     "Koge"
+    ]
+   ],
+   "city": "Koge",
+   "n_selected_matches": 12,
+   "name": "Koge Cricket Club",
+   "places": [
+    "Koge"
+   ],
+   "search_names": [
+    "Koge Cricket Club"
+   ],
+   "venue_id": "koge-cricket-club"
+  },
+  {
+   "aliases": [
+    [
+     "Korogi Sports Park",
+     "Nisshin"
+    ],
+    [
+     "Korogi Sports Park, Nisshin",
+     "Nisshin"
+    ]
+   ],
+   "city": "Nisshin",
+   "n_selected_matches": 13,
+   "name": "Korogi Sports Park",
+   "places": [
+    "Nisshin"
+   ],
+   "search_names": [
+    "Korogi Sports Park"
+   ],
+   "venue_id": "korogi-sports-park"
+  },
+  {
+   "aliases": [
+    [
+     "Kotambi Stadium, Vadodara",
+     "Vadodara"
+    ]
+   ],
+   "city": "Vadodara",
+   "n_selected_matches": 1,
+   "name": "Kotambi Stadium",
+   "places": [
+    "Vadodara"
+   ],
+   "search_names": [
+    "Kotambi Stadium"
+   ],
+   "venue_id": "kotambi-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Kyambogo Cricket Oval",
+     "Kampala"
+    ]
+   ],
+   "city": "Kampala",
+   "n_selected_matches": 6,
+   "name": "Kyambogo Cricket Oval",
+   "places": [
+    "Kampala"
+   ],
+   "search_names": [
+    "Kyambogo Cricket Oval"
+   ],
+   "venue_id": "kyambogo-cricket-oval"
+  },
+  {
+   "aliases": [
+    [
+     "La Manga Club Bottom Ground",
+     "Murcia"
+    ]
+   ],
+   "city": "Murcia",
+   "n_selected_matches": 10,
+   "name": "La Manga Club Bottom Ground",
+   "places": [
+    "Murcia"
+   ],
+   "search_names": [
+    "La Manga Club Bottom Ground"
+   ],
+   "venue_id": "la-manga-club-bottom-ground"
+  },
+  {
+   "aliases": [
+    [
+     "La Manga Club Top Ground",
+     "Murcia"
+    ]
+   ],
+   "city": "Murcia",
+   "n_selected_matches": 7,
+   "name": "La Manga Club Top Ground",
+   "places": [
+    "Murcia"
+   ],
+   "search_names": [
+    "La Manga Club Top Ground"
+   ],
+   "venue_id": "la-manga-club-top-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Lal Bahadur Shastri Stadium, Hyderabad, Deccan",
+     "Hyderabad"
+    ]
+   ],
+   "city": "Hyderabad",
+   "n_selected_matches": 1,
+   "name": "Lal Bahadur Shastri Stadium",
+   "places": [
+    "Deccan",
+    "Hyderabad"
+   ],
+   "search_names": [
+    "Lal Bahadur Shastri Stadium"
+   ],
+   "venue_id": "lal-bahadur-shastri-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Lisicji Jarak Cricket Ground",
+     "Belgrade"
+    ]
+   ],
+   "city": "Belgrade",
+   "n_selected_matches": 5,
+   "name": "Lisicji Jarak Cricket Ground",
+   "places": [
+    "Belgrade"
+   ],
+   "search_names": [
+    "Lisicji Jarak Cricket Ground"
+   ],
+   "venue_id": "lisicji-jarak-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Lord's",
+     "London"
+    ],
+    [
+     "Lord's, London",
+     "London"
+    ]
+   ],
+   "city": "London",
+   "n_selected_matches": 92,
+   "name": "Lord's",
+   "places": [
+    "London"
+   ],
+   "search_names": [
+    "Lord's"
+   ],
+   "venue_id": "lords"
+  },
+  {
+   "aliases": [
+    [
+     "Los Pinos Polo Club 1, Cundinamarca",
+     "Bogota"
+    ]
+   ],
+   "city": "Bogota",
+   "n_selected_matches": 5,
+   "name": "Los Pinos Polo Club 1",
+   "places": [
+    "Bogota",
+    "Cundinamarca"
+   ],
+   "search_names": [
+    "Los Pinos Polo Club 1"
+   ],
+   "venue_id": "los-pinos-polo-club-1"
+  },
+  {
+   "aliases": [
+    [
+     "Los Pinos Polo Club 2, Cundinamarca",
+     "Bogota"
+    ]
+   ],
+   "city": "Bogota",
+   "n_selected_matches": 1,
+   "name": "Los Pinos Polo Club 2",
+   "places": [
+    "Bogota",
+    "Cundinamarca"
+   ],
+   "search_names": [
+    "Los Pinos Polo Club 2"
+   ],
+   "venue_id": "los-pinos-polo-club-2"
+  },
+  {
+   "aliases": [
+    [
+     "Los Reyes Polo Club",
+     "Guacima"
+    ]
+   ],
+   "city": "Guacima",
+   "n_selected_matches": 4,
+   "name": "Los Reyes Polo Club",
+   "places": [
+    "Guacima"
+   ],
+   "search_names": [
+    "Los Reyes Polo Club"
+   ],
+   "venue_id": "los-reyes-polo-club"
+  },
+  {
+   "aliases": [
+    [
+     "Lugogo Cricket Oval",
+     "Kampala"
+    ],
+    [
+     "Lugogo Cricket Oval, Kampala",
+     "Kampala"
+    ]
+   ],
+   "city": "Kampala",
+   "n_selected_matches": 3,
+   "name": "Lugogo Cricket Oval",
+   "places": [
+    "Kampala"
+   ],
+   "search_names": [
+    "Lugogo Cricket Oval"
+   ],
+   "venue_id": "lugogo-cricket-oval"
+  },
+  {
+   "aliases": [
+    [
+     "M Chinnaswamy Stadium",
+     "Bangalore"
+    ],
+    [
+     "M Chinnaswamy Stadium",
+     "Bengaluru"
+    ],
+    [
+     "M Chinnaswamy Stadium, Bangalore",
+     "Bengaluru"
+    ],
+    [
+     "M Chinnaswamy Stadium, Bengaluru",
+     "Bengaluru"
+    ],
+    [
+     "M.Chinnaswamy Stadium",
+     "Bengaluru"
+    ]
+   ],
+   "city": "Bangalore",
+   "n_selected_matches": 139,
+   "name": "M Chinnaswamy Stadium",
+   "places": [
+    "Bangalore",
+    "Bengaluru"
+   ],
+   "search_names": [
+    "M Chinnaswamy Stadium",
+    "M.Chinnaswamy Stadium"
+   ],
+   "venue_id": "m-chinnaswamy-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "MA Aziz Stadium",
+     "Chattogram"
+    ],
+    [
+     "MA Aziz Stadium, Chittagong",
+     "Chattogram"
+    ]
+   ],
+   "city": "Chattogram",
+   "n_selected_matches": 6,
+   "name": "MA Aziz Stadium",
+   "places": [
+    "Chattogram",
+    "Chittagong"
+   ],
+   "search_names": [
+    "MA Aziz Stadium"
+   ],
+   "venue_id": "ma-aziz-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "MA Chidambaram Stadium",
+     "Chennai"
+    ],
+    [
+     "MA Chidambaram Stadium, Chepauk",
+     "Chennai"
+    ],
+    [
+     "MA Chidambaram Stadium, Chepauk, Chennai",
+     "Chennai"
+    ]
+   ],
+   "city": "Chennai",
+   "n_selected_matches": 132,
+   "name": "MA Chidambaram Stadium",
+   "places": [
+    "Chennai",
+    "Chepauk"
+   ],
+   "search_names": [
+    "MA Chidambaram Stadium"
+   ],
+   "venue_id": "ma-chidambaram-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Madhavrao Scindia Cricket Ground",
+     "Rajkot"
+    ]
+   ],
+   "city": "Rajkot",
+   "n_selected_matches": 4,
+   "name": "Madhavrao Scindia Cricket Ground",
+   "places": [
+    "Rajkot"
+   ],
+   "search_names": [
+    "Madhavrao Scindia Cricket Ground"
+   ],
+   "venue_id": "madhavrao-scindia-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur",
+     "Mohali"
+    ],
+    [
+     "Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur",
+     "New Chandigarh"
+    ],
+    [
+     "Maharaja Yadavindra Singh International Cricket Stadium, New Chandigarh",
+     "New Chandigarh"
+    ]
+   ],
+   "city": "New Chandigarh",
+   "n_selected_matches": 19,
+   "name": "Maharaja Yadavindra Singh International Cricket Stadium",
+   "places": [
+    "Mohali",
+    "Mullanpur",
+    "New Chandigarh"
+   ],
+   "search_names": [
+    "Maharaja Yadavindra Singh International Cricket Stadium"
+   ],
+   "venue_id": "maharaja-yadavindra-singh-international-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Maharani Usharaje Trust Cricket Ground",
+     "Indore"
+    ]
+   ],
+   "city": "Indore",
+   "n_selected_matches": 2,
+   "name": "Maharani Usharaje Trust Cricket Ground",
+   "places": [
+    "Indore"
+   ],
+   "search_names": [
+    "Maharani Usharaje Trust Cricket Ground"
+   ],
+   "venue_id": "maharani-usharaje-trust-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Maharashtra Cricket Association Stadium",
+     "Pune"
+    ],
+    [
+     "Maharashtra Cricket Association Stadium, Pune",
+     "Pune"
+    ],
+    [
+     "Subrata Roy Sahara Stadium",
+     "Pune"
+    ]
+   ],
+   "city": "Pune",
+   "n_selected_matches": 70,
+   "name": "Maharashtra Cricket Association Stadium",
+   "places": [
+    "Pune"
+   ],
+   "search_names": [
+    "Maharashtra Cricket Association Stadium",
+    "Subrata Roy Sahara Stadium"
+   ],
+   "venue_id": "maharashtra-cricket-association-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Mahinda Rajapaksa International Cricket Stadium, Sooriyawewa",
+     "Hambantota"
+    ],
+    [
+     "Mahinda Rajapaksa International Cricket Stadium, Sooriyawewa, Hambantota",
+     "Hambantota"
+    ]
+   ],
+   "city": "Hambantota",
+   "n_selected_matches": 28,
+   "name": "Mahinda Rajapaksa International Cricket Stadium",
+   "places": [
+    "Hambantota",
+    "Sooriyawewa"
+   ],
+   "search_names": [
+    "Mahinda Rajapaksa International Cricket Stadium"
+   ],
+   "venue_id": "mahinda-rajapaksa-international-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Malahide",
+     "Dublin"
+    ],
+    [
+     "Malahide, Dublin",
+     "Dublin"
+    ],
+    [
+     "The Village, Malahide",
+     "Dublin"
+    ],
+    [
+     "The Village, Malahide, Dublin",
+     "Dublin"
+    ]
+   ],
+   "city": "Dublin",
+   "n_selected_matches": 39,
+   "name": "Malahide",
+   "places": [
+    "Dublin",
+    "Malahide"
+   ],
+   "search_names": [
+    "Malahide",
+    "The Village"
+   ],
+   "venue_id": "malahide"
+  },
+  {
+   "aliases": [
+    [
+     "Malkerns Country Club oval",
+     "Malkerns"
+    ]
+   ],
+   "city": "Malkerns",
+   "n_selected_matches": 13,
+   "name": "Malkerns Country Club oval",
+   "places": [
+    "Malkerns"
+   ],
+   "search_names": [
+    "Malkerns Country Club oval"
+   ],
+   "venue_id": "malkerns-country-club-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Chevrolet Park",
+     "Bloemfontein"
+    ],
+    [
+     "Chevrolet Park, Bloemfontein",
+     "Bloemfontein"
+    ],
+    [
+     "Goodyear Park",
+     "Bloemfontein"
+    ],
+    [
+     "Goodyear Park, Bloemfontein",
+     "Bloemfontein"
+    ],
+    [
+     "Mangaung Oval",
+     "Bloemfontein"
+    ],
+    [
+     "Mangaung Oval, Bloemfontein",
+     "Bloemfontein"
+    ],
+    [
+     "OUTsurance Oval",
+     "Bloemfontein"
+    ]
+   ],
+   "city": "Bloemfontein",
+   "n_selected_matches": 24,
+   "name": "Mangaung Oval",
+   "places": [
+    "Bloemfontein"
+   ],
+   "search_names": [
+    "Chevrolet Park",
+    "Goodyear Park",
+    "Mangaung Oval",
+    "OUTsurance Oval"
+   ],
+   "venue_id": "mangaung-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Mannofield Park",
+     "Aberdeen"
+    ],
+    [
+     "Mannofield Park, Aberdeen",
+     "Aberdeen"
+    ]
+   ],
+   "city": "Aberdeen",
+   "n_selected_matches": 13,
+   "name": "Mannofield Park",
+   "places": [
+    "Aberdeen"
+   ],
+   "search_names": [
+    "Mannofield Park"
+   ],
+   "venue_id": "mannofield-park"
+  },
+  {
+   "aliases": [
+    [
+     "Manuka Oval",
+     "Canberra"
+    ],
+    [
+     "Manuka Oval, Canberra",
+     "Canberra"
+    ]
+   ],
+   "city": "Canberra",
+   "n_selected_matches": 15,
+   "name": "Manuka Oval",
+   "places": [
+    "Canberra"
+   ],
+   "search_names": [
+    "Manuka Oval"
+   ],
+   "venue_id": "manuka-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Maple Leaf North-East Ground, King City",
+     "King City"
+    ]
+   ],
+   "city": "King City",
+   "n_selected_matches": 4,
+   "name": "Maple Leaf North-East Ground",
+   "places": [
+    "King City"
+   ],
+   "search_names": [
+    "Maple Leaf North-East Ground"
+   ],
+   "venue_id": "maple-leaf-north-east-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Maple Leaf North-West Ground",
+     "King City"
+    ],
+    [
+     "Maple Leaf North-West Ground",
+     "Toronto"
+    ],
+    [
+     "Maple Leaf North-West Ground, King City",
+     "King City"
+    ]
+   ],
+   "city": "King City",
+   "n_selected_matches": 37,
+   "name": "Maple Leaf North-West Ground",
+   "places": [
+    "King City",
+    "Toronto"
+   ],
+   "search_names": [
+    "Maple Leaf North-West Ground"
+   ],
+   "venue_id": "maple-leaf-north-west-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Marrara Cricket Ground",
+     "Darwin"
+    ],
+    [
+     "Marrara Cricket Ground, Darwin",
+     "Darwin"
+    ],
+    [
+     "Marrara Stadium, Darwin",
+     "Darwin"
+    ]
+   ],
+   "city": "Darwin",
+   "n_selected_matches": 8,
+   "name": "Marrara Stadium",
+   "places": [
+    "Darwin"
+   ],
+   "search_names": [
+    "Marrara Cricket Ground",
+    "Marrara Stadium"
+   ],
+   "venue_id": "marrara-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Marsa Sports Club",
+     "Marsa"
+    ]
+   ],
+   "city": "Marsa",
+   "n_selected_matches": 63,
+   "name": "Marsa Sports Club",
+   "places": [
+    "Marsa"
+   ],
+   "search_names": [
+    "Marsa Sports Club"
+   ],
+   "venue_id": "marsa-sports-club"
+  },
+  {
+   "aliases": [
+    [
+     "McLean Park",
+     null
+    ],
+    [
+     "McLean Park",
+     "Napier"
+    ],
+    [
+     "McLean Park, Napier",
+     "Napier"
+    ]
+   ],
+   "city": "Napier",
+   "n_selected_matches": 31,
+   "name": "McLean Park",
+   "places": [
+    "Napier"
+   ],
+   "search_names": [
+    "McLean Park"
+   ],
+   "venue_id": "mclean-park"
+  },
+  {
+   "aliases": [
+    [
+     "Meersen, Gent",
+     "Ghent"
+    ]
+   ],
+   "city": "Ghent",
+   "n_selected_matches": 5,
+   "name": "Meersen",
+   "places": [
+    "Gent",
+    "Ghent"
+   ],
+   "search_names": [
+    "Meersen"
+   ],
+   "venue_id": "meersen"
+  },
+  {
+   "aliases": [
+    [
+     "Melbourne Cricket Ground",
+     null
+    ],
+    [
+     "Melbourne Cricket Ground",
+     "Melbourne"
+    ]
+   ],
+   "city": "Melbourne",
+   "n_selected_matches": 80,
+   "name": "Melbourne Cricket Ground",
+   "places": [
+    "Melbourne"
+   ],
+   "search_names": [
+    "Melbourne Cricket Ground"
+   ],
+   "venue_id": "melbourne-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Mission Road Ground, Mong Kok",
+     "Hong Kong"
+    ],
+    [
+     "Mission Road Ground, Mong Kok, Hong Kong",
+     "Mong Kok"
+    ]
+   ],
+   "city": "Mong Kok",
+   "n_selected_matches": 36,
+   "name": "Mission Road Ground",
+   "places": [
+    "Hong Kong",
+    "Mong Kok"
+   ],
+   "search_names": [
+    "Mission Road Ground"
+   ],
+   "venue_id": "mission-road-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Mladost Cricket Ground, Zagreb",
+     "Zagreb"
+    ]
+   ],
+   "city": "Zagreb",
+   "n_selected_matches": 9,
+   "name": "Mladost Cricket Ground",
+   "places": [
+    "Zagreb"
+   ],
+   "search_names": [
+    "Mladost Cricket Ground"
+   ],
+   "venue_id": "mladost-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Moara Vlasiei Cricket Ground",
+     null
+    ],
+    [
+     "Moara Vlasiei Cricket Ground, Ilfov County",
+     "Ilfov County"
+    ]
+   ],
+   "city": "Ilfov County",
+   "n_selected_matches": 63,
+   "name": "Moara Vlasiei Cricket Ground",
+   "places": [
+    "Ilfov County"
+   ],
+   "search_names": [
+    "Moara Vlasiei Cricket Ground"
+   ],
+   "venue_id": "moara-vlasiei-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Mombasa Sports Club Ground",
+     null
+    ]
+   ],
+   "city": "Mombasa",
+   "n_selected_matches": 5,
+   "name": "Mombasa Sports Club Ground",
+   "places": [],
+   "search_names": [
+    "Mombasa Sports Club Ground"
+   ],
+   "venue_id": "mombasa-sports-club-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Choice Moosa Stadium, Pearland",
+     "Pearland"
+    ],
+    [
+     "Moosa Cricket Stadium, Pearland",
+     "Pearland"
+    ]
+   ],
+   "city": "Pearland",
+   "n_selected_matches": 12,
+   "name": "Moosa Cricket Stadium",
+   "places": [
+    "Pearland"
+   ],
+   "search_names": [
+    "Choice Moosa Stadium",
+    "Moosa Cricket Stadium"
+   ],
+   "venue_id": "moosa-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Moses Mabhida Stadium",
+     "Durban"
+    ]
+   ],
+   "city": "Durban",
+   "n_selected_matches": 1,
+   "name": "Moses Mabhida Stadium",
+   "places": [
+    "Durban"
+   ],
+   "search_names": [
+    "Moses Mabhida Stadium"
+   ],
+   "venue_id": "moses-mabhida-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Mulpani Cricket Ground",
+     "Kathmandu"
+    ]
+   ],
+   "city": "Kathmandu",
+   "n_selected_matches": 14,
+   "name": "Mulpani Cricket Ground",
+   "places": [
+    "Kathmandu"
+   ],
+   "search_names": [
+    "Mulpani Cricket Ground"
+   ],
+   "venue_id": "mulpani-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Multan Cricket Stadium",
+     null
+    ],
+    [
+     "Multan Cricket Stadium",
+     "Multan"
+    ]
+   ],
+   "city": "Multan",
+   "n_selected_matches": 19,
+   "name": "Multan Cricket Stadium",
+   "places": [
+    "Multan"
+   ],
+   "search_names": [
+    "Multan Cricket Stadium"
+   ],
+   "venue_id": "multan-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Nahar Singh Stadium",
+     "Faridabad"
+    ],
+    [
+     "Nahar Singh Stadium, Faridabad",
+     "Faridabad"
+    ]
+   ],
+   "city": "Faridabad",
+   "n_selected_matches": 2,
+   "name": "Nahar Singh Stadium",
+   "places": [
+    "Faridabad"
+   ],
+   "search_names": [
+    "Nahar Singh Stadium"
+   ],
+   "venue_id": "nahar-singh-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Namibia Cricket Ground, Windhoek",
+     "Windhoek"
+    ]
+   ],
+   "city": "Windhoek",
+   "n_selected_matches": 28,
+   "name": "Namibia Cricket Ground",
+   "places": [
+    "Windhoek"
+   ],
+   "search_names": [
+    "Namibia Cricket Ground"
+   ],
+   "venue_id": "namibia-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Khan Shaheb Osman Ali Stadium",
+     "Fatullah"
+    ],
+    [
+     "Narayanganj Osmani Stadium",
+     "Fatullah"
+    ]
+   ],
+   "city": "Fatullah",
+   "n_selected_matches": 10,
+   "name": "Narayanganj Osmani Stadium",
+   "places": [
+    "Fatullah"
+   ],
+   "search_names": [
+    "Khan Shaheb Osman Ali Stadium",
+    "Narayanganj Osmani Stadium"
+   ],
+   "venue_id": "narayanganj-osmani-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Narendra Modi Stadium",
+     "Ahmedabad"
+    ],
+    [
+     "Narendra Modi Stadium, Ahmedabad",
+     "Ahmedabad"
+    ],
+    [
+     "Sardar Patel (Gujarat) Stadium, Motera",
+     "Ahmedabad"
+    ],
+    [
+     "Sardar Patel Stadium",
+     "Ahmedabad"
+    ],
+    [
+     "Sardar Patel Stadium, Motera",
+     "Ahmedabad"
+    ]
+   ],
+   "city": "Ahmedabad",
+   "n_selected_matches": 97,
+   "name": "Narendra Modi Stadium",
+   "places": [
+    "Ahmedabad",
+    "Motera"
+   ],
+   "search_names": [
+    "Narendra Modi Stadium",
+    "Sardar Patel (Gujarat) Stadium",
+    "Sardar Patel Stadium"
+   ],
+   "venue_id": "narendra-modi-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Nassau County International Cricket Stadium, New York",
+     "New York"
+    ]
+   ],
+   "city": "New York",
+   "n_selected_matches": 8,
+   "name": "Nassau County International Cricket Stadium",
+   "places": [
+    "New York"
+   ],
+   "search_names": [
+    "Nassau County International Cricket Stadium"
+   ],
+   "venue_id": "nassau-county-international-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "National Cricket Stadium",
+     "St George's"
+    ],
+    [
+     "National Cricket Stadium, Grenada",
+     "St George's"
+    ],
+    [
+     "National Cricket Stadium, St George's",
+     "Grenada"
+    ],
+    [
+     "National Cricket Stadium, St George's, Grenada",
+     "St George's"
+    ],
+    [
+     "Queen's Park (New), St George's, Grenada",
+     "St George's"
+    ]
+   ],
+   "city": "St George's",
+   "n_selected_matches": 29,
+   "name": "National Cricket Stadium",
+   "places": [
+    "Grenada",
+    "St George's"
+   ],
+   "search_names": [
+    "National Cricket Stadium",
+    "Queen's Park (New)"
+   ],
+   "venue_id": "national-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "National Stadium",
+     "Karachi"
+    ],
+    [
+     "National Stadium, Karachi",
+     "Karachi"
+    ]
+   ],
+   "city": "Karachi",
+   "n_selected_matches": 51,
+   "name": "National Stadium",
+   "places": [
+    "Karachi"
+   ],
+   "search_names": [
+    "National Stadium"
+   ],
+   "venue_id": "national-stadium-karachi"
+  },
+  {
+   "aliases": [
+    [
+     "Nehru Stadium",
+     "Guwahati"
+    ]
+   ],
+   "city": "Guwahati",
+   "n_selected_matches": 3,
+   "name": "Nehru Stadium",
+   "places": [
+    "Guwahati"
+   ],
+   "search_names": [
+    "Nehru Stadium"
+   ],
+   "venue_id": "nehru-stadium-guwahati"
+  },
+  {
+   "aliases": [
+    [
+     "Nehru Stadium",
+     null
+    ],
+    [
+     "Nehru Stadium",
+     "Kochi"
+    ]
+   ],
+   "city": "Kochi",
+   "n_selected_matches": 9,
+   "name": "Nehru Stadium",
+   "places": [
+    "Kochi"
+   ],
+   "search_names": [
+    "Nehru Stadium"
+   ],
+   "venue_id": "nehru-stadium-kochi"
+  },
+  {
+   "aliases": [
+    [
+     "Nehru Stadium, Fatorda",
+     "Margao"
+    ]
+   ],
+   "city": "Margao",
+   "n_selected_matches": 2,
+   "name": "Nehru Stadium",
+   "places": [
+    "Fatorda",
+    "Margao"
+   ],
+   "search_names": [
+    "Nehru Stadium"
+   ],
+   "venue_id": "nehru-stadium-margao"
+  },
+  {
+   "aliases": [
+    [
+     "Nehru Stadium",
+     "Pune"
+    ],
+    [
+     "Nehru Stadium, Poona",
+     "Pune"
+    ]
+   ],
+   "city": "Pune",
+   "n_selected_matches": 2,
+   "name": "Nehru Stadium",
+   "places": [
+    "Poona",
+    "Pune"
+   ],
+   "search_names": [
+    "Nehru Stadium"
+   ],
+   "venue_id": "nehru-stadium-pune"
+  },
+  {
+   "aliases": [
+    [
+     "Newlands",
+     "Cape Town"
+    ],
+    [
+     "Newlands, Cape Town",
+     "Cape Town"
+    ]
+   ],
+   "city": "Cape Town",
+   "n_selected_matches": 80,
+   "name": "Newlands",
+   "places": [
+    "Cape Town"
+   ],
+   "search_names": [
+    "Newlands"
+   ],
+   "venue_id": "newlands"
+  },
+  {
+   "aliases": [
+    [
+     "Niaz Stadium, Hyderabad",
+     "Sind"
+    ]
+   ],
+   "city": "Sind",
+   "n_selected_matches": 1,
+   "name": "Niaz Stadium",
+   "places": [
+    "Hyderabad",
+    "Sind"
+   ],
+   "search_names": [
+    "Niaz Stadium"
+   ],
+   "venue_id": "niaz-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Nigeria Cricket Federation Oval 1, Abuja",
+     "Abuja"
+    ]
+   ],
+   "city": "Abuja",
+   "n_selected_matches": 24,
+   "name": "Nigeria Cricket Federation Oval 1",
+   "places": [
+    "Abuja"
+   ],
+   "search_names": [
+    "Nigeria Cricket Federation Oval 1"
+   ],
+   "venue_id": "nigeria-cricket-federation-oval-1"
+  },
+  {
+   "aliases": [
+    [
+     "Nigeria Cricket Federation Oval 2, Abuja",
+     "Abuja"
+    ]
+   ],
+   "city": "Abuja",
+   "n_selected_matches": 5,
+   "name": "Nigeria Cricket Federation Oval 2",
+   "places": [
+    "Abuja"
+   ],
+   "search_names": [
+    "Nigeria Cricket Federation Oval 2"
+   ],
+   "venue_id": "nigeria-cricket-federation-oval-2"
+  },
+  {
+   "aliases": [
+    [
+     "Old Hararians",
+     "Harare"
+    ],
+    [
+     "Old Hararians, Harare",
+     "Harare"
+    ]
+   ],
+   "city": "Harare",
+   "n_selected_matches": 4,
+   "name": "Old Hararians",
+   "places": [
+    "Harare"
+   ],
+   "search_names": [
+    "Old Hararians"
+   ],
+   "venue_id": "old-hararians"
+  },
+  {
+   "aliases": [
+    [
+     "Old Trafford",
+     "Manchester"
+    ],
+    [
+     "Old Trafford, Manchester",
+     "Manchester"
+    ]
+   ],
+   "city": "Manchester",
+   "n_selected_matches": 55,
+   "name": "Old Trafford",
+   "places": [
+    "Manchester"
+   ],
+   "search_names": [
+    "Old Trafford"
+   ],
+   "venue_id": "old-trafford"
+  },
+  {
+   "aliases": [
+    [
+     "P Sara Oval",
+     "Colombo"
+    ],
+    [
+     "P Sara Oval, Colombo",
+     "Colombo"
+    ],
+    [
+     "P Saravanamuttu Stadium",
+     "Colombo"
+    ]
+   ],
+   "city": "Colombo",
+   "n_selected_matches": 15,
+   "name": "P Sara Oval",
+   "places": [
+    "Colombo"
+   ],
+   "search_names": [
+    "P Sara Oval",
+    "P Saravanamuttu Stadium"
+   ],
+   "venue_id": "p-sara-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Pallekele International Cricket Stadium",
+     null
+    ],
+    [
+     "Pallekele International Cricket Stadium",
+     "Kandy"
+    ],
+    [
+     "Pallekele International Cricket Stadium",
+     "Pallekele"
+    ]
+   ],
+   "city": "Kandy",
+   "n_selected_matches": 84,
+   "name": "Pallekele International Cricket Stadium",
+   "places": [
+    "Kandy",
+    "Pallekele"
+   ],
+   "search_names": [
+    "Pallekele International Cricket Stadium"
+   ],
+   "venue_id": "pallekele-international-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Perth Stadium",
+     null
+    ],
+    [
+     "Perth Stadium",
+     "Perth"
+    ]
+   ],
+   "city": "Perth",
+   "n_selected_matches": 17,
+   "name": "Perth Stadium",
+   "places": [
+    "Perth"
+   ],
+   "search_names": [
+    "Perth Stadium"
+   ],
+   "venue_id": "perth-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Pierre Werner Cricket Ground",
+     "Walferdange"
+    ]
+   ],
+   "city": "Walferdange",
+   "n_selected_matches": 6,
+   "name": "Pierre Werner Cricket Ground",
+   "places": [
+    "Walferdange"
+   ],
+   "search_names": [
+    "Pierre Werner Cricket Ground"
+   ],
+   "venue_id": "pierre-werner-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Prairie View Cricket Complex",
+     "Houston"
+    ]
+   ],
+   "city": "Houston",
+   "n_selected_matches": 7,
+   "name": "Prairie View Cricket Complex",
+   "places": [
+    "Houston"
+   ],
+   "search_names": [
+    "Prairie View Cricket Complex"
+   ],
+   "venue_id": "prairie-view-cricket-complex"
+  },
+  {
+   "aliases": [
+    [
+     "Providence Stadium",
+     "Guyana"
+    ],
+    [
+     "Providence Stadium, Guyana",
+     "Providence"
+    ]
+   ],
+   "city": "Providence",
+   "n_selected_matches": 48,
+   "name": "Providence Stadium",
+   "places": [
+    "Guyana",
+    "Providence"
+   ],
+   "search_names": [
+    "Providence Stadium"
+   ],
+   "venue_id": "providence-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Punjab Cricket Association IS Bindra Stadium",
+     "Chandigarh"
+    ],
+    [
+     "Punjab Cricket Association IS Bindra Stadium, Mohali",
+     "Chandigarh"
+    ],
+    [
+     "Punjab Cricket Association IS Bindra Stadium, Mohali",
+     "Mohali"
+    ],
+    [
+     "Punjab Cricket Association IS Bindra Stadium, Mohali, Chandigarh",
+     "Chandigarh"
+    ],
+    [
+     "Punjab Cricket Association Stadium, Mohali",
+     "Chandigarh"
+    ],
+    [
+     "Punjab Cricket Association Stadium, Mohali, Chandigarh",
+     "Chandigarh"
+    ]
+   ],
+   "city": "Chandigarh",
+   "n_selected_matches": 94,
+   "name": "Punjab Cricket Association IS Bindra Stadium",
+   "places": [
+    "Chandigarh",
+    "Mohali"
+   ],
+   "search_names": [
+    "Punjab Cricket Association IS Bindra Stadium",
+    "Punjab Cricket Association Stadium"
+   ],
+   "venue_id": "punjab-cricket-association-is-bindra-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Queen's Park Oval",
+     "Port of Spain"
+    ],
+    [
+     "Queen's Park Oval, Port of Spain",
+     "Trinidad"
+    ],
+    [
+     "Queen's Park Oval, Port of Spain, Trinidad",
+     "Port of Spain"
+    ],
+    [
+     "Queen's Park Oval, Trinidad",
+     "Port of Spain"
+    ]
+   ],
+   "city": "Trinidad",
+   "n_selected_matches": 44,
+   "name": "Queen's Park Oval",
+   "places": [
+    "Port of Spain",
+    "Trinidad"
+   ],
+   "search_names": [
+    "Queen's Park Oval"
+   ],
+   "venue_id": "queens-park-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Queens Sports Club",
+     "Bulawayo"
+    ],
+    [
+     "Queens Sports Club, Bulawayo",
+     "Bulawayo"
+    ]
+   ],
+   "city": "Bulawayo",
+   "n_selected_matches": 96,
+   "name": "Queens Sports Club",
+   "places": [
+    "Bulawayo"
+   ],
+   "search_names": [
+    "Queens Sports Club"
+   ],
+   "venue_id": "queens-sports-club"
+  },
+  {
+   "aliases": [
+    [
+     "John Davies Oval",
+     "Queenstown"
+    ],
+    [
+     "John Davies Oval, Queenstown",
+     "Queenstown"
+    ],
+    [
+     "Queenstown Events Centre",
+     null
+    ],
+    [
+     "Queenstown Events Centre",
+     "Queenstown"
+    ]
+   ],
+   "city": "Queenstown",
+   "n_selected_matches": 7,
+   "name": "Queenstown Events Centre",
+   "places": [
+    "Queenstown"
+   ],
+   "search_names": [
+    "John Davies Oval",
+    "Queenstown Events Centre"
+   ],
+   "venue_id": "queenstown-events-centre"
+  },
+  {
+   "aliases": [
+    [
+     "R Premadasa Stadium",
+     "Colombo"
+    ],
+    [
+     "R Premadasa Stadium, Colombo",
+     "Colombo"
+    ],
+    [
+     "R.Premadasa Stadium",
+     "Colombo"
+    ],
+    [
+     "R.Premadasa Stadium, Khettarama",
+     "Colombo"
+    ]
+   ],
+   "city": "Colombo",
+   "n_selected_matches": 145,
+   "name": "R Premadasa Stadium",
+   "places": [
+    "Colombo",
+    "Khettarama"
+   ],
+   "search_names": [
+    "R Premadasa Stadium",
+    "R.Premadasa Stadium"
+   ],
+   "venue_id": "r-premadasa-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Rajiv Gandhi International Stadium",
+     "Hyderabad"
+    ],
+    [
+     "Rajiv Gandhi International Stadium, Uppal",
+     "Hyderabad"
+    ],
+    [
+     "Rajiv Gandhi International Stadium, Uppal, Hyderabad",
+     "Hyderabad"
+    ]
+   ],
+   "city": "Hyderabad",
+   "n_selected_matches": 109,
+   "name": "Rajiv Gandhi International Stadium",
+   "places": [
+    "Hyderabad",
+    "Uppal"
+   ],
+   "search_names": [
+    "Rajiv Gandhi International Stadium"
+   ],
+   "venue_id": "rajiv-gandhi-international-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Rangiri Dambulla International Stadium",
+     null
+    ],
+    [
+     "Rangiri Dambulla International Stadium",
+     "Dambulla"
+    ]
+   ],
+   "city": "Dambulla",
+   "n_selected_matches": 53,
+   "name": "Rangiri Dambulla International Stadium",
+   "places": [
+    "Dambulla"
+   ],
+   "search_names": [
+    "Rangiri Dambulla International Stadium"
+   ],
+   "venue_id": "rangiri-dambulla-international-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Rawalpindi Cricket Stadium",
+     null
+    ],
+    [
+     "Rawalpindi Cricket Stadium",
+     "Rawalpindi"
+    ]
+   ],
+   "city": "Rawalpindi",
+   "n_selected_matches": 47,
+   "name": "Rawalpindi Cricket Stadium",
+   "places": [
+    "Rawalpindi"
+   ],
+   "search_names": [
+    "Rawalpindi Cricket Stadium"
+   ],
+   "venue_id": "rawalpindi-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Reforma Athletic Club, Naucalpan",
+     "Naucalpan"
+    ]
+   ],
+   "city": "Naucalpan",
+   "n_selected_matches": 6,
+   "name": "Reforma Athletic Club",
+   "places": [
+    "Naucalpan"
+   ],
+   "search_names": [
+    "Reforma Athletic Club"
+   ],
+   "venue_id": "reforma-athletic-club"
+  },
+  {
+   "aliases": [
+    [
+     "Indian Petrochemicals Corporation Limited Sports Complex Ground",
+     "Vadodara"
+    ],
+    [
+     "Reliance Stadium",
+     "Vadodara"
+    ]
+   ],
+   "city": "Vadodara",
+   "n_selected_matches": 5,
+   "name": "Reliance Stadium",
+   "places": [
+    "Vadodara"
+   ],
+   "search_names": [
+    "Indian Petrochemicals Corporation Limited Sports Complex Ground",
+    "Reliance Stadium"
+   ],
+   "venue_id": "reliance-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Riverside Ground",
+     "Chester-le-Street"
+    ],
+    [
+     "Riverside Ground, Chester-le-Street",
+     "Chester-le-Street"
+    ]
+   ],
+   "city": "Chester-le-Street",
+   "n_selected_matches": 29,
+   "name": "Riverside Ground",
+   "places": [
+    "Chester-le-Street"
+   ],
+   "search_names": [
+    "Riverside Ground"
+   ],
+   "venue_id": "riverside-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Roma Cricket Ground",
+     "Spinaceto"
+    ]
+   ],
+   "city": "Spinaceto",
+   "n_selected_matches": 12,
+   "name": "Roma Cricket Ground",
+   "places": [
+    "Spinaceto"
+   ],
+   "search_names": [
+    "Roma Cricket Ground"
+   ],
+   "venue_id": "roma-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "The Rose Bowl",
+     "Southampton"
+    ],
+    [
+     "The Rose Bowl, Southampton",
+     "Southampton"
+    ]
+   ],
+   "city": "Southampton",
+   "n_selected_matches": 52,
+   "name": "The Rose Bowl",
+   "places": [
+    "Southampton"
+   ],
+   "search_names": [
+    "The Rose Bowl"
+   ],
+   "venue_id": "rose-bowl"
+  },
+  {
+   "aliases": [
+    [
+     "Royal Brussels Cricket Club Ground, Waterloo",
+     "Waterloo"
+    ]
+   ],
+   "city": "Waterloo",
+   "n_selected_matches": 10,
+   "name": "Royal Brussels Cricket Club Ground",
+   "places": [
+    "Waterloo"
+   ],
+   "search_names": [
+    "Royal Brussels Cricket Club Ground"
+   ],
+   "venue_id": "royal-brussels-cricket-club-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Ruaraka Sports Club Ground",
+     "Nairobi"
+    ],
+    [
+     "Ruaraka Sports Club Ground, Nairobi",
+     "Nairobi"
+    ]
+   ],
+   "city": "Nairobi",
+   "n_selected_matches": 7,
+   "name": "Ruaraka Sports Club Ground",
+   "places": [
+    "Nairobi"
+   ],
+   "search_names": [
+    "Ruaraka Sports Club Ground"
+   ],
+   "venue_id": "ruaraka-sports-club-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Sabina Park, Jamaica",
+     "Kingston"
+    ],
+    [
+     "Sabina Park, Kingston",
+     "Jamaica"
+    ],
+    [
+     "Sabina Park, Kingston, Jamaica",
+     "Kingston"
+    ]
+   ],
+   "city": "Jamaica",
+   "n_selected_matches": 53,
+   "name": "Sabina Park",
+   "places": [
+    "Jamaica",
+    "Kingston"
+   ],
+   "search_names": [
+    "Sabina Park"
+   ],
+   "venue_id": "sabina-park"
+  },
+  {
+   "aliases": [
+    [
+     "Sano International Cricket Ground",
+     null
+    ],
+    [
+     "Sano International Cricket Ground",
+     "Sano"
+    ]
+   ],
+   "city": "Sano",
+   "n_selected_matches": 38,
+   "name": "Sano International Cricket Ground",
+   "places": [
+    "Sano"
+   ],
+   "search_names": [
+    "Sano International Cricket Ground"
+   ],
+   "venue_id": "sano-international-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Sano International Cricket Ground 2",
+     "Sano"
+    ]
+   ],
+   "city": "Sano",
+   "n_selected_matches": 5,
+   "name": "Sano International Cricket Ground 2",
+   "places": [
+    "Sano"
+   ],
+   "search_names": [
+    "Sano International Cricket Ground 2"
+   ],
+   "venue_id": "sano-international-cricket-ground-2"
+  },
+  {
+   "aliases": [
+    [
+     "Gucherre Cricket Ground",
+     "Albergaria"
+    ],
+    [
+     "Santarem Cricket Ground",
+     "Albergaria"
+    ]
+   ],
+   "city": "Albergaria",
+   "n_selected_matches": 18,
+   "name": "Santarem Cricket Ground",
+   "places": [
+    "Albergaria"
+   ],
+   "search_names": [
+    "Gucherre Cricket Ground",
+    "Santarem Cricket Ground"
+   ],
+   "venue_id": "santarem-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Sao Fernando Polo and Cricket Club",
+     "Seropedica"
+    ],
+    [
+     "Sao Fernando Polo and Cricket Club, Campo Sede",
+     "Seropedica"
+    ]
+   ],
+   "city": "Seropedica",
+   "n_selected_matches": 3,
+   "name": "Sao Fernando Polo and Cricket Club",
+   "places": [
+    "Campo Sede",
+    "Seropedica"
+   ],
+   "search_names": [
+    "Sao Fernando Polo and Cricket Club"
+   ],
+   "venue_id": "sao-fernando-polo-and-cricket-club"
+  },
+  {
+   "aliases": [
+    [
+     "Niranjan Shah Stadium, Rajkot",
+     "Rajkot"
+    ],
+    [
+     "Saurashtra Cricket Association Stadium",
+     null
+    ],
+    [
+     "Saurashtra Cricket Association Stadium",
+     "Rajkot"
+    ],
+    [
+     "Saurashtra Cricket Association Stadium, Rajkot",
+     "Rajkot"
+    ]
+   ],
+   "city": "Rajkot",
+   "n_selected_matches": 24,
+   "name": "Saurashtra Cricket Association Stadium",
+   "places": [
+    "Rajkot"
+   ],
+   "search_names": [
+    "Niranjan Shah Stadium",
+    "Saurashtra Cricket Association Stadium"
+   ],
+   "venue_id": "saurashtra-cricket-association-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Sawai Mansingh Stadium",
+     "Jaipur"
+    ],
+    [
+     "Sawai Mansingh Stadium, Jaipur",
+     "Jaipur"
+    ]
+   ],
+   "city": "Jaipur",
+   "n_selected_matches": 79,
+   "name": "Sawai Mansingh Stadium",
+   "places": [
+    "Jaipur"
+   ],
+   "search_names": [
+    "Sawai Mansingh Stadium"
+   ],
+   "venue_id": "sawai-mansingh-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Saxton Oval",
+     null
+    ],
+    [
+     "Saxton Oval",
+     "Nelson"
+    ],
+    [
+     "Saxton Oval, Nelson",
+     "Nelson"
+    ]
+   ],
+   "city": "Nelson",
+   "n_selected_matches": 17,
+   "name": "Saxton Oval",
+   "places": [
+    "Nelson"
+   ],
+   "search_names": [
+    "Saxton Oval"
+   ],
+   "venue_id": "saxton-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Scott Page Field, Vinor",
+     "Prague"
+    ]
+   ],
+   "city": "Prague",
+   "n_selected_matches": 23,
+   "name": "Scott Page Field",
+   "places": [
+    "Prague",
+    "Vinor"
+   ],
+   "search_names": [
+    "Scott Page Field"
+   ],
+   "venue_id": "scott-page-field"
+  },
+  {
+   "aliases": [
+    [
+     "Sector 16 Stadium",
+     "Chandigarh"
+    ]
+   ],
+   "city": "Chandigarh",
+   "n_selected_matches": 1,
+   "name": "Sector 16 Stadium",
+   "places": [
+    "Chandigarh"
+   ],
+   "search_names": [
+    "Sector 16 Stadium"
+   ],
+   "venue_id": "sector-16-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Seddon Park",
+     null
+    ],
+    [
+     "Seddon Park",
+     "Hamilton"
+    ],
+    [
+     "Seddon Park, Hamilton",
+     "Hamilton"
+    ],
+    [
+     "Westpac Park, Hamilton",
+     "Hamilton"
+    ]
+   ],
+   "city": "Hamilton",
+   "n_selected_matches": 61,
+   "name": "Seddon Park",
+   "places": [
+    "Hamilton"
+   ],
+   "search_names": [
+    "Seddon Park",
+    "Westpac Park"
+   ],
+   "venue_id": "seddon-park"
+  },
+  {
+   "aliases": [
+    [
+     "Selangor Turf Club",
+     "Kuala Lumpur"
+    ],
+    [
+     "Selangor Turf Club, Kuala Lumpur",
+     "Kuala Lumpur"
+    ]
+   ],
+   "city": "Kuala Lumpur",
+   "n_selected_matches": 17,
+   "name": "Selangor Turf Club",
+   "places": [
+    "Kuala Lumpur"
+   ],
+   "search_names": [
+    "Selangor Turf Club"
+   ],
+   "venue_id": "selangor-turf-club"
+  },
+  {
+   "aliases": [
+    [
+     "North West Cricket Stadium, Potchefstroom",
+     "Potchefstroom"
+    ],
+    [
+     "Sedgars Park",
+     "Potchefstroom"
+    ],
+    [
+     "Sedgars Park, Potchefstroom",
+     "Potchefstroom"
+    ],
+    [
+     "Senwes Park",
+     "Potchefstroom"
+    ],
+    [
+     "Senwes Park, Potchefstroom",
+     "Potchefstroom"
+    ]
+   ],
+   "city": "Potchefstroom",
+   "n_selected_matches": 15,
+   "name": "Senwes Park",
+   "places": [
+    "Potchefstroom"
+   ],
+   "search_names": [
+    "North West Cricket Stadium",
+    "Sedgars Park",
+    "Senwes Park"
+   ],
+   "venue_id": "senwes-park"
+  },
+  {
+   "aliases": [
+    [
+     "Shaheed Chandu Stadium",
+     "Bogra"
+    ]
+   ],
+   "city": "Bogra",
+   "n_selected_matches": 5,
+   "name": "Shaheed Chandu Stadium",
+   "places": [
+    "Bogra"
+   ],
+   "search_names": [
+    "Shaheed Chandu Stadium"
+   ],
+   "venue_id": "shaheed-chandu-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Shaheed Veer Narayan Singh International Stadium",
+     null
+    ],
+    [
+     "Shaheed Veer Narayan Singh International Stadium",
+     "Raipur"
+    ],
+    [
+     "Shaheed Veer Narayan Singh International Stadium, Raipur",
+     "Raipur"
+    ]
+   ],
+   "city": "Raipur",
+   "n_selected_matches": 12,
+   "name": "Shaheed Veer Narayan Singh International Stadium",
+   "places": [
+    "Raipur"
+   ],
+   "search_names": [
+    "Shaheed Veer Narayan Singh International Stadium"
+   ],
+   "venue_id": "shaheed-veer-narayan-singh-international-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Sharjah Cricket Association Stadium",
+     "Sharjah"
+    ],
+    [
+     "Sharjah Cricket Stadium",
+     null
+    ],
+    [
+     "Sharjah Cricket Stadium",
+     "Sharjah"
+    ]
+   ],
+   "city": "Sharjah",
+   "n_selected_matches": 87,
+   "name": "Sharjah Cricket Stadium",
+   "places": [
+    "Sharjah"
+   ],
+   "search_names": [
+    "Sharjah Cricket Association Stadium",
+    "Sharjah Cricket Stadium"
+   ],
+   "venue_id": "sharjah-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Sheikh Abu Naser Stadium",
+     "Khulna"
+    ],
+    [
+     "Sheikh Abu Naser Stadium, Khulna",
+     "Khulna"
+    ]
+   ],
+   "city": "Khulna",
+   "n_selected_matches": 9,
+   "name": "Sheikh Abu Naser Stadium",
+   "places": [
+    "Khulna"
+   ],
+   "search_names": [
+    "Sheikh Abu Naser Stadium"
+   ],
+   "venue_id": "sheikh-abu-naser-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Sheikh Zayed Stadium",
+     "Abu Dhabi"
+    ],
+    [
+     "Sheikh Zayed Stadium, Abu Dhabi",
+     "Abu Dhabi"
+    ],
+    [
+     "Zayed Cricket Stadium",
+     "Abu Dhabi"
+    ],
+    [
+     "Zayed Cricket Stadium, Abu Dhabi",
+     "Abu Dhabi"
+    ]
+   ],
+   "city": "Abu Dhabi",
+   "n_selected_matches": 146,
+   "name": "Sheikh Zayed Stadium",
+   "places": [
+    "Abu Dhabi"
+   ],
+   "search_names": [
+    "Sheikh Zayed Stadium",
+    "Zayed Cricket Stadium"
+   ],
+   "venue_id": "sheikh-zayed-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Sheikhupura Stadium",
+     null
+    ]
+   ],
+   "city": null,
+   "n_selected_matches": 1,
+   "name": "Sheikhupura Stadium",
+   "places": [],
+   "search_names": [
+    "Sheikhupura Stadium"
+   ],
+   "venue_id": "sheikhupura-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Sher-e-Bangla National Cricket Stadium",
+     "Mirpur"
+    ],
+    [
+     "Shere Bangla National Stadium",
+     "Dhaka"
+    ],
+    [
+     "Shere Bangla National Stadium",
+     "Mirpur"
+    ],
+    [
+     "Shere Bangla National Stadium, Mirpur",
+     "Dhaka"
+    ]
+   ],
+   "city": "Dhaka",
+   "n_selected_matches": 205,
+   "name": "Shere Bangla National Stadium",
+   "places": [
+    "Dhaka",
+    "Mirpur"
+   ],
+   "search_names": [
+    "Sher-e-Bangla National Cricket Stadium",
+    "Shere Bangla National Stadium"
+   ],
+   "venue_id": "shere-bangla-national-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Shrimant Madhavrao Scindia Cricket Stadium, Gwalior",
+     "Gwalior"
+    ]
+   ],
+   "city": "Gwalior",
+   "n_selected_matches": 1,
+   "name": "Shrimant Madhavrao Scindia Cricket Stadium",
+   "places": [
+    "Gwalior"
+   ],
+   "search_names": [
+    "Shrimant Madhavrao Scindia Cricket Stadium"
+   ],
+   "venue_id": "shrimant-madhavrao-scindia-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Sikh Union Club Ground, Nairobi",
+     "Nairobi"
+    ]
+   ],
+   "city": "Nairobi",
+   "n_selected_matches": 11,
+   "name": "Sikh Union Club Ground",
+   "places": [
+    "Nairobi"
+   ],
+   "search_names": [
+    "Sikh Union Club Ground"
+   ],
+   "venue_id": "sikh-union-club-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Simar Cricket Ground, Rome",
+     "Rome"
+    ]
+   ],
+   "city": "Rome",
+   "n_selected_matches": 12,
+   "name": "Simar Cricket Ground",
+   "places": [
+    "Rome"
+   ],
+   "search_names": [
+    "Simar Cricket Ground"
+   ],
+   "venue_id": "simar-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "GMHBA Stadium, South Geelong, Victoria",
+     "Geelong"
+    ],
+    [
+     "Simonds Stadium, South Geelong",
+     "Victoria"
+    ],
+    [
+     "Simonds Stadium, South Geelong, Victoria",
+     "Geelong"
+    ]
+   ],
+   "city": "Geelong",
+   "n_selected_matches": 7,
+   "name": "Simonds Stadium",
+   "places": [
+    "Geelong",
+    "South Geelong",
+    "Victoria"
+   ],
+   "search_names": [
+    "GMHBA Stadium",
+    "Simonds Stadium"
+   ],
+   "venue_id": "simonds-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Singapore National Cricket Ground",
+     "Singapore"
+    ]
+   ],
+   "city": "Singapore",
+   "n_selected_matches": 37,
+   "name": "Singapore National Cricket Ground",
+   "places": [
+    "Singapore"
+   ],
+   "search_names": [
+    "Singapore National Cricket Ground"
+   ],
+   "venue_id": "singapore-national-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Sinhalese Sports Club",
+     "Colombo"
+    ],
+    [
+     "Sinhalese Sports Club Ground",
+     "Colombo"
+    ],
+    [
+     "Sinhalese Sports Club Ground, Colombo",
+     "Colombo"
+    ]
+   ],
+   "city": "Colombo",
+   "n_selected_matches": 35,
+   "name": "Sinhalese Sports Club Ground",
+   "places": [
+    "Colombo"
+   ],
+   "search_names": [
+    "Sinhalese Sports Club",
+    "Sinhalese Sports Club Ground"
+   ],
+   "venue_id": "sinhalese-sports-club-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Sir Vivian Richards Stadium",
+     "North Sound"
+    ],
+    [
+     "Sir Vivian Richards Stadium, Antigua",
+     "North Sound"
+    ],
+    [
+     "Sir Vivian Richards Stadium, North Sound",
+     null
+    ],
+    [
+     "Sir Vivian Richards Stadium, North Sound",
+     "Antigua"
+    ],
+    [
+     "Sir Vivian Richards Stadium, North Sound, Antigua",
+     "North Sound"
+    ]
+   ],
+   "city": "North Sound",
+   "n_selected_matches": 57,
+   "name": "Sir Vivian Richards Stadium",
+   "places": [
+    "Antigua",
+    "North Sound"
+   ],
+   "search_names": [
+    "Sir Vivian Richards Stadium"
+   ],
+   "venue_id": "sir-vivian-richards-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Solvangs Park, Glostrup",
+     "Copenhagen"
+    ]
+   ],
+   "city": "Copenhagen",
+   "n_selected_matches": 2,
+   "name": "Solvangs Park",
+   "places": [
+    "Copenhagen",
+    "Glostrup"
+   ],
+   "search_names": [
+    "Solvangs Park"
+   ],
+   "venue_id": "solvangs-park"
+  },
+  {
+   "aliases": [
+    [
+     "Sophia Gardens",
+     "Cardiff"
+    ],
+    [
+     "Sophia Gardens, Cardiff",
+     "Cardiff"
+    ]
+   ],
+   "city": "Cardiff",
+   "n_selected_matches": 41,
+   "name": "Sophia Gardens",
+   "places": [
+    "Cardiff"
+   ],
+   "search_names": [
+    "Sophia Gardens"
+   ],
+   "venue_id": "sophia-gardens"
+  },
+  {
+   "aliases": [
+    [
+     "Sportpark Het Schootsveld",
+     "Deventer"
+    ],
+    [
+     "Sportpark Het Schootsveld, Deventer",
+     "Deventer"
+    ]
+   ],
+   "city": "Deventer",
+   "n_selected_matches": 9,
+   "name": "Sportpark Het Schootsveld",
+   "places": [
+    "Deventer"
+   ],
+   "search_names": [
+    "Sportpark Het Schootsveld"
+   ],
+   "venue_id": "sportpark-het-schootsveld"
+  },
+  {
+   "aliases": [
+    [
+     "Sportpark Maarschalkerweerd",
+     "Utrecht"
+    ],
+    [
+     "Sportpark Maarschalkerweerd, Utrecht",
+     "Utrecht"
+    ]
+   ],
+   "city": "Utrecht",
+   "n_selected_matches": 17,
+   "name": "Sportpark Maarschalkerweerd",
+   "places": [
+    "Utrecht"
+   ],
+   "search_names": [
+    "Sportpark Maarschalkerweerd"
+   ],
+   "venue_id": "sportpark-maarschalkerweerd"
+  },
+  {
+   "aliases": [
+    [
+     "Sportpark Westvliet",
+     "The Hague"
+    ],
+    [
+     "Sportpark Westvliet, The Hague",
+     "The Hague"
+    ],
+    [
+     "Sportpark Westvliet, Voorburg",
+     "The Hague"
+    ]
+   ],
+   "city": "The Hague",
+   "n_selected_matches": 23,
+   "name": "Sportpark Westvliet",
+   "places": [
+    "The Hague",
+    "Voorburg"
+   ],
+   "search_names": [
+    "Sportpark Westvliet"
+   ],
+   "venue_id": "sportpark-westvliet"
+  },
+  {
+   "aliases": [
+    [
+     "St Albans Club, Buenos Aires",
+     "Buenos Aires"
+    ]
+   ],
+   "city": "Buenos Aires",
+   "n_selected_matches": 17,
+   "name": "St Albans Club",
+   "places": [
+    "Buenos Aires"
+   ],
+   "search_names": [
+    "St Albans Club"
+   ],
+   "venue_id": "st-albans-club"
+  },
+  {
+   "aliases": [
+    [
+     "St George's College Ground, Buenos Aires",
+     "Buenos Aires"
+    ]
+   ],
+   "city": "Buenos Aires",
+   "n_selected_matches": 9,
+   "name": "St George's College Ground",
+   "places": [
+    "Buenos Aires"
+   ],
+   "search_names": [
+    "St George's College Ground"
+   ],
+   "venue_id": "st-georges-college-ground"
+  },
+  {
+   "aliases": [
+    [
+     "St George's Park",
+     "Port Elizabeth"
+    ],
+    [
+     "St George's Park, Gqeberha",
+     "Gqeberha"
+    ],
+    [
+     "St George's Park, Port Elizabeth",
+     "Gqeberha"
+    ],
+    [
+     "St George's Park, Port Elizabeth",
+     "Port Elizabeth"
+    ]
+   ],
+   "city": "Port Elizabeth",
+   "n_selected_matches": 50,
+   "name": "St George's Park",
+   "places": [
+    "Gqeberha",
+    "Port Elizabeth"
+   ],
+   "search_names": [
+    "St George's Park"
+   ],
+   "venue_id": "st-georges-park"
+  },
+  {
+   "aliases": [
+    [
+     "St Georges Quilmes",
+     null
+    ]
+   ],
+   "city": null,
+   "n_selected_matches": 3,
+   "name": "St Georges Quilmes",
+   "places": [],
+   "search_names": [
+    "St Georges Quilmes"
+   ],
+   "venue_id": "st-georges-quilmes"
+  },
+  {
+   "aliases": [
+    [
+     "St Lawrence Ground",
+     "Canterbury"
+    ],
+    [
+     "St Lawrence Ground, Canterbury",
+     "Canterbury"
+    ]
+   ],
+   "city": "Canterbury",
+   "n_selected_matches": 2,
+   "name": "St Lawrence Ground",
+   "places": [
+    "Canterbury"
+   ],
+   "search_names": [
+    "St Lawrence Ground"
+   ],
+   "venue_id": "st-lawrence-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Stadium Australia",
+     "Sydney"
+    ]
+   ],
+   "city": "Sydney",
+   "n_selected_matches": 4,
+   "name": "Stadium Australia",
+   "places": [
+    "Sydney"
+   ],
+   "search_names": [
+    "Stadium Australia"
+   ],
+   "venue_id": "stadium-australia"
+  },
+  {
+   "aliases": [
+    [
+     "Stars Arena Hofstade, Zemst",
+     "Zemst"
+    ]
+   ],
+   "city": "Zemst",
+   "n_selected_matches": 7,
+   "name": "Stars Arena Hofstade",
+   "places": [
+    "Zemst"
+   ],
+   "search_names": [
+    "Stars Arena Hofstade"
+   ],
+   "venue_id": "stars-arena-hofstade"
+  },
+  {
+   "aliases": [
+    [
+     "Stubberudmyra Cricket Ground, Oslo",
+     "Oslo"
+    ]
+   ],
+   "city": "Oslo",
+   "n_selected_matches": 3,
+   "name": "Stubberudmyra Cricket Ground",
+   "places": [
+    "Oslo"
+   ],
+   "search_names": [
+    "Stubberudmyra Cricket Ground"
+   ],
+   "venue_id": "stubberudmyra-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "SuperSport Park",
+     "Centurion"
+    ],
+    [
+     "SuperSport Park, Centurion",
+     "Centurion"
+    ]
+   ],
+   "city": "Centurion",
+   "n_selected_matches": 93,
+   "name": "SuperSport Park",
+   "places": [
+    "Centurion"
+   ],
+   "search_names": [
+    "SuperSport Park"
+   ],
+   "venue_id": "supersport-park"
+  },
+  {
+   "aliases": [
+    [
+     "Svanholm Park, Brondby",
+     "Brondby"
+    ]
+   ],
+   "city": "Brondby",
+   "n_selected_matches": 24,
+   "name": "Svanholm Park",
+   "places": [
+    "Brondby"
+   ],
+   "search_names": [
+    "Svanholm Park"
+   ],
+   "venue_id": "svanholm-park"
+  },
+  {
+   "aliases": [
+    [
+     "Sydney Cricket Ground",
+     null
+    ],
+    [
+     "Sydney Cricket Ground",
+     "Sydney"
+    ]
+   ],
+   "city": "Sydney",
+   "n_selected_matches": 92,
+   "name": "Sydney Cricket Ground",
+   "places": [
+    "Sydney"
+   ],
+   "search_names": [
+    "Sydney Cricket Ground"
+   ],
+   "venue_id": "sydney-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Sylhet International Cricket Stadium",
+     null
+    ],
+    [
+     "Sylhet International Cricket Stadium",
+     "Sylhet"
+    ],
+    [
+     "Sylhet International Cricket Stadium, Academy Ground",
+     "Sylhet"
+    ],
+    [
+     "Sylhet Stadium",
+     null
+    ],
+    [
+     "Sylhet Stadium",
+     "Sylhet"
+    ]
+   ],
+   "city": "Sylhet",
+   "n_selected_matches": 27,
+   "name": "Sylhet International Cricket Stadium",
+   "places": [
+    "Academy Ground",
+    "Sylhet"
+   ],
+   "search_names": [
+    "Sylhet International Cricket Stadium",
+    "Sylhet Stadium"
+   ],
+   "venue_id": "sylhet-international-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Tafawa Balewa Square Cricket Oval",
+     "Lagos"
+    ],
+    [
+     "Tafawa Balewa Square Cricket Oval, Lagos",
+     "Lagos"
+    ]
+   ],
+   "city": "Lagos",
+   "n_selected_matches": 27,
+   "name": "Tafawa Balewa Square Cricket Oval",
+   "places": [
+    "Lagos"
+   ],
+   "search_names": [
+    "Tafawa Balewa Square Cricket Oval"
+   ],
+   "venue_id": "tafawa-balewa-square-cricket-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Takashinga Sports Club",
+     "Harare"
+    ],
+    [
+     "Takashinga Sports Club, Highfield, Harare",
+     "Harare"
+    ]
+   ],
+   "city": "Harare",
+   "n_selected_matches": 19,
+   "name": "Takashinga Sports Club",
+   "places": [
+    "Harare",
+    "Highfield"
+   ],
+   "search_names": [
+    "Takashinga Sports Club"
+   ],
+   "venue_id": "takashinga-sports-club"
+  },
+  {
+   "aliases": [
+    [
+     "TCA Oval, Blantyre",
+     "Blantyre"
+    ]
+   ],
+   "city": "Blantyre",
+   "n_selected_matches": 22,
+   "name": "TCA Oval",
+   "places": [
+    "Blantyre"
+   ],
+   "search_names": [
+    "TCA Oval"
+   ],
+   "venue_id": "tca-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Terdthai Cricket Ground",
+     "Bangkok"
+    ],
+    [
+     "Terdthai Cricket Ground, Bangkok",
+     "Bangkok"
+    ]
+   ],
+   "city": "Bangkok",
+   "n_selected_matches": 52,
+   "name": "Terdthai Cricket Ground",
+   "places": [
+    "Bangkok"
+   ],
+   "search_names": [
+    "Terdthai Cricket Ground"
+   ],
+   "venue_id": "terdthai-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Tikkurila Cricket Ground",
+     "Vantaa"
+    ]
+   ],
+   "city": "Vantaa",
+   "n_selected_matches": 33,
+   "name": "Tikkurila Cricket Ground",
+   "places": [
+    "Vantaa"
+   ],
+   "search_names": [
+    "Tikkurila Cricket Ground"
+   ],
+   "venue_id": "tikkurila-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Titwood",
+     "Glasgow"
+    ],
+    [
+     "Titwood, Glasgow",
+     "Glasgow"
+    ]
+   ],
+   "city": "Glasgow",
+   "n_selected_matches": 10,
+   "name": "Titwood",
+   "places": [
+    "Glasgow"
+   ],
+   "search_names": [
+    "Titwood"
+   ],
+   "venue_id": "titwood"
+  },
+  {
+   "aliases": [
+    [
+     "Tolerance Oval",
+     "Abu Dhabi"
+    ],
+    [
+     "Tolerance Oval, Abu Dhabi",
+     "Abu Dhabi"
+    ]
+   ],
+   "city": "Abu Dhabi",
+   "n_selected_matches": 9,
+   "name": "Tolerance Oval",
+   "places": [
+    "Abu Dhabi"
+   ],
+   "search_names": [
+    "Tolerance Oval"
+   ],
+   "venue_id": "tolerance-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Riverway Stadium, Townsville",
+     "Townsville"
+    ],
+    [
+     "Tony Ireland Stadium",
+     "Townsville"
+    ],
+    [
+     "Tony Ireland Stadium, Townsville",
+     "Townsville"
+    ]
+   ],
+   "city": "Townsville",
+   "n_selected_matches": 5,
+   "name": "Tony Ireland Stadium",
+   "places": [
+    "Townsville"
+   ],
+   "search_names": [
+    "Riverway Stadium",
+    "Tony Ireland Stadium"
+   ],
+   "venue_id": "tony-ireland-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Toronto Cricket, Skating and Curling Club",
+     "Toronto"
+    ]
+   ],
+   "city": "Toronto",
+   "n_selected_matches": 1,
+   "name": "Toronto Cricket",
+   "places": [
+    "Skating and Curling Club",
+    "Toronto"
+   ],
+   "search_names": [
+    "Toronto Cricket"
+   ],
+   "venue_id": "toronto-cricket"
+  },
+  {
+   "aliases": [
+    [
+     "Trent Bridge",
+     "Nottingham"
+    ],
+    [
+     "Trent Bridge, Nottingham",
+     "Nottingham"
+    ]
+   ],
+   "city": "Nottingham",
+   "n_selected_matches": 60,
+   "name": "Trent Bridge",
+   "places": [
+    "Nottingham"
+   ],
+   "search_names": [
+    "Trent Bridge"
+   ],
+   "venue_id": "trent-bridge"
+  },
+  {
+   "aliases": [
+    [
+     "Tribhuvan University International Cricket Ground",
+     "Kirtipur"
+    ],
+    [
+     "Tribhuvan University International Cricket Ground, Kirtipur",
+     "Kirtipur"
+    ]
+   ],
+   "city": "Kirtipur",
+   "n_selected_matches": 82,
+   "name": "Tribhuvan University International Cricket Ground",
+   "places": [
+    "Kirtipur"
+   ],
+   "search_names": [
+    "Tribhuvan University International Cricket Ground"
+   ],
+   "venue_id": "tribhuvan-university-international-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Udayana Cricket Ground",
+     "Bali"
+    ],
+    [
+     "Udayana Cricket Ground, Bali",
+     "Bali"
+    ]
+   ],
+   "city": "Bali",
+   "n_selected_matches": 80,
+   "name": "Udayana Cricket Ground",
+   "places": [
+    "Bali"
+   ],
+   "search_names": [
+    "Udayana Cricket Ground"
+   ],
+   "venue_id": "udayana-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "United Cricket Club Ground",
+     "Windhoek"
+    ],
+    [
+     "United Cricket Club Ground, Windhoek",
+     "Windhoek"
+    ]
+   ],
+   "city": "Windhoek",
+   "n_selected_matches": 35,
+   "name": "United Cricket Club Ground",
+   "places": [
+    "Windhoek"
+   ],
+   "search_names": [
+    "United Cricket Club Ground"
+   ],
+   "venue_id": "united-cricket-club-ground"
+  },
+  {
+   "aliases": [
+    [
+     "University of Dar-es-Salaam Ground",
+     "Dar-es-Salaam"
+    ]
+   ],
+   "city": "Dar-es-Salaam",
+   "n_selected_matches": 7,
+   "name": "University of Dar-es-Salaam Ground",
+   "places": [
+    "Dar-es-Salaam"
+   ],
+   "search_names": [
+    "University of Dar-es-Salaam Ground"
+   ],
+   "venue_id": "university-of-dar-es-salaam-ground"
+  },
+  {
+   "aliases": [
+    [
+     "University of Doha for Science and Technology",
+     "Doha"
+    ]
+   ],
+   "city": "Doha",
+   "n_selected_matches": 13,
+   "name": "University of Doha for Science and Technology",
+   "places": [
+    "Doha"
+   ],
+   "search_names": [
+    "University of Doha for Science and Technology"
+   ],
+   "venue_id": "university-of-doha-for-science-and-technology"
+  },
+  {
+   "aliases": [
+    [
+     "University of Lagos Cricket Oval",
+     "Lagos"
+    ]
+   ],
+   "city": "Lagos",
+   "n_selected_matches": 8,
+   "name": "University of Lagos Cricket Oval",
+   "places": [
+    "Lagos"
+   ],
+   "search_names": [
+    "University of Lagos Cricket Oval"
+   ],
+   "venue_id": "university-of-lagos-cricket-oval"
+  },
+  {
+   "aliases": [
+    [
+     "University Oval",
+     "Dunedin"
+    ],
+    [
+     "University Oval, Dunedin",
+     "Dunedin"
+    ]
+   ],
+   "city": "Dunedin",
+   "n_selected_matches": 22,
+   "name": "University Oval",
+   "places": [
+    "Dunedin"
+   ],
+   "search_names": [
+    "University Oval"
+   ],
+   "venue_id": "university-oval"
+  },
+  {
+   "aliases": [
+    [
+     "National Sports Academy, Sofia",
+     "Sofia"
+    ],
+    [
+     "Vassil Levski National Sports Academy, Sofia",
+     "Sofia"
+    ]
+   ],
+   "city": "Sofia",
+   "n_selected_matches": 23,
+   "name": "Vassil Levski National Sports Academy",
+   "places": [
+    "Sofia"
+   ],
+   "search_names": [
+    "National Sports Academy",
+    "Vassil Levski National Sports Academy"
+   ],
+   "venue_id": "vassil-levski-national-sports-academy"
+  },
+  {
+   "aliases": [
+    [
+     "Velden Cricket Ground, Latschach",
+     "Latschach"
+    ]
+   ],
+   "city": "Latschach",
+   "n_selected_matches": 9,
+   "name": "Velden Cricket Ground",
+   "places": [
+    "Latschach"
+   ],
+   "search_names": [
+    "Velden Cricket Ground"
+   ],
+   "venue_id": "velden-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Vidarbha C.A. Ground",
+     "Nagpur"
+    ],
+    [
+     "Vidarbha Cricket Association Ground",
+     "Nagpur"
+    ]
+   ],
+   "city": "Nagpur",
+   "n_selected_matches": 3,
+   "name": "Vidarbha Cricket Association Ground",
+   "places": [
+    "Nagpur"
+   ],
+   "search_names": [
+    "Vidarbha C.A. Ground",
+    "Vidarbha Cricket Association Ground"
+   ],
+   "venue_id": "vidarbha-cricket-association-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Vidarbha Cricket Association Stadium, Jamtha",
+     null
+    ],
+    [
+     "Vidarbha Cricket Association Stadium, Jamtha",
+     "Nagpur"
+    ],
+    [
+     "Vidarbha Cricket Association Stadium, Jamtha, Nagpur",
+     "Nagpur"
+    ]
+   ],
+   "city": "Nagpur",
+   "n_selected_matches": 30,
+   "name": "Vidarbha Cricket Association Stadium",
+   "places": [
+    "Jamtha",
+    "Nagpur"
+   ],
+   "search_names": [
+    "Vidarbha Cricket Association Stadium"
+   ],
+   "venue_id": "vidarbha-cricket-association-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "VRA Cricket Ground",
+     "Amstelveen"
+    ],
+    [
+     "VRA Ground",
+     "Amstelveen"
+    ],
+    [
+     "VRA Ground, Amstelveen",
+     "Amstelveen"
+    ]
+   ],
+   "city": "Amstelveen",
+   "n_selected_matches": 18,
+   "name": "VRA Ground",
+   "places": [
+    "Amstelveen"
+   ],
+   "search_names": [
+    "VRA Cricket Ground",
+    "VRA Ground"
+   ],
+   "venue_id": "vra-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Wanderers",
+     "Windhoek"
+    ],
+    [
+     "Wanderers Cricket Ground",
+     "Windhoek"
+    ],
+    [
+     "Wanderers Cricket Ground, Windhoek",
+     "Windhoek"
+    ]
+   ],
+   "city": "Windhoek",
+   "n_selected_matches": 46,
+   "name": "Wanderers Cricket Ground",
+   "places": [
+    "Windhoek"
+   ],
+   "search_names": [
+    "Wanderers",
+    "Wanderers Cricket Ground"
+   ],
+   "venue_id": "wanderers-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "New Wanderers Stadium",
+     "Johannesburg"
+    ],
+    [
+     "New Wanderers Stadium, Johannesburg",
+     "Johannesburg"
+    ],
+    [
+     "The Wanderers Stadium",
+     "Johannesburg"
+    ],
+    [
+     "The Wanderers Stadium, Johannesburg",
+     "Johannesburg"
+    ],
+    [
+     "Wanderers Stadium, Johannesburg",
+     "Johannesburg"
+    ]
+   ],
+   "city": "Johannesburg",
+   "n_selected_matches": 98,
+   "name": "The Wanderers Stadium",
+   "places": [
+    "Johannesburg"
+   ],
+   "search_names": [
+    "New Wanderers Stadium",
+    "The Wanderers Stadium",
+    "Wanderers Stadium"
+   ],
+   "venue_id": "wanderers-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Wankhede Stadium",
+     null
+    ],
+    [
+     "Wankhede Stadium",
+     "Mumbai"
+    ],
+    [
+     "Wankhede Stadium, Mumbai",
+     "Mumbai"
+    ]
+   ],
+   "city": "Mumbai",
+   "n_selected_matches": 170,
+   "name": "Wankhede Stadium",
+   "places": [
+    "Mumbai"
+   ],
+   "search_names": [
+    "Wankhede Stadium"
+   ],
+   "venue_id": "wankhede-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Warner Park, Basseterre",
+     null
+    ],
+    [
+     "Warner Park, Basseterre",
+     "St Kitts"
+    ],
+    [
+     "Warner Park, Basseterre, St Kitts",
+     "Basseterre"
+    ],
+    [
+     "Warner Park, St Kitts",
+     "Basseterre"
+    ]
+   ],
+   "city": "Basseterre",
+   "n_selected_matches": 36,
+   "name": "Warner Park",
+   "places": [
+    "Basseterre",
+    "St Kitts"
+   ],
+   "search_names": [
+    "Warner Park"
+   ],
+   "venue_id": "warner-park"
+  },
+  {
+   "aliases": [
+    [
+     "West End Park International Cricket Stadium",
+     "Doha"
+    ],
+    [
+     "West End Park International Cricket Stadium, Doha",
+     "Doha"
+    ]
+   ],
+   "city": "Doha",
+   "n_selected_matches": 48,
+   "name": "West End Park International Cricket Stadium",
+   "places": [
+    "Doha"
+   ],
+   "search_names": [
+    "West End Park International Cricket Stadium"
+   ],
+   "venue_id": "west-end-park-international-cricket-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "W.A.C.A. Ground",
+     "Perth"
+    ],
+    [
+     "Western Australia Cricket Association Ground",
+     "Perth"
+    ],
+    [
+     "Western Australia Cricket Association Ground, Perth",
+     "Perth"
+    ]
+   ],
+   "city": "Perth",
+   "n_selected_matches": 41,
+   "name": "Western Australia Cricket Association Ground",
+   "places": [
+    "Perth"
+   ],
+   "search_names": [
+    "W.A.C.A. Ground",
+    "Western Australia Cricket Association Ground"
+   ],
+   "venue_id": "western-australia-cricket-association-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Sky Stadium",
+     "Wellington"
+    ],
+    [
+     "Sky Stadium, Wellington",
+     "Wellington"
+    ],
+    [
+     "Westpac Stadium",
+     null
+    ],
+    [
+     "Westpac Stadium",
+     "Wellington"
+    ],
+    [
+     "Westpac Stadium, Wellington",
+     "Wellington"
+    ]
+   ],
+   "city": "Wellington",
+   "n_selected_matches": 40,
+   "name": "Westpac Stadium",
+   "places": [
+    "Wellington"
+   ],
+   "search_names": [
+    "Sky Stadium",
+    "Westpac Stadium"
+   ],
+   "venue_id": "westpac-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "White Hill Field, Sandys Parish",
+     "Hamilton"
+    ]
+   ],
+   "city": "Hamilton",
+   "n_selected_matches": 21,
+   "name": "White Hill Field",
+   "places": [
+    "Hamilton",
+    "Sandys Parish"
+   ],
+   "search_names": [
+    "White Hill Field"
+   ],
+   "venue_id": "white-hill-field"
+  },
+  {
+   "aliases": [
+    [
+     "Willowmoore Park",
+     "Benoni"
+    ],
+    [
+     "Willowmoore Park, Benoni",
+     "Benoni"
+    ]
+   ],
+   "city": "Benoni",
+   "n_selected_matches": 25,
+   "name": "Willowmoore Park",
+   "places": [
+    "Benoni"
+   ],
+   "search_names": [
+    "Willowmoore Park"
+   ],
+   "venue_id": "willowmoore-park"
+  },
+  {
+   "aliases": [
+    [
+     "Windsor Park, Roseau",
+     "Dominica"
+    ],
+    [
+     "Windsor Park, Roseau, Dominica",
+     "Roseau"
+    ]
+   ],
+   "city": "Dominica",
+   "n_selected_matches": 14,
+   "name": "Windsor Park",
+   "places": [
+    "Dominica",
+    "Roseau"
+   ],
+   "search_names": [
+    "Windsor Park"
+   ],
+   "venue_id": "windsor-park"
+  },
+  {
+   "aliases": [
+    [
+     "Yeonhui Cricket Ground",
+     "Incheon"
+    ],
+    [
+     "Yeonhui Cricket Ground, Incheon",
+     "Incheon"
+    ]
+   ],
+   "city": "Incheon",
+   "n_selected_matches": 18,
+   "name": "Yeonhui Cricket Ground",
+   "places": [
+    "Incheon"
+   ],
+   "search_names": [
+    "Yeonhui Cricket Ground"
+   ],
+   "venue_id": "yeonhui-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "UKM-YSD Cricket Oval",
+     "Bangi"
+    ],
+    [
+     "UKM-YSD Cricket Oval, Bangi",
+     "Bangi"
+    ],
+    [
+     "YSD-UKM Cricket Oval, Bangi",
+     "Bangi"
+    ]
+   ],
+   "city": "Bangi",
+   "n_selected_matches": 45,
+   "name": "YSD-UKM Cricket Oval",
+   "places": [
+    "Bangi"
+   ],
+   "search_names": [
+    "UKM-YSD Cricket Oval",
+    "YSD-UKM Cricket Oval"
+   ],
+   "venue_id": "ysd-ukm-cricket-oval"
+  },
+  {
+   "aliases": [
+    [
+     "Zhejiang University of Technology Cricket Field",
+     "Hangzhou"
+    ]
+   ],
+   "city": "Hangzhou",
+   "n_selected_matches": 6,
+   "name": "Zhejiang University of Technology Cricket Field",
+   "places": [
+    "Hangzhou"
+   ],
+   "search_names": [
+    "Zhejiang University of Technology Cricket Field"
+   ],
+   "venue_id": "zhejiang-university-of-technology-cricket-field"
+  },
+  {
+   "aliases": [
+    [
+     "Bir Sreshtho Flight Lieutenant Matiur Rahman Stadium, Chattogram",
+     "Chattogram"
+    ],
+    [
+     "Chittagong Divisional Stadium",
+     null
+    ],
+    [
+     "Zahur Ahmed Chowdhury Stadium",
+     "Chattogram"
+    ],
+    [
+     "Zahur Ahmed Chowdhury Stadium",
+     "Chittagong"
+    ],
+    [
+     "Zahur Ahmed Chowdhury Stadium, Chattogram",
+     "Chattogram"
+    ],
+    [
+     "Zahur Ahmed Chowdhury Stadium, Chittagong",
+     "Chattogram"
+    ],
+    [
+     "Zohur Ahmed Chowdhury Stadium",
+     "Chittagong"
+    ]
+   ],
+   "city": "Chattogram",
+   "n_selected_matches": 80,
+   "name": "Zohur Ahmed Chowdhury Stadium",
+   "places": [
+    "Chattogram",
+    "Chittagong"
+   ],
+   "search_names": [
+    "Bir Sreshtho Flight Lieutenant Matiur Rahman Stadium",
+    "Chittagong Divisional Stadium",
+    "Zahur Ahmed Chowdhury Stadium",
+    "Zohur Ahmed Chowdhury Stadium"
+   ],
+   "venue_id": "zohur-ahmed-chowdhury-stadium"
+  }
+ ]
+}

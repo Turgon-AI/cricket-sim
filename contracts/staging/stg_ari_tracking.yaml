@@ -1,0 +1,262 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.staging.stg_ari_tracking
+name: stg_ari_tracking
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Typed copy of Ari Adaikalam's Cricinfo tracking file (line, length, shot, wagon wheel, win probability)
+    with one row per Cricinfo-tracked delivery. It is the raw input for the per-ball tracking layers in silver.
+  limitations: 'RESTRICTED THIRD-PARTY DATA. This comes from Ari Adaikalam''s Kaggle dataset ''The Ultimate Ball-by-Ball
+    Cricket Dataset''. The Cricinfo-derived parts are non-commercial and must credit ESPNcricinfo. It must not be
+    republished or exported; use for analysis and charts only. Cricinfo''s line, length, shot and control labels
+    are observer labels recorded after the outcome of the ball is known, so they depend on what happened (shot control
+    almost encodes the wicket: 13.7% of ''not in control'' balls are wickets against 0.36% otherwise), and must
+    not feed a decision model. Coverage is uneven: line and length are missing for 38% of rows and are absent for
+    Tests and ODIs before 2014; ball timestamps only start in Oct 2019; win probability and projected score exist
+    on about 23% of rows. Source keys are built from Cricsheet, so every row joining to silver balls is expected
+    by construction. Staging does no cleaning: empty strings and blanks become NULL and nothing else is changed.'
+  usage: Join to silver balls on (match_id, innings, delivery_number). Do not use for anything that is published.
+schema:
+- name: stg_ari_tracking
+  physicalName: data/staging/stg_ari_tracking.parquet
+  physicalType: table
+  logicalType: object
+  description: Cricinfo ball-tracking attributes for 4,468,782 deliveries in 9,510 matches, taken from Ari's cricinfo_tracking.csv
+    with columns renamed to snake_case and typed.
+  dataGranularityDescription: One row per delivery (match_id, innings, delivery_number) that Ari's file has a tracking
+    record for.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (text), the same value as matches.match_id. Part of the key. All 9,510 matches
+      here exist in silver matches.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings of the match in the order batted, numbered as in silver balls.innings (1 to 4 in this file).
+      Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+    quality:
+    - name: innings_1_to_4
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 4
+      mustBe: 0
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Position of the delivery within the innings, counting every delivery including wides and no-balls,
+      starting at 1. Part of the key; identical in meaning to silver balls.delivery_number, and every row here has
+      a matching silver ball.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: ball_line
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Cricinfo''s label for the line of the ball: ''outside offstump'', ''wide outside offstump'', ''on
+      the stumps'', ''down leg'' or ''wide down leg''. NULL when Cricinfo has no value (about 38% of rows; Tests
+      and ODIs before 2014 have none). Relative to the batter, not the ground. Observer label recorded after the
+      outcome.'
+    quality:
+    - name: valid_line
+      metric: invalidValues
+      arguments:
+        validValues:
+        - outside offstump
+        - wide outside offstump
+        - on the stumps
+        - down leg
+        - wide down leg
+      mustBe: 0
+  - name: ball_length
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Cricinfo''s label for the length of the ball: ''full toss'', ''yorker'', ''full'', ''good length'',
+      ''short of a good length'' or ''short''. NULL when Cricinfo has no value (about 38% of rows). Observer label
+      recorded after the outcome.'
+    quality:
+    - name: valid_length
+      metric: invalidValues
+      arguments:
+        validValues:
+        - full toss
+        - yorker
+        - full
+        - good length
+        - short of a good length
+        - short
+      mustBe: 0
+  - name: shot_played
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricinfo's name for the shot, for example 'cover drive', 'flick', 'defended', 'left alone', 'no
+      shot'. Free vocabulary of about 40 names; names used before 2014 are coarser (for example 'forward defence',
+      'off side drive on front foot'), so the same shot can have two names across eras. NULL when not recorded.
+      Observer label recorded after the outcome.
+  - name: shot_control
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Whether Cricinfo judged the batter to be in control of the shot: ''in control'' or ''not in control''.
+      NULL when not recorded (3.4% of rows). Nearly encodes whether a wicket fell, so it is a result-class label,
+      not a pre-ball feature.'
+    quality:
+    - name: valid_control
+      metric: invalidValues
+      arguments:
+        validValues:
+        - in control
+        - not in control
+      mustBe: 0
+  - name: wagon_x
+    logicalType: integer
+    physicalType: INTEGER
+    description: Horizontal pixel coordinate of where the ball went on Cricinfo's wagon-wheel graphic (observed
+      0 to 364). NULL when no wagon-wheel point exists (22.6% of rows, e.g. dots and wickets); NULL together with
+      the other wagon_* columns.
+    customProperties:
+    - property: unit
+      value: pixels
+  - name: wagon_y
+    logicalType: integer
+    physicalType: INTEGER
+    description: Vertical pixel coordinate on Cricinfo's wagon-wheel graphic (observed 0 to 381). NULL exactly when
+      wagon_x is NULL.
+    customProperties:
+    - property: unit
+      value: pixels
+  - name: wagon_zone
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Wagon-wheel sector, 1 to 8, as Cricinfo numbers it. Zones are not tied to a fixed side of the
+      ground: the same shot_direction can appear under two zone numbers (cover occurs in zones 3 and 6). NULL when
+      wagon_x is NULL.'
+    quality:
+    - name: zone_1_to_8
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 8
+      mustBe: 0
+  - name: wagon_angle
+    logicalType: number
+    physicalType: DOUBLE
+    description: Direction of the shot in degrees from 0 to just under 360, with 0 straight behind the batter. Left-handers
+      are mirrored so the angle is relative to the batter's off side. NULL when wagon_x is NULL.
+    customProperties:
+    - property: unit
+      value: degrees
+    quality:
+    - name: angle_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 0 OR ${column} >= 360
+      mustBe: 0
+  - name: wagon_distance
+    logicalType: number
+    physicalType: DOUBLE
+    description: How far the ball travelled as a fraction of the way from the centre of the field to the boundary;
+      can exceed 1 (observed up to 1.39). NULL when wagon_x is NULL.
+    customProperties:
+    - property: unit
+      value: fraction of boundary distance
+    quality:
+    - name: distance_non_negative
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 0
+      mustBe: 0
+  - name: wagon_in_ring
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the shot ended inside the 30-yard fielding circle, false if outside. NULL when wagon_x
+      is NULL.
+  - name: shot_direction
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'The wagon-wheel zone as a name: fine leg, square leg, mid wicket, mid on, mid off, cover, point
+      or third man. Left-handers are mirrored, so ''cover'' is always the off side. NULL when wagon_x is NULL.'
+    quality:
+    - name: valid_direction
+      metric: invalidValues
+      arguments:
+        validValues:
+        - fine leg
+        - square leg
+        - mid wicket
+        - mid on
+        - mid off
+        - cover
+        - point
+        - third man
+      mustBe: 0
+  - name: ball_timestamp
+    logicalType: timestamp
+    physicalType: TIMESTAMP
+    description: Cricinfo's record time of the delivery, in UTC (no time-zone marker in the column). Only exists
+      from 30 Oct 2019 (about 41% of rows); NULL otherwise. It is the time Cricinfo logged the ball, not a verified
+      bowling time.
+  - name: win_probability
+    logicalType: number
+    physicalType: DOUBLE
+    description: Cricinfo's estimated chance, in percent (0 to 100), that the batting side wins at this ball, in
+      both innings. NULL on about 77% of rows. It was computed after the fact by a Cricinfo model, so it is a benchmark,
+      not a pre-ball input.
+    customProperties:
+    - property: unit
+      value: '%'
+    quality:
+    - name: probability_0_to_100
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  - name: predicted_score
+    logicalType: integer
+    physicalType: INTEGER
+    description: Cricinfo's projected final innings score at this ball, in runs. NULL exactly when win_probability
+      is NULL.
+    customProperties:
+    - property: unit
+      value: runs
+    quality:
+    - name: score_positive
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 0
+      mustBe: 0
+  - name: ball_events
+    logicalType: string
+    physicalType: VARCHAR
+    description: Events Cricinfo logged on the ball, as lowercase phrases separated by '; ' (for example 'drs review
+      (unsuccessful)', 'dropped catch', 'bowler change', 'end change', 'run out chance', 'player replacement').
+      NULL on 99% of rows. A 'bowler change' is usually attached to the last ball of the previous over rather than
+      the new bowler's first ball, so it leaks the next decision into the current ball.
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 4000
+  - name: wagon_fields_all_or_none
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (wagon_x IS NULL) <> (wagon_y IS NULL) OR (wagon_x IS NULL) <> (wagon_zone
+      IS NULL) OR (wagon_x IS NULL) <> (wagon_angle IS NULL) OR (wagon_x IS NULL) <> (wagon_distance IS NULL) OR
+      (wagon_x IS NULL) <> (wagon_in_ring IS NULL) OR (wagon_x IS NULL) <> (shot_direction IS NULL)
+    mustBe: 0
+  - name: score_and_probability_together
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (win_probability IS NULL) <> (predicted_score IS NULL)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: staging
+- property: kind
+  value: staging
+- property: sources
+  value:
+  - ari
+- property: upstream
+  value: []

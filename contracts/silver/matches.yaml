@@ -1,0 +1,386 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.matches
+name: matches
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'The match register: one row per Cricsheet match with its identity, competition, date, venue, teams,
+    toss and result. Every other event table hangs off it.'
+  limitations: 'Cricsheet (ODC-BY 1.0); format documented at https://cricsheet.org/format/json/. Silver keeps ALL
+    Cricsheet matches (men''s and women''s, international and club, 23,132 matches, 2001-12 to 2026-10); scope filters
+    are applied only in gold. It is NOT a complete register of cricket: Cricsheet omits matches it could not get
+    (see cricsheet_missing) and withholds Afghanistan''s matches entirely. Names (teams, venue, event) are as Cricsheet
+    spells them and are not harmonised across years. NULL in the result columns means ''not applicable'' (e.g. result
+    is NULL when someone won), not unknown. team1/team2 are listing order only. Some corrected files have a higher
+    revision, so re-ingesting can change values.'
+  usage: Join balls, wickets, innings, powerplays, reviews, replacements and match_players on match_id. Use winner_after_tiebreak,
+    not winner, to find who actually won a tied knockout.
+schema:
+- name: matches
+  physicalName: data/silver/matches.parquet
+  physicalType: table
+  logicalType: object
+  description: 'One row per match parsed from Cricsheet''s JSON files: its metadata (info block) and outcome, flattened
+    to columns. List-valued fields are joined with ''|''; nested ones are stored as JSON text.'
+  dataGranularityDescription: One row per Cricsheet match (match_id).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (text of the source file name, e.g. '1144528'). For most internationals this
+      equals the ESPNcricinfo match id; it is the join key to every other match-level table and to Ari's data. Primary
+      key.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: data_version
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet JSON format version the file was written in ('1.2.0' or '1.3.0').
+    quality:
+    - name: valid_version
+      metric: invalidValues
+      arguments:
+        validValues:
+        - 1.2.0
+        - 1.3.0
+      mustBe: 0
+  - name: created
+    logicalType: string
+    physicalType: VARCHAR
+    description: Date (YYYY-MM-DD text) the Cricsheet file was first generated. Not the match date.
+  - name: revision
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Cricsheet revision number of the file, starting at 1 and increasing with each correction (1 to
+      6). Higher means the match was corrected after publication.
+  - name: match_type
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Cricsheet match type: Test, MDM (multi-day match, not a Test), ODI, ODM (one-day match that is
+      not an ODI), T20 or IT20 (international T20). Note that Cricsheet files most T20 internationals under ''T20''
+      with team_type = ''international'', so IT20 is only a minority; filter on team_type and event rather than
+      on match_type alone.'
+    quality:
+    - name: valid_match_type
+      metric: invalidValues
+      arguments:
+        validValues:
+        - Test
+        - MDM
+        - ODI
+        - ODM
+        - T20
+        - IT20
+      mustBe: 0
+  - name: match_type_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Official number of the match within its match type (for example the 2,404th Test), where Cricsheet
+      knows it. NULL for IT20, MDM, ODM and for 60% of T20 matches.
+  - name: gender
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''male'' or ''female'' (Cricsheet''s classification of the competition).'
+    quality:
+    - name: valid_gender
+      metric: invalidValues
+      arguments:
+        validValues:
+        - male
+        - female
+      mustBe: 0
+  - name: team_type
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''international'' for national teams or ''club'' for franchise, county, state and other club sides.'
+    quality:
+    - name: valid_team_type
+      metric: invalidValues
+      arguments:
+        validValues:
+        - international
+        - club
+      mustBe: 0
+  - name: event_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the tournament or series. The same event can be spelled differently across years (e.g.
+      'World Cup' vs 'ICC Cricket World Cup'), so group with care. NULL for 89 matches.
+  - name: event_match_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Position of the match within the event or series, when Cricsheet records a plain number. NULL for
+      30% of matches, and also when the source holds a non-numeric value.
+  - name: event_stage
+    logicalType: string
+    physicalType: VARCHAR
+    description: Stage of the event when given, for example 'Final', 'Semi Final', 'Qualifier 1', 'Group Stage'.
+      Spelling varies ('Semi Final' and 'Semi-Final'). NULL for 93% of matches.
+  - name: season
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Season label as text: ''2019'' or a split season such as ''2011/12''.'
+  - name: start_date
+    logicalType: date
+    physicalType: DATE
+    description: First calendar day of the match (earliest of Cricsheet's dates). Cricsheet coverage starts 2001-12-19
+      here.
+  - name: end_date
+    logicalType: date
+    physicalType: DATE
+    description: Last calendar day listed for the match (equals start_date for one-day matches).
+  - name: n_dates
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Number of calendar days listed for the match (1 to 6). Not the same as end_date - start_date +
+      1 when there are rest days or play was lost.
+    customProperties:
+    - property: unit
+      value: days
+    quality:
+    - name: days_1_to_6
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 6
+      mustBe: 0
+  - name: venue
+    logicalType: string
+    physicalType: VARCHAR
+    description: Ground name as Cricsheet gives it; spelling is not canonical, so the same ground can appear under
+      several names.
+  - name: city
+    logicalType: string
+    physicalType: VARCHAR
+    description: City as given by Cricsheet. NULL for 1,649 matches.
+  - name: team1
+    logicalType: string
+    physicalType: VARCHAR
+    description: First team listed by Cricsheet (info.teams[0]). It is NOT necessarily the home team or the team
+      that batted first.
+  - name: team2
+    logicalType: string
+    physicalType: VARCHAR
+    description: Second team listed by Cricsheet (info.teams[1]).
+  - name: toss_winner
+    logicalType: string
+    physicalType: VARCHAR
+    description: Team that won the toss; always team1 or team2.
+  - name: toss_decision
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'What the toss winner chose: ''bat'' or ''field''.'
+    quality:
+    - name: valid_toss_decision
+      metric: invalidValues
+      arguments:
+        validValues:
+        - bat
+        - field
+      mustBe: 0
+  - name: winner
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Winning team (always team1 or team2). NULL when there is no winner: draw, tie or no result. For
+      a tie settled by a super over or bowl-out this stays NULL; see winner_after_tiebreak. Note this is NULL, not
+      the string ''tie''.'
+  - name: win_by_runs
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Winning margin in runs when the match was won by runs. NULL otherwise.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: win_by_wickets
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Winning margin in wickets when the match was won by wickets. NULL otherwise.
+    customProperties:
+    - property: unit
+      value: wickets
+  - name: win_by_innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Set (to 1) when a Test side won by an innings; the runs margin is then in win_by_runs. NULL otherwise.
+  - name: result
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Only set when there is no outright winner: ''draw'', ''tie'' or ''no result''. NULL when the match
+      has a winner (so NULL does not mean unknown).'
+    quality:
+    - name: valid_result
+      metric: invalidValues
+      arguments:
+        validValues:
+        - draw
+        - tie
+        - no result
+      mustBe: 0
+  - name: method
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How the result was decided when unusual: ''D/L'' (Duckworth-Lewis(-Stern)), ''VJD'', ''Awarded'',
+      ''Lost fewer wickets''. NULL for ordinary results. Note a ''tie'' can also carry method D/L (20 matches).'
+    quality:
+    - name: valid_method
+      metric: invalidValues
+      arguments:
+        validValues:
+        - D/L
+        - VJD
+        - Awarded
+        - Lost fewer wickets
+      mustBe: 0
+  - name: scheduled_overs
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Overs per side the match was scheduled for (20 or 50). NULL for all Tests and MDM matches (3,156
+      rows) because they are not over-limited. T20 and IT20 matches are always 20 (Cricsheet writes 50 for 19 of
+      them, so the format overrides it here; the value Cricsheet wrote is in scheduled_overs_source).
+    customProperties:
+    - property: unit
+      value: overs
+    quality:
+    - name: overs_20_or_50
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT IN (20, 50)
+      mustBe: 0
+  - name: balls_per_over
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Legal deliveries per over: 6, except 5 in 389 matches of The Hundred (men''s and women''s), where
+      5-ball sets are used.'
+    customProperties:
+    - property: unit
+      value: balls
+    quality:
+    - name: five_or_six
+      metric: invalidValues
+      arguments:
+        validValues:
+        - 5
+        - 6
+      mustBe: 0
+  - name: player_of_match
+    logicalType: string
+    physicalType: VARCHAR
+    description: Player(s) of the match as names joined by '|' (two or more when shared). NULL when not awarded
+      or not recorded.
+  - name: umpires
+    logicalType: string
+    physicalType: VARCHAR
+    description: On-field umpires' names joined by '|'. NULL when missing (see cricsheet_missing).
+  - name: tv_umpires
+    logicalType: string
+    physicalType: VARCHAR
+    description: Third/TV umpires' names joined by '|'. NULL if none recorded (about 50%).
+  - name: match_referees
+    logicalType: string
+    physicalType: VARCHAR
+    description: Match referees' names joined by '|'. NULL if none recorded; this is common for club cricket.
+  - name: n_innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Number of innings in the match as parsed, including super overs (1 to 8). 1 for matches that ended
+      after one innings (abandoned, forfeited or rain-affected).
+    customProperties:
+    - property: unit
+      value: innings
+    quality:
+    - name: innings_1_to_8
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 8
+      mustBe: 0
+  - name: cricsheet_missing
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'JSON text of Cricsheet''s own list of data known to be absent from this match (info.missing):
+      e.g. ["player_of_match"], ["umpires"], ["reviews"], or a powerplays object. NULL when nothing is flagged (2,823
+      matches are flagged). Parse with a JSON function.'
+  - name: winner_after_tiebreak
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'The eventual winner including tie-breaks: equals winner for matches with a winner; for a regulation
+      tie it holds the super-over (110 matches) or bowl-out (2) winner; NULL for draws, no results and ties without
+      a recorded tiebreak (93 matches).'
+  - name: tiebreak_method
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''super_over'' or ''bowl_out'' when a tied match was settled that way; NULL otherwise.'
+    quality:
+    - name: valid_tiebreak
+      metric: invalidValues
+      arguments:
+        validValues:
+        - super_over
+        - bowl_out
+      mustBe: 0
+  - name: season_year
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Calendar year of start_date (not the first year of a split season label).
+  - name: supersubs
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'JSON text mapping team to the player used as a super sub (a 2020-21 Big Bash experiment): {team:
+      player}. NULL for all other matches. Parse with a JSON function.'
+  - name: scheduled_overs_source
+    logicalType: integer
+    physicalType: SMALLINT
+    description: The overs value exactly as Cricsheet wrote it (info.overs). It equals scheduled_overs except for
+      the 19 T20 matches where Cricsheet wrote 50; NULL for Tests and MDM matches.
+    customProperties:
+    - property: unit
+      value: overs
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 5
+  - name: winner_is_a_team
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE winner IS NOT NULL AND winner NOT IN (team1, team2)
+    mustBe: 0
+  - name: toss_winner_is_a_team
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE toss_winner NOT IN (team1, team2)
+    mustBe: 0
+  - name: dates_ordered
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE start_date > end_date
+    mustBe: 0
+  - name: season_year_matches_start
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE season_year <> year(start_date)
+    mustBe: 0
+  - name: result_iff_no_winner
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (winner IS NULL) <> (result IS NOT NULL)
+    mustBe: 0
+  - name: tiebreak_only_on_tie
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE tiebreak_method IS NOT NULL AND (result <> 'tie' OR winner_after_tiebreak
+      IS NULL)
+    mustBe: 0
+  - name: teams_differ
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE team1 = team2
+    mustBe: 0
+  - name: scheduled_overs_match_format
+    description: T20 and IT20 are 20 overs, ODI and ODM 50, and Tests and multi-day matches have no over limit
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (match_type IN ('T20', 'IT20') AND scheduled_overs IS DISTINCT FROM 20)
+      OR (match_type IN ('ODI', 'ODM') AND scheduled_overs IS DISTINCT FROM 50) OR (match_type IN ('Test', 'MDM')
+      AND scheduled_overs IS NOT NULL)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: entity
+- property: sources
+  value:
+  - cricsheet
+- property: upstream
+  value: []

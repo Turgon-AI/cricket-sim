@@ -1,0 +1,661 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.fact_delivery
+name: fact_delivery
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'The core ball-by-ball table: for every delivery in scope, the match state BEFORE the ball (computed
+    only from earlier balls, so it is safe as model input) followed by what happened on the ball. Every non-key
+    column carries customProperty timingClass: ''pre_ball'' (knowable before the ball is bowled) or ''outcome''
+    (the result of the ball).'
+  limitations: 'Scope: men''s Tests, ODIs, T20Is between two ICC full members, and the IPL, from 2001 (config/scope.yml);
+    Cricsheet coverage is incomplete (see report_international_coverage; e.g. Afghanistan matches are withheld by
+    Cricsheet). The ''_before'' columns never include the ball itself; the build checks that the next ball''s state
+    equals this state plus this ball. Rain-revised chases (target_status ''revised_timing_unknown'', about 419 innings)
+    and innings of unknown length (innings_length_status ''reduced_timing_unknown'') have NULL target and/or ball
+    limit on purpose: Cricsheet records only the final revised target, not when it changed. Before late 2017 Cricsheet
+    folded byes off a no-ball into the no-ball count (see noball_includes_byes). A wicket on the ball is in dismissal_count;
+    who was out and how is in fact_dismissal. 3 matches in scope fail the quality checks (dim_match.passes_quality).'
+  usage: A decision or forecasting model should read only pre_ball columns (filter by the timingClass custom property)
+    and exclude rows with target_status = 'revised_timing_unknown' or innings_length_status = 'reduced_timing_unknown'
+    when it needs a known target or horizon. Join players on dim_player.cricsheet_id and matches on dim_match.match_id.
+schema:
+- name: fact_delivery
+  physicalName: data/gold/fact_delivery.parquet
+  physicalType: table
+  logicalType: object
+  description: Every delivery of every in-scope match, with the batting side, over and ball position, the players
+    on the field, the pre-ball match state (score, wickets, balls left, target, runs required, Test lead) and the
+    ball's outcome (legality, runs by type, boundaries, extras, wickets, DRS review).
+  dataGranularityDescription: One row per delivery bowled (wides and no-balls included), keyed by (match_id, innings,
+    delivery_number).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match identifier (the name of the match's file in Cricsheet's download, e.g. '1000851').
+      For most internationals it equals the ESPNcricinfo match id, but do not rely on that; use map_match_ids. Joins
+      to dim_match.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: dim_match.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number within the match, from 1, in batting order. Super overs continue the numbering (a
+      tied T20 with one super over has innings 3 and 4 as its super-over innings).
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Position of the delivery within its innings, from 1, counting every delivery including wides and
+      no-balls. Follows Ari Adaikalam's key convention, so (match_id, innings, delivery_number) also joins to that
+      Kaggle dataset.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: batting_team
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the batting team, as spelled by Cricsheet (e.g. 'South Africa', 'Chennai Super Kings').
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+  - name: is_super_over
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if this innings is a super over (the one-over-a-side tie-breaker), false otherwise.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+  - name: over
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Over number within the innings, counted from 0 as in cricket notation (the first over is over 0,
+      so ball '0.1' is the first ball). Always 0 in a super over.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    quality:
+    - name: non_negative
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 0
+      mustBe: 0
+  - name: ball_in_over
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Position of this delivery within its over, from 1, counting wides and no-balls. It is NOT the
+      legal ball number: a 6-ball over with one wide has positions 1-7. Use legal_balls_in_over_before or actual_delivery
+      for the official ball number.'
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+  - name: actual_delivery
+    logicalType: string
+    physicalType: VARCHAR
+    description: Official over.ball label of this delivery, e.g. '19.4' = 4th legal ball of the 20th over. A wide
+      or no-ball carries the number of the legal ball that will replace it, so labels can repeat within an over.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+  - name: legal_balls_in_over_before
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Legal balls already bowled in this over before this delivery (normally 0-5; 6 only in an over the
+      umpire miscounted).
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: balls
+  - name: batter_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier (8 hex characters) of the batter on strike. Joins to dim_player.cricsheet_id.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    relationships:
+    - to: dim_player.cricsheet_id
+  - name: batter
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the batter on strike, as written in Cricsheet (initials + surname, e.g. 'SC Cook').
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+  - name: non_striker_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier of the non-striking batter. Joins to dim_player.cricsheet_id.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    relationships:
+    - to: dim_player.cricsheet_id
+  - name: non_striker
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the non-striking batter, as written in Cricsheet.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+  - name: bowler_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier of the bowler. Joins to dim_player.cricsheet_id.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    relationships:
+    - to: dim_player.cricsheet_id
+  - name: bowler
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the bowler, as written in Cricsheet.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+  - name: innings_runs_before
+    logicalType: integer
+    physicalType: INTEGER
+    description: 'Batting side''s score in this innings before this ball: runs from every earlier delivery of the
+      innings, plus any penalty runs awarded to the side before the innings began. This ball''s runs are NOT included.'
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: innings_wickets_before
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Wickets the batting side had lost in this innings before this ball (0-9; the innings ends at the
+      10th). Counts dismissals only: ''retired hurt'' and ''retired not out'' are not wickets, ''retired out'' is.
+      This ball''s wicket, if any, is NOT included.'
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: wickets
+    quality:
+    - name: between_0_and_9
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 9
+      mustBe: 0
+  - name: legal_balls_before
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Legal deliveries (everything except wides and no-balls) already bowled in this innings before this
+      ball.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: balls
+  - name: scheduled_balls_limit
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Legal balls the innings was scheduled to have when the match began (scheduled overs x balls per
+      over; 6 for a super over; NULL for Tests). Nominal: it ignores any later rain reduction, so it never reveals
+      the future and is safe as a model input. Uses Cricsheet''s scheduled overs, which may not reflect a reduction
+      agreed before the first ball (Eden Park 2019 was 11 overs a side; Cricsheet says 20).'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: balls
+  - name: scheduled_balls_remaining_before
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Legal balls left on the original schedule, counted by overs: the full overs still to come, plus
+      what is left of this over (at least 1 on the ball itself, so a legal ball never sees 0, even in a 7-ball
+      over). It uses only this ball''s own over, so a 5-ball or 7-ball over earlier in the innings (which Cricsheet
+      lists) does not shift it. Safe as a model input (never reveals a later reduction).'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: balls
+  - name: nominal_target_runs
+    logicalType: integer
+    physicalType: INTEGER
+    description: 'The target as it stood when the innings began, before any later revision: first-innings total
+      + 1 for a limited-overs chase, the previous super-over innings + 1, or the Test fourth-innings target. NULL
+      when the innings is not chasing. Safe as a model input; differs from the official target only when rain later
+      revised it.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: nominal_runs_required_before
+    logicalType: integer
+    physicalType: INTEGER
+    description: 'nominal_target_runs minus the runs already scored: runs still needed against the target as it
+      stood when the innings began. Safe as a model input.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: match_lead_before
+    logicalType: integer
+    physicalType: INTEGER
+    description: 'Tests only: the batting side''s lead in the match before this ball, i.e. all runs it has scored
+      in the match so far (earlier innings plus this innings up to the previous ball, penalty runs included) minus
+      all runs the opposition has scored. Negative = trailing. NULL for limited-overs and super-over innings.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: wickets_limit
+    logicalType: integer
+    physicalType: INTEGER
+    description: 'Dismissals that end the innings: 10, or 2 in a super over. When batters are absent hurt (batters_absent
+      > 0) the innings actually ends after wickets_limit - batters_absent dismissals.'
+    required: true
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: wickets
+    quality:
+    - name: valid_wickets_limit
+      metric: invalidValues
+      arguments:
+        validValues:
+        - 10
+        - 2
+      mustBe: 0
+  - name: batters_absent
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Number of batters Cricsheet lists as absent hurt (unable to bat) in this innings, usually 0. Recorded
+      once per innings, so it is treated as known from the innings'' first ball. HINDSIGHT: Cricsheet records absentees
+      for the whole innings, so on early balls this can reveal an injury that only became known later. Use it to
+      choose rows, never as a model input.'
+    required: true
+    customProperties:
+    - property: timingClass
+      value: hindsight
+    - property: unit
+      value: batters
+  - name: innings_balls_limit
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Maximum legal balls the innings could last, as known before its first ball: scheduled overs x
+      balls per over (300 in a 50-over ODI, 120 in a T20) plus the extra balls of any over Cricsheet lists as
+      miscounted (a listed 7-ball over makes it 301, a 5-ball over 299), or one over (6 balls) for a super over.
+      NULL for Tests
+      (no limit) and whenever the innings may have been shortened at a time the data cannot tell (innings_length_status
+      = ''reduced_timing_unknown'', e.g. rain-revised chases). HINDSIGHT: computed from earlier balls, but blanked
+      or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the
+      future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns
+      instead.'
+    customProperties:
+    - property: timingClass
+      value: hindsight
+    - property: unit
+      value: balls
+  - name: balls_remaining_before
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'innings_balls_limit minus legal_balls_before: legal balls left in the innings before this ball.
+      NULL whenever innings_balls_limit is NULL. HINDSIGHT: computed from earlier balls, but blanked or flagged
+      using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future.
+      Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead.'
+    customProperties:
+    - property: timingClass
+      value: hindsight
+    - property: unit
+      value: balls
+  - name: innings_length_status
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How much of the innings'' length is known before it starts. ''full_known'' = a limited-overs innings
+      whose full scheduled allocation applied from its first ball (a first innings that used all its balls or was
+      bowled out, or any innings of a match whose chase was unrevised); ''reduced_timing_unknown'' = a limited-overs
+      innings that may have been shortened (usually by rain) at an unknown moment: a rain-revised or inconsistent
+      chase, or a first innings that ended early without being bowled out. Cricsheet does not record when overs
+      were lost, so no ball limit is given; ''unlimited'' = a Test innings (no over limit); ''super_over'' = a super-over
+      innings (6 balls, 2 wickets). HINDSIGHT: computed from earlier balls, but blanked or flagged using how the
+      innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose
+      which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead.'
+    required: true
+    customProperties:
+    - property: timingClass
+      value: hindsight
+    quality:
+    - name: valid_length_status
+      metric: invalidValues
+      arguments:
+        validValues:
+        - full_known
+        - reduced_timing_unknown
+        - unlimited
+        - super_over
+      mustBe: 0
+  - name: target_runs
+    logicalType: integer
+    physicalType: INTEGER
+    description: 'Runs the batting side must reach to win, as known at the start of the innings (it never changes
+      mid-innings). Set only when target_status is ''set'' (unrevised limited-overs chase: Cricsheet''s stated target,
+      or the first-innings total + 1 when Cricsheet gives none), ''super_over_derived'' (the first super-over innings''
+      total + 1) or ''test_derived'' (Test fourth innings: the opposition''s runs minus the batting side''s runs
+      over innings 1-3, + 1). NULL otherwise, including rain-revised chases: Cricsheet stores only the FINAL revised
+      target, not when it was set, so using it ball by ball would leak the future. HINDSIGHT: computed from earlier
+      balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs
+      and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_
+      columns instead.'
+    customProperties:
+    - property: timingClass
+      value: hindsight
+    - property: unit
+      value: runs
+  - name: runs_required_before
+    logicalType: integer
+    physicalType: INTEGER
+    description: 'target_runs minus innings_runs_before: runs still needed to win before this ball. NULL when target_runs
+      is NULL. Always at least 1 where present. HINDSIGHT: computed from earlier balls, but blanked or flagged using
+      how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it
+      to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead.'
+    customProperties:
+    - property: timingClass
+      value: hindsight
+    - property: unit
+      value: runs
+  - name: target_status
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Why target_runs has (or lacks) a value. ''set'' = unrevised limited-overs chase, target and ball
+      limit known; ''revised_timing_unknown'' = chase revised by a rain rule (D/L) or set over fewer than the scheduled
+      overs; Cricsheet records only the final revised target, so target_runs and innings_balls_limit are NULL; ''inconsistent_with_balls''
+      = a chase that looks unrevised but whose own balls contradict its target (it reached the target, or used up
+      its overs, before its last ball), treated as unknown, so NULL; ''super_over_derived'' = second innings of
+      a super over; ''test_derived'' = fourth innings of a Test; ''none'' = no target applies (first innings, first
+      super-over innings, Test innings 1-3). HINDSIGHT: computed from earlier balls, but blanked or flagged using
+      how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it
+      to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead.'
+    required: true
+    customProperties:
+    - property: timingClass
+      value: hindsight
+    quality:
+    - name: valid_target_status
+      metric: invalidValues
+      arguments:
+        validValues:
+        - none
+        - set
+        - revised_timing_unknown
+        - inconsistent_with_balls
+        - super_over_derived
+        - test_derived
+      mustBe: 0
+  - name: is_legal
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the delivery counts toward the over (not a wide and not a no-ball). Known only once the
+      ball is bowled.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+  - name: runs_batter
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Runs credited to the batter off this delivery (off the bat, including boundaries).
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+    - property: unit
+      value: runs
+    quality:
+    - name: non_negative
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 0
+      mustBe: 0
+  - name: runs_extras
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Extra runs on this delivery: wides + noballs + byes + legbyes + penalty.'
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+    - property: unit
+      value: runs
+    quality:
+    - name: non_negative
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 0
+      mustBe: 0
+  - name: runs_total
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Total runs added to the batting side''s score by this delivery: runs_batter + runs_extras.'
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+    - property: unit
+      value: runs
+  - name: runs_non_boundary
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True when Cricsheet marks the batter's 4 or 6 as run (all-run, or overthrows) rather than a boundary.
+      Rare.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+  - name: is_four
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the batter hit a boundary four (runs_batter = 4 and not runs_non_boundary). Four byes or
+      leg-byes are not counted.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+  - name: is_six
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the batter hit a six (runs_batter = 6 and not runs_non_boundary).
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+  - name: wides
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Wide runs on this delivery (0 if not a wide; a wide that runs to the boundary gives 5).
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+    - property: unit
+      value: runs
+  - name: noballs
+    logicalType: integer
+    physicalType: SMALLINT
+    description: No-ball extras on this delivery (normally 1; 0 if not a no-ball). Values above 1 before late 2017
+      usually include byes run off the no-ball, see noball_includes_byes.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+    - property: unit
+      value: runs
+  - name: byes
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Byes on this delivery (runs not off the bat or body).
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+    - property: unit
+      value: runs
+  - name: legbyes
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Leg-byes on this delivery (runs off the batter's body).
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+    - property: unit
+      value: runs
+  - name: penalty
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Penalty runs awarded to the batting side on this delivery (5 when awarded, else 0).
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+    - property: unit
+      value: runs
+  - name: noball_includes_byes
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: 'True when noballs > 1 and runs_batter = 0, i.e. the no-ball count probably also contains byes
+      run off it: Cricsheet folded those together before late 2017. A heuristic flag; bowler-conceded runs from
+      such balls are overstated.'
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+  - name: wicket_count
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Number of wicket entries Cricsheet records on this delivery, including retirements ('retired hurt',
+      'retired not out') that are not dismissals. Use dismissal_count for wickets that count.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+    - property: unit
+      value: wickets
+  - name: dismissal_count
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Dismissals on this delivery that count against the batting side (0, 1, rarely 2): wicket entries
+      other than ''retired hurt'' and ''retired not out''. Details in fact_dismissal.'
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+    - property: unit
+      value: wickets
+  - name: has_review
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if a DRS (player or umpire) review was recorded on this delivery. Reviews happen after the
+      ball, so this is an outcome.
+    required: true
+    customProperties:
+    - property: timingClass
+      value: outcome
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 3500
+  - name: runs_total_adds_up
+    description: runs_total = runs_batter + runs_extras on every ball
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE runs_total <> runs_batter + runs_extras
+    mustBe: 0
+  - name: extras_add_up
+    description: runs_extras = wides + noballs + byes + legbyes + penalty on every ball
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE runs_extras <> wides + noballs + byes + legbyes + penalty
+    mustBe: 0
+  - name: legal_means_no_wide_or_noball
+    description: a ball is legal exactly when it is neither a wide nor a no-ball
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE is_legal <> (wides = 0 AND noballs = 0)
+    mustBe: 0
+  - name: boundaries_match_runs
+    description: is_four / is_six only on balls where the batter scored 4 / 6
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (is_four AND runs_batter <> 4) OR (is_six AND runs_batter <> 6)
+    mustBe: 0
+  - name: target_present_iff_known
+    description: target_runs is filled exactly when target_status says the target is known
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (target_runs IS NOT NULL) <> (target_status IN ('set', 'super_over_derived',
+      'test_derived'))
+    mustBe: 0
+  - name: ball_limit_present_iff_known
+    description: innings_balls_limit is filled exactly when the innings length is known
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (innings_balls_limit IS NOT NULL) <> (innings_length_status IN ('full_known',
+      'super_over'))
+    mustBe: 0
+  - name: lead_only_in_tests
+    description: match_lead_before is filled exactly for Test (unlimited) innings
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (match_lead_before IS NOT NULL) <> (innings_length_status = 'unlimited')
+    mustBe: 0
+  - name: known_chase_not_finished
+    description: no ball of a chase with a known target is bowled after the target is reached or the balls run out
+      (a target fixed after the fact would break this); a ball with 0 balls left is already after the last ball
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE target_status = 'set' AND (runs_required_before <= 0 OR balls_remaining_before
+      <= 0)
+    mustBe: 0
+  - name: nominal_target_equals_target
+    description: where the target is known without a rain revision, the nominal target is that target
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE target_status IN ('set', 'super_over_derived', 'test_derived') AND
+      nominal_target_runs IS DISTINCT FROM target_runs
+    mustBe: 0
+  - name: state_continuity
+    description: on every ball the next ball's _before state equals this ball's _before state plus this ball, so
+      _before never includes the ball itself
+    type: sql
+    query: SELECT count(*) FROM (SELECT innings_runs_before + runs_total AS r, innings_wickets_before + dismissal_count
+      AS w, legal_balls_before + CAST(is_legal AS INT) AS l, lead(innings_runs_before) OVER k AS nr, lead(innings_wickets_before)
+      OVER k AS nw, lead(legal_balls_before) OVER k AS nl FROM ${table} WINDOW k AS (PARTITION BY match_id, innings
+      ORDER BY delivery_number)) WHERE nr IS NOT NULL AND (nr <> r OR nw <> w OR nl <> l)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: fact
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - balls
+  - matches
+  - int_ball_state_pre

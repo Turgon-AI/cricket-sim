@@ -1,0 +1,22 @@
+# Reference list of numbered men's internationals (Test / ODI / T20I), from Wikipedia season pages.
+# Used to classify gaps in Cricsheet coverage exactly. Read by cricket_sim.wiki_fixtures.
+wiki_fixtures:
+  description: >-
+    Wikitext of English Wikipedia "International cricket in YYYY" / "International cricket in YYYY–YY"
+    season pages, pinned by revision id. Parsed into data/silver/wiki_fixtures.parquet.
+  endpoint: https://en.wikipedia.org/w/api.php
+  request: "action=query&prop=revisions&rvprop=content|ids&rvslots=main&formatversion=2&redirects=1"
+  user_agent: "cricket-sim/0.1 (non-commercial research; season-page reference list) python-requests"
+  delay_seconds: 1.0
+  # Page list rule: "International cricket in 2000–01" (en dash), then for every year Y from 2001 to 2026
+  # both "International cricket in Y" (northern summer) and "International cricket in Y–(Y+1 mod 100, 2 digits)".
+  first_season: "2000–01"
+  first_year: 2001
+  last_year: 2026
+  optional_pages:
+    - "International cricket in 2027"   # fetched if it exists; skipped (not an error) if missing
+  licence: CC BY-SA 4.0
+  redistributable: true
+  attribution: >-
+    Wikipedia contributors, "International cricket in <season>" pages, English Wikipedia
+    (https://en.wikipedia.org), CC BY-SA 4.0; derived data must be shared alike. Revision ids are in the snapshot index.

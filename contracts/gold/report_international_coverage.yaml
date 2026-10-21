@@ -1,0 +1,213 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.report_international_coverage
+name: report_international_coverage
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Measures how complete Cricsheet (and so this dataset) is for men''s internationals: every numbered Test,
+    ODI and full-member T20I since 2001 in an independent reference list, with whether Cricsheet holds it and, if
+    not, a named reason.'
+  limitations: 'The reference is Wikipedia''s ''International cricket in YYYY'' season pages (pinned revisions,
+    CC BY-SA 4.0), parsed automatically: a few rows lack teams (teams_source ''none'') or had duplicate conflicting
+    entries, and some match numbers are missing from the pages entirely, so they cannot appear here. Matches whose
+    result is unknown on the page are excluded. The T20I reference is incomplete after 2019 and associate T20Is
+    are out of scope. Reasons are assigned in a fixed order (first that applies), and ''missing_unlisted_2002_sparse_year''
+    is this project''s label for a year Cricsheet covers thinly, not a Cricsheet concept. ''before_cricsheet_coverage''
+    means earlier than Cricsheet''s first match of that format in scope.'
+schema:
+- name: report_international_coverage
+  physicalName: data/gold/report_international_coverage.parquet
+  physicalType: table
+  logicalType: object
+  description: Every numbered men's Test, ODI and full-member T20I from 2001 in the Wikipedia reference list, with
+    teams, result class, ESPNcricinfo id, the linked Cricsheet match (if any), the link method and a coverage status.
+  dataGranularityDescription: One row per reference international, keyed by (segment, match_number).
+  properties:
+  - name: segment
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''Test'', ''ODI'' or ''T20I''.'
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    quality:
+    - name: valid_segment
+      metric: invalidValues
+      arguments:
+        validValues:
+        - Test
+        - ODI
+        - T20I
+      mustBe: 0
+  - name: match_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Official international match number in the reference (Test No., ODI No., T20I No.).
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: start_date
+    logicalType: date
+    physicalType: DATE
+    description: Start date in the reference.
+    required: true
+    quality:
+    - name: in_scope_dates
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < DATE '2001-01-01'
+      mustBe: 0
+  - name: team1
+    logicalType: string
+    physicalType: VARCHAR
+    description: First team named in the reference (home side first when taken from a section heading). NULL when
+      the parser could not determine the teams.
+  - name: team2
+    logicalType: string
+    physicalType: VARCHAR
+    description: Second team named in the reference; NULL when unknown.
+  - name: result_class
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Result as parsed from the reference: ''result'', ''draw'', ''tie'', ''no_result'' or ''abandoned''.'
+    required: true
+    quality:
+    - name: valid_result_class
+      metric: invalidValues
+      arguments:
+        validValues:
+        - result
+        - draw
+        - tie
+        - no_result
+        - abandoned
+      mustBe: 0
+  - name: cricinfo_match_id
+    logicalType: integer
+    physicalType: BIGINT
+    description: ESPNcricinfo match id from the reference link. NULL when the page gives none.
+  - name: cricsheet_match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id the reference match is linked to (joins to dim_match.match_id). NULL when Cricsheet
+      does not hold it.
+    relationships:
+    - to: dim_match.match_id
+  - name: link_method
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How the reference match was linked to Cricsheet: ''cricinfo_id'' (Cricsheet match id equals the
+      reference''s ESPNcricinfo id), ''number_and_teams'' (same official number and same two teams), or ''date_and_teams''
+      (same two teams only), all three needing the two teams (unordered) to agree and start dates within one day; or
+      ''reviewed_override'' (a hand-checked link from config/link_overrides.yml, with its reason there). Links are
+      one-to-one, made best pair first. NULL when unlinked.'
+    quality:
+    - name: valid_link_method
+      metric: invalidValues
+      arguments:
+        validValues:
+        - cricinfo_id
+        - number_and_teams
+        - date_and_teams
+        - reviewed_override
+      mustBe: 0
+  - name: teams_source
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Where team1/team2 were read from on the page: ''row'' (the table row), ''header'' (captain columns),
+      ''heading'' (section heading such as ''India in Australia''), ''heading_multi_host'', ''heading_corrected''
+      (heading host replaced by the team actually playing, e.g. neutral venues), ''heading_unreliable'' or ''none''
+      (teams NULL).'
+    required: true
+  - name: duplicate_conflict
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the reference lists this match number more than once with conflicting dates, teams or ids;
+      the best-fitting row was kept.
+    required: true
+  - name: status
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Coverage verdict, first matching reason wins: ''in_cricsheet''; ''after_snapshot'' (dated after
+      the last in-scope match in the pinned Cricsheet snapshot, so not a gap); ''abandoned_without_a_ball'';
+      ''afghanistan_withheld_by_cricsheet'' (Cricsheet does not publish Afghanistan matches); ''before_cricsheet_coverage'';
+      ''cricsheet_known_missing'' (on Cricsheet''s own missing list, matched on date and teams, or on date alone
+      when the reference has no teams); ''no_result_possibly_no_play'' (Cricsheet
+      holds no match without a ball bowled); ''missing_unlisted_2002_sparse_year''; ''missing_unlisted'' (missing
+      with no known reason).'
+    required: true
+    quality:
+    - name: valid_status
+      metric: invalidValues
+      arguments:
+        validValues:
+        - in_cricsheet
+        - after_snapshot
+        - abandoned_without_a_ball
+        - afghanistan_withheld_by_cricsheet
+        - before_cricsheet_coverage
+        - cricsheet_known_missing
+        - no_result_possibly_no_play
+        - missing_unlisted_2002_sparse_year
+        - missing_unlisted
+      mustBe: 0
+  - name: page_title
+    logicalType: string
+    physicalType: VARCHAR
+    description: Title of the English Wikipedia season page this row was taken from (CC BY-SA 4.0 source).
+  - name: page_revid
+    logicalType: integer
+    physicalType: BIGINT
+    description: Wikipedia revision id of that page, the pinned version (oldid in the page URL). Together with page_title
+      it identifies the exact source page revision.
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 4000
+  - name: linked_iff_in_cricsheet
+    description: a Cricsheet id and link method are present exactly for status 'in_cricsheet'
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (cricsheet_match_id IS NOT NULL) <> (status = 'in_cricsheet') OR
+      (link_method IS NOT NULL) <> (status = 'in_cricsheet')
+    mustBe: 0
+  - name: no_gap_after_the_snapshot
+    description: a reference match dated after the last in-scope match in the pinned Cricsheet snapshot is 'after_snapshot',
+      never a gap
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE start_date > (SELECT max(start_date) FROM ${table:dim_match}) AND status
+      <> 'after_snapshot'
+    mustBe: 0
+  - name: no_missed_link
+    description: no unlinked reference match has the same number and teams as an unlinked Cricsheet match within three
+      days
+    type: sql
+    query: SELECT count(*) FROM ${table} c JOIN ${table:dim_match} d ON d.segment = c.segment AND d.match_type_number
+      = c.match_number AND list_sort([d.team1, d.team2]) = list_sort([c.team1, c.team2]) AND abs(d.start_date - c.start_date)
+      <= 3 WHERE c.cricsheet_match_id IS NULL AND d.match_id NOT IN (SELECT cricsheet_match_id FROM ${table} WHERE
+      cricsheet_match_id IS NOT NULL)
+    mustBe: 0
+  - name: missing_list_checked_by_date_when_teams_unknown
+    description: an unexplained gap without reference teams is not on Cricsheet's missing list for that date
+    type: sql
+    query: SELECT count(*) FROM ${table} c WHERE c.status LIKE 'missing_unlisted%' AND c.team1 IS NULL AND EXISTS (SELECT
+      1 FROM ${table:cricsheet_missing} m WHERE m.gender = 'male' AND m.list_type = 'match_type' AND m.list_name = CASE
+      c.segment WHEN 'ODI' THEN 'Odi' ELSE c.segment END AND abs(m.start_date - c.start_date) <= 1)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: report
+- property: sources
+  value:
+  - wiki_fixtures
+  - cricsheet
+  - cricsheet_missing
+  - derived
+- property: upstream
+  value:
+  - wikipedia_fixtures
+  - dim_match
+  - cricsheet_missing

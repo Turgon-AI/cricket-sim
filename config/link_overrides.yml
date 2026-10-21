@@ -1,0 +1,37 @@
+# Reviewed links between the Wikipedia reference list and Cricsheet that the strict rule cannot make
+# (src/cricket_sim/wiki_fixtures.py link_reference: the two teams agree and start dates are within one day).
+# Each entry names both sides and was checked by hand against the data. The linker adds them after the strict pass,
+# as link_method 'reviewed_override'. The build fails if an entry names a row that does not exist, gives identifiers
+# that do not match the data, has no reason, or touches a row the strict pass already linked (so this file cannot
+# rewire a good link, and an entry the strict rule no longer needs must be removed).
+#   segment, reference_number, reference_cricinfo_id: the reference row (Wikipedia, as parsed; id may be null)
+#   cricsheet_match_id, cricsheet_number: the Cricsheet match (dim_match.match_id, match_type_number)
+links:
+  - {segment: Test, reference_number: 1768, reference_cricinfo_id: 221840, cricsheet_match_id: "221840", cricsheet_number: 1768,
+     reason: "reference lists no teams; same ESPNcricinfo id, number and date (Australia v ICC World XI, 2005-10-14)"}
+  - {segment: ODI, reference_number: 2269, reference_cricinfo_id: 216271, cricsheet_match_id: "216271", cricsheet_number: 2269,
+     reason: "reference lists no teams; same ESPNcricinfo id, number and date (Africa XI v Asia XI, 2005-08-17)"}
+  - {segment: ODI, reference_number: 2271, reference_cricinfo_id: 216669, cricsheet_match_id: "216669", cricsheet_number: 2271,
+     reason: "reference lists no teams; same ESPNcricinfo id, number and date (Africa XI v Asia XI, 2005-08-21)"}
+  - {segment: ODI, reference_number: 2283, reference_cricinfo_id: 221083, cricsheet_match_id: "221083", cricsheet_number: 2283,
+     reason: "reference lists no teams; same ESPNcricinfo id, number and date (Australia v ICC World XI, 2005-10-07)"}
+  - {segment: ODI, reference_number: 2284, reference_cricinfo_id: 221337, cricsheet_match_id: "221337", cricsheet_number: 2284,
+     reason: "reference lists no teams; same ESPNcricinfo id, number and date (Australia v ICC World XI, 2005-10-09)"}
+  - {segment: ODI, reference_number: 2327, reference_cricinfo_id: null, cricsheet_match_id: "236520", cricsheet_number: 2327,
+     reason: "Wikipedia date cell wrong (2006-02-09; Cricsheet and the page's scorecard URL say 2006-02-11); same number and teams"}
+  - {segment: ODI, reference_number: 2524, reference_cricinfo_id: 251494, cricsheet_match_id: "251494", cricsheet_number: 2524,
+     reason: "reference lists no teams; same ESPNcricinfo id, number and date (New Zealand v Australia, 2007-02-16)"}
+  - {segment: ODI, reference_number: 2526, reference_cricinfo_id: 251495, cricsheet_match_id: "251495", cricsheet_number: 2526,
+     reason: "reference lists no teams; same ESPNcricinfo id, number and date (New Zealand v Australia, 2007-02-18)"}
+  - {segment: ODI, reference_number: 2527, reference_cricinfo_id: 251496, cricsheet_match_id: "251496", cricsheet_number: 2527,
+     reason: "reference lists no teams; same ESPNcricinfo id, number and date (New Zealand v Australia, 2007-02-20)"}
+  - {segment: ODI, reference_number: 2561, reference_cricinfo_id: 247487, cricsheet_match_id: "247487", cricsheet_number: 2561,
+     reason: "Wikipedia team cell wrong (Ireland v New Zealand); same ESPNcricinfo id, number and date (Bangladesh v New Zealand, 2007-04-02)"}
+  - {segment: ODI, reference_number: 2587, reference_cricinfo_id: 289107, cricsheet_match_id: "289107", cricsheet_number: 2587,
+     reason: "reference lists no teams; same ESPNcricinfo id, number and date (Africa XI v Asia XI, 2007-06-06)"}
+  - {segment: ODI, reference_number: 2588, reference_cricinfo_id: 289108, cricsheet_match_id: "289108", cricsheet_number: 2588,
+     reason: "reference lists no teams; same ESPNcricinfo id, number and date (Africa XI v Asia XI, 2007-06-09)"}
+  - {segment: ODI, reference_number: 2589, reference_cricinfo_id: 289110, cricsheet_match_id: "289110", cricsheet_number: 2589,
+     reason: "reference lists no teams; same ESPNcricinfo id, number and date (Africa XI v Asia XI, 2007-06-10)"}
+  - {segment: ODI, reference_number: 3139, reference_cricinfo_id: 433596, cricsheet_match_id: "433596", cricsheet_number: 3139,
+     reason: "Wikipedia team cell wrong (Australia v Australia); same ESPNcricinfo id, number and date (Australia v Pakistan, 2011-03-19)"}

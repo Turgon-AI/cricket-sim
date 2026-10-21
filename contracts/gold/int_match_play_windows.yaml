@@ -1,0 +1,126 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.int_match_play_windows
+name: int_match_play_windows
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Stores the exact playing window (first to last ball) of each match day where Cricinfo ball timestamps
+    exist, plus the default estimate elsewhere, so the weather tables place their windows consistently.
+  limitations: 'Internal only: the 5,587 ''ball_timestamps'' windows come from Cricinfo-derived ball timestamps
+    (Ari Adaikalam), which are not redistributable, so this table is never exported. Timestamps exist only from
+    October 2019, so about 78% of rows are the default per-format estimate (not real play times). A timestamp cluster
+    becomes a match day only if it has at least 20 balls and spans no more than 13 hours (9 for T20 and IPL); a
+    gap of over 6 hours between balls splits days, and the end is the last ball plus 5 minutes. Day/night status
+    and interruptions are not known. Rows exist only for match days at venues with a timezone (25,712 of 32,324).'
+schema:
+- name: int_match_play_windows
+  physicalName: data/gold/int_match_play_windows.parquet
+  physicalType: table
+  logicalType: object
+  description: Playing window start and end for each match day, in UTC and local time, with how it was derived.
+  dataGranularityDescription: One row per match and match day (match_id, match_day_number) at venues with a timezone,
+    25,712 rows.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id. Joins to matches.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: match_day_number
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 1-based index of the match day among the match's Cricsheet dates.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+    customProperties:
+    - property: unit
+      value: day
+  - name: match_date
+    logicalType: date
+    physicalType: DATE
+    description: Calendar date of this match day (local date).
+  - name: venue_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Canonical venue of the match. Joins to venues.venue_id.
+    relationships:
+    - to: venues.venue_id
+  - name: window_source
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''ball_timestamps'' (from first and last ball times) or ''default_estimate'' (a fixed local-time
+      window by format: Test 10:00-18:00, ODI 10:00-22:00, T20 14:00-23:00, IPL 15:30-23:30).'
+    quality:
+    - name: valid_window_source
+      metric: invalidValues
+      arguments:
+        validValues:
+        - ball_timestamps
+        - default_estimate
+      mustBe: 0
+  - name: window_start_utc
+    logicalType: timestamp
+    physicalType: TIMESTAMP
+    description: 'Start of the playing window in UTC (naive timestamp): the first ball of the day, or the default
+      start converted to UTC.'
+  - name: window_end_utc
+    logicalType: timestamp
+    physicalType: TIMESTAMP
+    description: 'End of the playing window in UTC: the last ball of the day plus 5 minutes, or the default end
+      converted to UTC.'
+  - name: window_start_local
+    logicalType: timestamp
+    physicalType: TIMESTAMP
+    description: window_start_utc in the venue's local time (naive timestamp).
+  - name: window_end_local
+    logicalType: timestamp
+    physicalType: TIMESTAMP
+    description: window_end_utc in the venue's local time (naive timestamp).
+  - name: n_balls_timed
+    logicalType: integer
+    physicalType: INTEGER
+    description: Number of balls with timestamps in the cluster that defined the window (at least 20). NULL for
+      default estimates.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: internal_note
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Fixed text ''internal-only: windows from Cricinfo-derived ball timestamps (Ari) are not redistributable''
+      on ball_timestamps rows; NULL on default_estimate rows.'
+  quality:
+  - name: window_ends_after_start
+    type: sql
+    description: Window end is after window start.
+    query: SELECT count(*) FROM ${table} WHERE window_end_utc <= window_start_utc
+    mustBe: 0
+  - name: timed_iff_ball_timestamps
+    type: sql
+    description: n_balls_timed and internal_note are present exactly for ball_timestamps windows.
+    query: SELECT count(*) FROM ${table} WHERE (window_source = 'ball_timestamps') <> (n_balls_timed IS NOT NULL)
+      OR (window_source = 'ball_timestamps') <> (internal_note IS NOT NULL)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: derived
+- property: sources
+  value:
+  - ari
+  - venues_geo
+  - derived
+- property: upstream
+  value:
+  - matches
+  - venues
+  - stg_ari_tracking

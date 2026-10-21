@@ -1,0 +1,68 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.models.report_model_checkpoints
+name: report_model_checkpoints
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Match-level accuracy at moments people actually look at, counting every match once.
+  limitations: Clean held-out matches only. The last-5-overs checkpoint covers only chases that lasted that long.
+schema:
+- name: report_model_checkpoints
+  physicalName: data/models/report_model_checkpoints.parquet
+  physicalType: table
+  logicalType: object
+  description: 'Brier score and log loss of the probability that the side batting first wins, at three moments:
+    the first ball of the match, the first ball of the chase, and the first ball of the chase with 30 or fewer balls
+    left.'
+  dataGranularityDescription: One row per checkpoint x model.
+  properties:
+  - name: checkpoint
+    logicalType: string
+    physicalType: VARCHAR
+    description: start_of_match, start_of_chase or last_5_overs.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: model
+    logicalType: string
+    physicalType: VARCHAR
+    description: Which model (see report_model_scores).
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: Matches scored.
+    customProperties:
+    - property: unit
+      value: matches
+  - name: log_loss
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean negative log likelihood; lower is better.
+    customProperties:
+    - property: unit
+      value: nats
+  - name: brier
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean squared error; lower is better.
+    customProperties:
+    - property: unit
+      value: score
+customProperties:
+- property: layer
+  value: models
+- property: kind
+  value: report
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - model_ball_win_probability

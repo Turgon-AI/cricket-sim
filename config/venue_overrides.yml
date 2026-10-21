@@ -1,0 +1,246 @@
+# Manual fixes for the canonical venue table (src/cricket_sim/venues/).
+#
+# How canonical venues are formed: take the venue string up to its first comma (the "core name"),
+# normalise it (lower case, no accents/punctuation, no leading "the"), and group identical cores.
+# venue_id = slug of that core (plus a city suffix for split_by_city cores). It never depends on
+# config/scope.yml or on match counts, so widening the scope cannot rename a venue.
+# Every entry below must take effect: a stale entry (matching no Cricsheet string or venue_id) fails the build.
+
+# venue_context: 'snapshot' (default) builds each venue once from every match in the snapshot, so a later
+# spelling can move an earlier match's point and weather. 'asof' gives a venue a new version whenever its geocoder
+# inputs (name, city, search names, places) or home team change, built only from matches up to that date; each match
+# uses the version valid on its start date (silver venue_versions). Turn 'asof' on only together with a re-download of
+# venues_geo and weather: with it on, a geocode or weather request the locked snapshots lack fails the build.
+venue_context: asof
+
+# merge: primary core name -> other core names of the SAME ground (renames, sponsor names, misspellings).
+# "Core|City" merges a core only where Cricsheet gives that city.
+merge:
+  "Arun Jaitley Stadium": ["Feroz Shah Kotla"]
+  "Western Australia Cricket Association Ground": ["W.A.C.A. Ground", "WACA"]
+  "Simonds Stadium": ["GMHBA Stadium"]
+  "Seddon Park": ["Westpac Park"]
+  "Westpac Stadium": ["Sky Stadium"]
+  "Jade Stadium": ["AMI Stadium"]
+  "Queenstown Events Centre": ["John Davies Oval"]
+  "Kennington Oval": ["The Oval"]
+  "Narendra Modi Stadium": ["Sardar Patel Stadium", "Sardar Patel (Gujarat) Stadium"]   # one site; see eras (rebuilt 2016-20)
+  "Punjab Cricket Association IS Bindra Stadium": ["Punjab Cricket Association Stadium"]
+  "Maharashtra Cricket Association Stadium": ["Subrata Roy Sahara Stadium"]
+  "Dr. Y.S. Rajasekhara Reddy ACA-VDCA Cricket Stadium": ["Andhra Cricket Association-Visakhapatnam District Cricket Association Stadium"]
+  "Saurashtra Cricket Association Stadium": ["Niranjan Shah Stadium"]
+  # Nagpur has two grounds: the OLD Vidarbha CA Ground in Civil Lines (internationals until 2007) and the NEW
+  # Vidarbha CA Stadium at Jamtha (from Nov 2008). "Vidarbha Cricket Association Ground" (2007 ODI) was wrongly
+  # merged into Jamtha before; it is the old ground, like "Vidarbha C.A. Ground" (2005-06).
+  "Vidarbha Cricket Association Ground": ["Vidarbha C.A. Ground"]
+  "Reliance Stadium": ["Indian Petrochemicals Corporation Limited Sports Complex Ground"]
+  "M Chinnaswamy Stadium": ["M.Chinnaswamy Stadium"]
+  "R Premadasa Stadium": ["R.Premadasa Stadium"]
+  "P Sara Oval": ["P Saravanamuttu Stadium"]
+  "County Ground": ["The Cooper Associates County Ground", "The Royal & Sun Alliance County Ground"]
+  "National Cricket Stadium": ["Queen's Park (New)"]
+  "Sinhalese Sports Club Ground": ["Sinhalese Sports Club"]
+  "Shere Bangla National Stadium": ["Sher-e-Bangla National Cricket Stadium"]
+  "Zohur Ahmed Chowdhury Stadium": ["Zahur Ahmed Chowdhury Stadium", "Chittagong Divisional Stadium", "Bir Sreshtho Flight Lieutenant Matiur Rahman Stadium"]
+  "Sylhet International Cricket Stadium": ["Sylhet Stadium"]
+  "Narayanganj Osmani Stadium": ["Khan Shaheb Osman Ali Stadium"]
+  "Dubai International Cricket Stadium": ["Dubai Sports City Cricket Stadium"]
+  "Sharjah Cricket Stadium": ["Sharjah Cricket Association Stadium"]
+  "Sheikh Zayed Stadium": ["Zayed Cricket Stadium"]
+  "ICC Academy": ["ICC Global Cricket Academy"]
+  "The Wanderers Stadium": ["New Wanderers Stadium", "Wanderers Stadium"]
+  "Wanderers Cricket Ground": ["Wanderers"]
+  "De Beers Diamond Oval": ["Diamond Oval"]
+  # Bloemfontein's one international ground, under its sponsor names: Goodyear Park (to 2008), OUTsurance Oval
+  # (2008-11), Chevrolet Park (2011-14), Mangaung Oval (since). Was split in two ids before.
+  "Mangaung Oval": ["Goodyear Park", "Chevrolet Park", "OUTsurance Oval"]
+  "Boland Park": ["Boland Bank Park"]
+  # Potchefstroom: North West Cricket Stadium (2003 World Cup) = Sedgars Park = Senwes Park (same OSM way).
+  # North-West University No1 Ground is a different (university) ground and stays separate.
+  "Senwes Park": ["Sedgars Park", "North West Cricket Stadium"]
+  # Clontarf Cricket Club, Dublin plays at Castle Avenue: one ground (same OSM way 230017371).
+  "Castle Avenue": ["Clontarf Cricket Club Ground"]
+  # Albergaria, Portugal: Gucherre and Santarem are names of the same ground (same OSM way and point).
+  "Santarem Cricket Ground": ["Gucherre Cricket Ground"]
+  # Bermuda National Stadium, Hamilton: Cricsheet also writes it "National Stadium, Hamilton".
+  "Bermuda National Stadium": ["National Stadium|Hamilton"]
+  # Darwin: the 2003 Test/2008 ODIs ("Marrara Cricket Ground") and the 2025-26 T20Is ("Marrara Stadium") were both at
+  # Marrara Oval (TIO Stadium); the two Wikidata points are 150 m apart. Probable rather than certain.
+  "Marrara Stadium": ["Marrara Cricket Ground"]
+  # St George's College, Quilmes (Buenos Aires province): Cricsheet also writes "St Georges Quilmes"; same point.
+  "St George's College Ground": ["St Georges Quilmes"]
+  "Daren Sammy National Cricket Stadium": ["Darren Sammy National Cricket Stadium", "Beausejour Stadium"]
+  "Gahanga International Cricket Stadium": ["Gahanga International Cricket Stadium. Rwanda"]
+  "Bready Cricket Club": ["Bready"]
+  "Grange Cricket Club Ground": ["Grange Cricket Club"]
+  "Malahide": ["The Village"]
+  "VRA Ground": ["VRA Cricket Ground"]
+  "YSD-UKM Cricket Oval": ["UKM-YSD Cricket Oval"]
+  "Moosa Cricket Stadium": ["Choice Moosa Stadium"]
+  "Vassil Levski National Sports Academy": ["National Sports Academy"]
+  "Bundaberg Rum Stadium": ["Cazaly's Stadium"]
+  "Tony Ireland Stadium": ["Riverway Stadium"]
+  # One ground under two ids each (same Wikidata item, same point).
+  # Centurion: Centurion Park is the old name of SuperSport Park.
+  "SuperSport Park": ["Centurion Park"]
+  # Launceston: York Park, sponsor names Aurora Stadium (to 2021) and University of Tasmania Stadium (since).
+  "University of Tasmania Stadium": ["Aurora Stadium"]
+  # Lucknow: "Vajpai" is a Cricsheet typo. The "... Stadium B" ground is a second ground and stays apart.
+  "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium": ["Bharat Ratna Shri Atal Bihari Vajpai Ekana Cricket Stadium"]
+
+# assign: one exact Cricsheet "<venue> | <city>" string (city ~ = none) -> "Core" or "Core|City".
+# For strings whose core name collides with a different ground. Found by listing core names that occur in
+# several cities once silver covered every match.
+assign:
+  # St David's CC ground in Bermuda, not Lord's in London
+  "Lords, St David's Cricket Club Ground | Bermuda": "St David's Cricket Club Ground"
+  # a Women's Big Bash match in Hobart, not University Oval, Dunedin
+  "University Oval, Hobart | Hobart": "University Oval Hobart"
+  # the 2020 Plunket Shield match without a city was in Invercargill, not Chesterfield
+  "Queen's Park | ~": "Queen's Park|Invercargill"
+
+# split_by_city: core names shared by different grounds in different places -> "<slug>-<city slug>".
+split_by_city:
+  - "County Ground"
+  - "National Stadium"
+  - "Nehru Stadium"
+  - "Gymkhana Club Ground"
+  - "Queen's Park"
+
+# city_aliases: spellings of the same city, only used to decide splits.
+city_aliases:
+  Chittagong: Chattogram
+  Poona: Pune
+  Bangalore: Bengaluru
+  Dharmasala: Dharamsala
+
+# eras: known rebuilds. match_venues.venue_era becomes "<venue_id>@<from>" from that date.
+eras:
+  narendra-modi-stadium:
+    - {from: "2020-02-24", note: "Motera demolished 2016 and rebuilt; the new stadium opened in February 2020"}
+  wankhede-stadium:
+    - {from: "2011-01-01", note: "rebuilt 2010-11 for the 2011 World Cup"}
+
+# venues: per-venue fixes keyed by venue_id. Any of:
+#   name, city                    display fixes
+#   country                       cricket territory (must be a key of territory_bounds in venue_reference.yml)
+#   lat, lon (+ source)           explicit coordinates; geocode_source = manual
+#   osm_ref: way/123              pin an OSM element (fetched into the geo snapshot); its centroid is the point
+#   wikidata_qid                  pin a Wikidata item; it MUST carry coordinates (P625) or the build fails
+#   nominatim_query, country_hint, skip_wikidata    steer the automatic search
+#   elevation_m, city_elevation_m, timezone, coastal: true    sanity-check inputs
+#   acknowledge: [check, ...]     a reviewed failed check (country/elevation/timezone/sea/anchor); keeps needs_review
+#   needs_review: true, note
+venues:
+  # --- pinned Wikidata items (each must carry coordinates; checked against the territory/elevation tables)
+  bermuda-national-stadium: {wikidata_qid: Q822067, country: Bermuda, note: "also written 'National Stadium, Hamilton' by Cricsheet (merged above)"}
+  bert-sutcliffe-oval: {wikidata_qid: Q4895324}
+  dr-y-s-rajasekhara-reddy-aca-vdca-cricket-stadium: {wikidata_qid: Q23975544}
+  icc-academy-ground-no-2: {wikidata_qid: Q20807637, needs_review: true, note: "ICC Academy Ground No 2 sits next to the main ICC Academy ground; coordinates are those of the academy"}
+  punjab-cricket-association-is-bindra-stadium: {wikidata_qid: Q3522142}
+  shere-bangla-national-stadium: {wikidata_qid: Q16135053}
+  white-hill-field: {wikidata_qid: Q65052467, country: Bermuda}
+  maple-leaf-north-east-ground: {wikidata_qid: Q5268956, needs_review: true, note: "coordinates of the Maple Leaf Cricket Club grounds, King City (both grounds share them)"}
+  maple-leaf-north-west-ground: {wikidata_qid: Q5268956, needs_review: true, note: "coordinates of the Maple Leaf Cricket Club grounds, King City (both grounds share them)"}
+  royal-brussels-cricket-club-ground: {wikidata_qid: Q65087740}
+  bangabandhu-national-stadium: {wikidata_qid: Q806456}
+  city-oval: {wikidata_qid: Q5123337}
+  lisicji-jarak-cricket-ground: {wikidata_qid: Q113245092}
+  mahinda-rajapaksa-international-cricket-stadium: {wikidata_qid: Q1684285}
+  mission-road-ground: {wikidata_qid: Q23038215}
+  namibia-cricket-ground: {wikidata_qid: Q133443345}
+  sportpark-het-schootsveld: {wikidata_qid: Q7579625, country: Netherlands}
+  sportpark-maarschalkerweerd: {wikidata_qid: Q2235985}
+  tribhuvan-university-international-cricket-ground: {wikidata_qid: Q7840418}
+  western-australia-cricket-association-ground: {wikidata_qid: Q2738971}
+  # Wikidata item 'Chevrolet Park' (a former name) is the Bloemfontein ground; the automatic search had only the city.
+  mangaung-oval: {wikidata_qid: Q5094407}
+  maharaja-yadavindra-singh-international-cricket-stadium: {wikidata_qid: Q24747936, note: "Wikidata 'Mullanpur International Cricket Stadium' (New Chandigarh); was the city centroid"}
+  # Scott Page Field is the Czech Cricket Union ground at Vinor, Prague (Wikidata 'Vinor Cricket Ground')
+  scott-page-field: {wikidata_qid: Q106763991}
+
+  # --- pinned OSM elements (resolved through Nominatim /lookup into the geo snapshot).
+  # Wikidata Q7375723 has latitude +1.259 (northern hemisphere, ~280 km from Nairobi): a sign error. OSM has the club.
+  ruaraka-sports-club-ground: {osm_ref: way/524758013, note: "Ruaraka Sports Club, Thika Road, Nairobi (OSM); Wikidata Q7375723 has the latitude sign wrong"}
+  # Wikidata Q108795166 puts Happy Valley in the sea south of Akrotiri; the OSM pitch is in Episkopi Cantonment.
+  happy-valley-ground: {osm_ref: way/241638311, country: Cyprus, note: "OSM pitch 'Happy Valley Ground', Episkopi Cantonment (Wikidata point was in the sea)"}
+  happy-valley-ground-2: {osm_ref: way/241638311, country: Cyprus, needs_review: true, note: "second ground in the same valley; uses the main ground's point (was geocoded to Episkopi, Crete)"}
+  # Udayana's QID has no coordinates (silently ignored before: island centroid, 1268 m). The ground is on the
+  # Jimbaran campus; the campus centroid is within about a kilometre of it, near sea level.
+  udayana-cricket-ground: {osm_ref: way/81124180, country: Indonesia, needs_review: true, acknowledge: [anchor], note: "Udayana University Jimbaran campus point (was the Bali centroid at 1268 m)"}
+  # Arnos Vale was the St Vincent island centroid at 650 m; the playing field is by the old airport, near sea level.
+  arnos-vale-ground: {osm_ref: way/569033614, note: "OSM 'Arnos Vale Playing Field', Kingstown (was the island centroid at 650 m)"}
+  sikh-union-club-ground: {osm_ref: way/226426594, note: "OSM pitch 'Sikh Union Club', Nairobi (pinned QID had no coordinates)"}
+  kyambogo-cricket-oval: {osm_ref: way/1064904518, note: "OSM pitch 'Kyambogo Cricket Ground', Kampala"}
+  entebbe-cricket-oval: {osm_ref: way/52597225, needs_review: true, note: "OSM pitch of the Entebbe Club, Golf Lane: probable, not confirmed as the cricket oval"}
+  gymkhana-club-ground-nairobi: {wikidata_qid: Q6959784, note: "Wikidata 'Nairobi Gymkhana Club' (was the city centroid shared with Sikh Union)"}
+  gymkhana-club-ground-dar-es-salaam: {osm_ref: node/4569337200, note: "OSM 'Dar es Salaam Gymkhana Club'"}
+  university-of-dar-es-salaam-ground: {osm_ref: way/798357475, needs_review: true, note: "University of Dar es Salaam campus point"}
+  st-georges-college-ground: {osm_ref: way/480374067, country: Argentina, note: "St George's College, Quilmes (was the Buenos Aires centroid)"}
+  al-amerat-cricket-ground-oman-cricket-ministry-turf-1: {osm_ref: way/1374688911, note: "OSM 'Oman Cricket Academy', Al Amerat: the complex holding both Ministry turfs"}
+  al-amerat-cricket-ground-oman-cricket-ministry-turf-2: {osm_ref: way/1374688911, note: "OSM 'Oman Cricket Academy', Al Amerat: the complex holding both Ministry turfs"}
+  los-pinos-polo-club-1: {osm_ref: way/936530948, country: Colombia, note: "OSM 'Los Pinos Polo Club', Mosquera (both grounds share the club point)"}
+  los-pinos-polo-club-2: {osm_ref: way/936530948, country: Colombia, note: "OSM 'Los Pinos Polo Club', Mosquera (both grounds share the club point)"}
+  integrated-polytechnic-regional-centre: {osm_ref: way/1065043068, note: "OSM pitch 'IPRC Cricket Ground', Kigali"}
+  tafawa-balewa-square-cricket-oval: {osm_ref: way/671991288, note: "OSM 'Tafawa Balewa Square', Lagos"}
+  central-broward-regional-park-stadium-turf-ground: {osm_ref: way/187341290, country: United States, note: "OSM 'Central Broward Regional Park', Lauderhill (park point; the stadium is in it)"}
+  stubberudmyra-cricket-ground: {osm_ref: way/1328077627, note: "OSM pitch 'Stubberudmyra', Oslo"}
+  ballpark-ground: {osm_ref: way/677493757, note: "OSM pitch 'Ballpark Graz'"}
+  cobham-oval-new: {osm_ref: way/204216316, note: "OSM 'Cobham Oval', Whangarei"}
+  zhejiang-university-of-technology-cricket-field: {osm_ref: relation/13555568, country: China, needs_review: true, note: "Zhejiang University of Technology Pingfeng campus point"}
+  # the old Nagpur ground in Civil Lines, not Jamtha
+  vidarbha-cricket-association-ground: {osm_ref: way/658036096, note: "OSM pitch 'VCA Ground', Seminary Hills / Civil Lines, Nagpur"}
+  united-cricket-club-ground: {osm_ref: way/88811458, needs_review: true, note: "OSM pitch 'United Sports Club', Olympia, Windhoek: probable"}
+
+  # The display city changed (Barbados -> Bridgetown, St Kitts -> Basseterre) once silver counted every match, which
+  # would change the search strings. Pin the coordinates the earlier snapshot's Nominatim search returned instead.
+  kensington-oval: {lat: 13.105317, lon: -59.6225631, source: "Nominatim 'Kensington Oval, Barbados' (venues_geo/2026-10-15)"}
+  warner-park: {lat: 17.2984395, lon: -62.7220774, country: Saint Kitts and Nevis, source: "Nominatim 'Warner Park Cricket Stadium, Basseterre' (venues_geo/2026-10-15)"}
+
+  # --- reviewed check failures. "anchor": Cricsheet's city is a metro/region name far from the ground.
+  bayuemas-oval: {acknowledge: [anchor], note: "Bayuemas Oval is in Klang/Pandamaran, ~30 km from central Kuala Lumpur"}
+  desert-springs-cricket-ground: {acknowledge: [anchor], note: "Desert Springs is near Cuevas del Almanzora, ~70 km from Almeria city"}
+  la-manga-club-bottom-ground: {osm_ref: way/224984783, country: Spain, needs_review: true, acknowledge: [anchor], note: "La Manga Club resort (hotel point; the grounds are on the resort), ~60 km from Murcia city"}
+  la-manga-club-top-ground: {osm_ref: way/224984783, country: Spain, needs_review: true, acknowledge: [anchor], note: "La Manga Club resort (hotel point; the grounds are on the resort), ~60 km from Murcia city"}
+  nassau-county-international-cricket-stadium: {acknowledge: [anchor], note: "temporary 2024 World Cup stadium in Eisenhower Park, East Meadow, ~40 km from Manhattan"}
+  niaz-stadium: {acknowledge: [anchor], note: "Cricsheet city 'Sind' is the province; the stadium is in Hyderabad, Sindh"}
+  prairie-view-cricket-complex: {acknowledge: [anchor], note: "Prairie View, Texas is ~70 km from Houston"}
+  santarem-cricket-ground: {acknowledge: [anchor], note: "Cricsheet city 'Albergaria' is a village in Santarem district; the city search found another Albergaria"}
+  terdthai-cricket-ground: {acknowledge: [anchor], note: "Terdthai ground is ~40 km east of central Bangkok"}
+  jaffery-sports-club-ground: {country: Kenya, note: "Nairobi; its few internationals were mostly Qatar's, so the home-team rule pointed at Qatar"}
+  # With venue_context: asof the home team is taken from the matches up to each date, and these
+  # grounds' first internationals were mostly a touring side's (or too few to name one), so the early versions'
+  # country evidence (that team, or the geocoder's 'United Kingdom' label for an overseas territory) missed the point.
+  # The country of a ground does not change over time, so it is fixed here (Warner Park: above).
+  europa-sports-complex: {country: Gibraltar}
+  jimmy-powell-oval: {country: Cayman Islands}
+  moara-vlasiei-cricket-ground: {country: Romania}
+  sportpark-westvliet: {coastal: true, note: "The Hague polder: 0 m on the DEM is land"}
+  guernsey-rovers-athletic-club-ground: {acknowledge: [sea], needs_review: true, note: "city-level point on the Port Soif beach; ground position unknown"}
+
+  # York CC (Yorkshire home matches) was matched to York Park, Launceston on the word "York" alone. The
+  # country bounds the geocoder; the pin is Wikidata 'Clifton Park Ground', York (in the bulk Wikidata file).
+  york-cricket-club: {country: England, wikidata_qid: Q5133289, note: "Clifton Park, York (was York Park, Tasmania)"}
+
+  # --- countries the automatic evidence could not establish (no home team, no geocoder label)
+  bulawayo-athletic-club: {country: Zimbabwe}
+  old-hararians: {country: Zimbabwe}
+  kinrara-academy-oval: {country: Malaysia}
+  yeonhui-cricket-ground: {country: South Korea}
+
+  # --- elevation / sea-level judgements
+  # HPCA Dharamsala: the 90 m DEM gives 1161 m in steep terrain; the published stadium altitude is about 1317 m.
+  himachal-pradesh-cricket-association-stadium: {elevation_m: 1317, note: "published stadium altitude; 90 m DEM says 1161 m"}
+
+  # --- country_hint is appended to the OSM Nominatim searches when the city name alone is ambiguous
+  seddon-park: {country_hint: New Zealand}
+  ysd-ukm-cricket-oval: {country_hint: Malaysia}
+  sano-international-cricket-ground: {country_hint: Japan}
+  sano-international-cricket-ground-2: {country_hint: Japan}
+  koge-cricket-club: {country_hint: Denmark}
+  roma-cricket-ground: {country_hint: Italy}
+  simar-cricket-ground: {country_hint: Italy}
+  st-albans-club: {country_hint: Argentina}
+  davies-park: {country_hint: New Zealand}
+  mombasa-sports-club-ground: {city: Mombasa, country_hint: Kenya}
+  toronto-cricket: {country_hint: Canada, nominatim_query: "Toronto Cricket Skating and Curling Club, Toronto, Canada"}

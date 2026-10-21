@@ -1,0 +1,232 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.hawkeye_ball_delivery
+name: hawkeye_ball_delivery
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Holds the physically measured delivery (speed, bounce point, position at the stumps) from the ICC Hawk-Eye
+    feed, linked to Cricsheet balls, for models of what the bowler actually bowled.
+  limitations: 'Sparse per-ball layer: a row exists only for balls where the source has a value, so a missing row
+    means ''not recorded'', never ''zero'' or ''no''. Coverage is only the matches in the HawkeyeStats feed that
+    were linked to Cricsheet: 1,689 men''s ODI (2011 to 2021), Test (2012 to 2021) and IPL (2012 to 2021) matches,
+    no T20Is and nothing after the feed froze in February 2022. Within those matches tracking still has gaps (about
+    80% of Test balls, 96-97% of ODI and IPL balls). Any measurement outside a plausible range was set to NULL (speed
+    outside 50-165 km/h, pitch_x or stumps_x beyond 3 m, pitch_y outside -2 to 25 m, stumps_y outside 0 to 4 m),
+    and a speed reading of -1 or 0 means ''not tracked''; so each measurement is NULL independently of the others
+    (speed is NULL on about 28% of rows). Rows with hawkeye_link_quality of player_mismatch (459) or runs_mismatch
+    (66) may be mis-aligned with the Cricsheet ball; filter to ''verified'' (1,065,074 rows) or ''verified_surname''
+    (6,291) for clean joins. Pitch and stump x coordinates are in a fixed field frame, not mirrored for left-handers;
+    use the *_off_side columns for batter-relative comparisons. Hawk-Eye data carries no licence (all rights reserved):
+    never exported.'
+  usage: 'Compare against Cricinfo''s line and length labels in cricinfo_ball_labels only after reading that table''s
+    limitations: those labels are written after seeing the outcome, while these measurements are not.'
+schema:
+- name: hawkeye_ball_delivery
+  physicalName: data/silver/hawkeye_ball_delivery.parquet
+  physicalType: table
+  logicalType: object
+  description: Hawk-Eye measured delivery attributes (speed, bounce point, ball position at the stumps, batter handedness)
+    for each linked Cricsheet ball.
+  dataGranularityDescription: One row per Cricsheet ball (match_id, innings, delivery_number) that has a linked
+    Hawk-Eye row, 1,071,890 rows over 1,689 matches.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (the same id as the Cricinfo match id for most internationals). Joins to matches.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number within the match, as numbered by Cricsheet (1 to 4; super overs are numbered as
+      further innings). Part of the ball key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Position of the delivery within its innings, counting every delivery including wides and no-balls,
+      starting at 1 (Ari's key convention, equal to balls.delivery_number). Together with match_id and innings it
+      joins this row to balls.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+    customProperties:
+    - property: unit
+      value: deliveries
+  - name: speed_kmh
+    logicalType: number
+    physicalType: DOUBLE
+    description: Ball speed in km/h, converted from the feed's metres per second and rounded to 2 decimals. NULL
+      when the feed has -1 or 0 (not tracked) or the value is outside 50 to 165 km/h (physically implausible).
+    customProperties:
+    - property: timingClass
+      value: delivery
+    - property: unit
+      value: km/h
+    quality:
+    - name: speed_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 50 AND 165
+      mustBe: 0
+  - name: right_handed_bat
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: TRUE if the batter facing the ball is right-handed, FALSE if left-handed (Hawk-Eye's rightHandedBat
+      flag with its TRUE/true spelling variants normalised). This is the only per-ball source of batter handedness
+      in the project.
+    customProperties:
+    - property: timingClass
+      value: delivery
+  - name: pitch_x
+    logicalType: number
+    physicalType: DOUBLE
+    description: Lateral position of the bounce point in metres from the middle-stump line, in Hawk-Eye's fixed
+      field frame (the sign is NOT mirrored for left-handed batters). NULL when not tracked or when |value| exceeds
+      3 m.
+    customProperties:
+    - property: timingClass
+      value: delivery
+    - property: unit
+      value: metres from middle stump
+    quality:
+    - name: pitch_x_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -3 AND 3
+      mustBe: 0
+  - name: pitch_y
+    logicalType: number
+    physicalType: DOUBLE
+    description: Distance of the bounce point from the batter's stumps along the pitch in metres (small = full,
+      large = short). NULL when not tracked or outside -2 to 25 m.
+    customProperties:
+    - property: timingClass
+      value: delivery
+    - property: unit
+      value: m from the batter's stumps
+    quality:
+    - name: pitch_y_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -2 AND 25
+      mustBe: 0
+  - name: pitch_x_off_side
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'pitch_x re-signed to be relative to the batter: positive = towards the batter''s off side, negative
+      = towards the leg side (pitch_x negated for right-handers, unchanged for left-handers). NULL whenever pitch_x
+      or right_handed_bat is NULL.'
+    customProperties:
+    - property: timingClass
+      value: delivery
+    - property: unit
+      value: metres from middle stump
+    quality:
+    - name: pitch_x_off_side_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -3 AND 3
+      mustBe: 0
+  - name: stumps_x
+    logicalType: number
+    physicalType: DOUBLE
+    description: Lateral position of the ball at the stumps plane in metres from the middle-stump line, in the same
+      unmirrored field frame as pitch_x. NULL when not tracked ('NA' in the feed) or when |value| exceeds 3 m.
+    customProperties:
+    - property: timingClass
+      value: delivery
+    - property: unit
+      value: metres from middle stump
+    quality:
+    - name: stumps_x_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -3 AND 3
+      mustBe: 0
+  - name: stumps_y
+    logicalType: number
+    physicalType: DOUBLE
+    description: Height of the ball above the ground at the stumps plane in metres. NULL when not tracked or outside
+      0 to 4 m.
+    customProperties:
+    - property: timingClass
+      value: delivery
+    - property: unit
+      value: m above ground
+    quality:
+    - name: stumps_y_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 4
+      mustBe: 0
+  - name: stumps_x_off_side
+    logicalType: number
+    physicalType: DOUBLE
+    description: stumps_x re-signed to be relative to the batter (positive = off side), derived the same way as
+      pitch_x_off_side. NULL whenever stumps_x or right_handed_bat is NULL.
+    customProperties:
+    - property: timingClass
+      value: delivery
+    - property: unit
+      value: metres from middle stump
+    quality:
+    - name: stumps_x_off_side_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -3 AND 3
+      mustBe: 0
+  - name: hawkeye_link_quality
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How well this Hawk-Eye row agrees with the Cricsheet ball it was aligned to: ''verified'' (runs,
+      batter and bowler all agree, players matched by ICC Pulse id), ''verified_surname'' (all agree but at least
+      one player matched by surname only), ''player_mismatch'' (runs agree, batter or bowler does not), ''runs_mismatch''
+      (runs differ). Never NULL.'
+    customProperties:
+    - property: timingClass
+      value: delivery
+    quality:
+    - name: valid_link_quality
+      metric: invalidValues
+      arguments:
+        validValues:
+        - verified
+        - verified_surname
+        - player_mismatch
+        - runs_mismatch
+      mustBe: 0
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 400
+  - name: innings_in_range
+    type: sql
+    description: Hawk-Eye innings 1-4 (3 and 4 are super overs in limited-overs matches).
+    query: SELECT count(*) FROM ${table} WHERE innings NOT BETWEEN 1 AND 4
+    mustBe: 0
+  - name: off_side_is_mirror_of_pitch_x
+    type: sql
+    description: pitch_x_off_side equals -pitch_x for right-handers, pitch_x for left-handers, NULL when handedness
+      is unknown.
+    query: SELECT count(*) FROM ${table} WHERE pitch_x_off_side IS DISTINCT FROM CASE WHEN right_handed_bat THEN
+      -pitch_x WHEN NOT right_handed_bat THEN pitch_x END
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - hawkeye
+- property: upstream
+  value:
+  - stg_hawkeye_balls
+  - balls
+  - matches
+  - people
+- property: timingClass
+  value: delivery

@@ -1,0 +1,163 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.cricinfo_ball_labels_predicted
+name: cricinfo_ball_labels_predicted
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Holds line and length labels that Ari's text model inferred from Cricinfo commentary for balls with no
+    recorded label, kept in their own table so inferred values are never mistaken for recorded ones.
+  limitations: 'Sparse per-ball layer: a row exists only for balls where the source has a value, so a missing row
+    means ''not recorded'', never ''zero'' or ''no''. These are model guesses of labels from Cricinfo commentary
+    text, produced by Ari Adaikalam''s pipeline (the text itself is not stored here), never merged with the recorded
+    Cricinfo labels: rows exist only where the recorded label is missing (no ball has both). The confidence is the
+    model''s own score, uncalibrated and unvalidated (it cannot be checked in this pipeline because predictions
+    and recorded labels never overlap). Most predictions are inferred rather than stated in the text (explicit =
+    FALSE), and inferred ones lean to the commonest class, so the predicted distribution differs from recorded labels.
+    Cricinfo-derived: non-commercial licence, never exported. Inferred length defaults heavily to ''good length''
+    (about 75% of predictions against 46% in recorded labels) and wides are under-predicted; use only rows with
+    explicit = TRUE as a noisy-label channel. Presence depends on the outcome (a predicted line exists for 67% of
+    dots but 50% of wickets among unlabelled balls). Super overs are included, so innings reaches 6.'
+schema:
+- name: cricinfo_ball_labels_predicted
+  physicalName: data/silver/cricinfo_ball_labels_predicted.parquet
+  physicalType: table
+  logicalType: object
+  description: Text-model predicted line and length of the delivery, with confidence and whether the commentary
+    stated it explicitly.
+  dataGranularityDescription: One row per ball (match_id, innings, delivery_number) with a predicted line or length,
+    1,634,290 rows over 5,419 matches.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (the same id as the Cricinfo match id for most internationals). Joins to matches.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number within the match, as numbered by Cricsheet (1 to 4; super overs are numbered as
+      further innings). Part of the ball key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Position of the delivery within its innings, counting every delivery including wides and no-balls,
+      starting at 1 (Ari's key convention, equal to balls.delivery_number). Together with match_id and innings it
+      joins this row to balls.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+    customProperties:
+    - property: unit
+      value: deliveries
+  - name: line_predicted
+    logicalType: string
+    physicalType: VARCHAR
+    description: Predicted line, same vocabulary as line_cricinfo ('wide outside offstump', 'outside offstump',
+      'on the stumps', 'down leg', 'wide down leg'). Never NULL in this table.
+    customProperties:
+    - property: timingClass
+      value: predicted_delivery
+    quality:
+    - name: valid_line
+      metric: invalidValues
+      arguments:
+        validValues:
+        - wide outside offstump
+        - outside offstump
+        - on the stumps
+        - down leg
+        - wide down leg
+      mustBe: 0
+  - name: line_predicted_conf
+    logicalType: number
+    physicalType: DOUBLE
+    description: The text model's own confidence in line_predicted (0 to 1). Uncalibrated.
+    customProperties:
+    - property: timingClass
+      value: predicted_delivery
+    - property: unit
+      value: probability (0-1)
+    quality:
+    - name: conf_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: line_predicted_explicit
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: TRUE if the commentary stated the line explicitly, FALSE if the model inferred it from other wording.
+    customProperties:
+    - property: timingClass
+      value: predicted_delivery
+  - name: length_predicted
+    logicalType: string
+    physicalType: VARCHAR
+    description: Predicted length, same vocabulary as length_cricinfo. NULL on 549 rows where only a line was predicted.
+    customProperties:
+    - property: timingClass
+      value: predicted_delivery
+    quality:
+    - name: valid_length
+      metric: invalidValues
+      arguments:
+        validValues:
+        - full toss
+        - yorker
+        - full
+        - good length
+        - short of a good length
+        - short
+      mustBe: 0
+  - name: length_predicted_conf
+    logicalType: number
+    physicalType: DOUBLE
+    description: The text model's own confidence in length_predicted (0 to 1), uncalibrated. NULL when length_predicted
+      is NULL.
+    customProperties:
+    - property: timingClass
+      value: predicted_delivery
+    - property: unit
+      value: probability (0-1)
+    quality:
+    - name: conf_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: length_predicted_explicit
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: TRUE if the commentary stated the length explicitly, FALSE if inferred. NULL when length_predicted
+      is NULL.
+    customProperties:
+    - property: timingClass
+      value: predicted_delivery
+  quality:
+  - name: length_fields_null_together
+    type: sql
+    description: Length value, confidence and explicit flag are present or absent together.
+    query: SELECT count(*) FROM ${table} WHERE (length_predicted IS NULL) <> (length_predicted_conf IS NULL) OR
+      (length_predicted IS NULL) <> (length_predicted_explicit IS NULL)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - ari
+- property: upstream
+  value:
+  - stg_ari_predictions
+- property: timingClass
+  value: predicted_delivery

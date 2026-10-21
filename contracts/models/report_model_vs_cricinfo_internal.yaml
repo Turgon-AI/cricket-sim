@@ -1,0 +1,68 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.models.report_model_vs_cricinfo_internal
+name: report_model_vs_cricinfo_internal
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'INTERNAL benchmark: how the open model compares with ESPNcricinfo''s own published win probability on
+    the same balls.'
+  limitations: Cricinfo's model sees information ours does not (team selection, conditions) and its methodology
+    is unpublished; its perspective is inferred from the data.
+schema:
+- name: report_model_vs_cricinfo_internal
+  physicalName: data/models/report_model_vs_cricinfo_internal.parquet
+  physicalType: table
+  logicalType: object
+  description: 'Brier score of our model and of Cricinfo''s pre-ball win probability (the previous ball''s published
+    value) on clean held-out balls where Cricinfo has one. Never exported: Cricinfo-derived.'
+  dataGranularityDescription: One row per innings.
+  properties:
+  - name: innings
+    logicalType: integer
+    physicalType: BIGINT
+    description: 1 or 2.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Balls compared.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: perspective
+    logicalType: string
+    physicalType: VARCHAR
+    description: Whose win probability Cricinfo's number turned out to be (batting_side expected).
+  - name: model_brier
+    logicalType: number
+    physicalType: DOUBLE
+    description: Our model's Brier score on these balls.
+    customProperties:
+    - property: unit
+      value: score
+  - name: cricinfo_brier
+    logicalType: number
+    physicalType: DOUBLE
+    description: Cricinfo's Brier score on the same balls.
+    customProperties:
+    - property: unit
+      value: score
+customProperties:
+- property: layer
+  value: models
+- property: kind
+  value: report
+- property: sources
+  value:
+  - ari
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - model_ball_win_probability
+  - cricinfo_ball_pre

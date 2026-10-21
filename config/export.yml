@@ -1,0 +1,86 @@
+# The dataset export. Each file names a gold table and the licence it carries.
+# `cricket export` refuses anything that is not a gold dim_/fact_/map_/report_ table, whose lineage is
+# not redistributable, or whose declared licence is weaker than its sources require.
+# Never published: anything Cricinfo- or Hawk-Eye-derived (staging, the ball_* layers, *_internal).
+title: Cricket ball-by-ball, with match state, context and quality checks
+files:
+  - file: fact_delivery
+    table: fact_delivery
+    licence: ODC-BY-1.0
+    description: One row per delivery. The match state before the ball (built only from earlier balls), then what happened on it.
+  - file: fact_innings
+    table: fact_innings
+    licence: ODC-BY-1.0
+    description: One row per innings. Totals, ball and wicket limits, and the target as known at the start versus Cricsheet's final (possibly rain-revised) target.
+  - file: fact_dismissal
+    table: fact_dismissal
+    licence: ODC-BY-1.0
+    description: One row per dismissal or retirement, with fielders and substitute flags.
+  - file: fact_match_weather_hourly
+    table: fact_match_weather_hourly
+    licence: ODbL-1.0
+    description: Hourly ERA5 weather (Open-Meteo) at each venue for every match day, in UTC and local time.
+  - file: dim_match
+    table: dim_match
+    licence: ODC-BY-1.0
+    description: One row per match. Teams, toss, result, officials, canonical venue id and whether the match passes every quality check.
+  - file: dim_player
+    table: dim_player
+    licence: ODC-BY-1.0
+    description: One row per player who appears in a match in scope. Identifiers, birth date and nationality (Wikidata) and career spans.
+  - file: dim_venue
+    table: dim_venue
+    licence: ODbL-1.0
+    description: One row per canonical venue used in scope, with coordinates, elevation, timezone and geocode confidence.
+  - file: fact_player_match_form
+    table: fact_player_match_form
+    licence: ODC-BY-1.0
+    description: Point-in-time player record before every in-scope match, from strictly earlier matches only.
+  - file: report_player_careers
+    table: report_player_careers
+    licence: ODC-BY-1.0
+    description: Whole-snapshot career totals per player and format (for browsing, not a model input).
+  - file: map_venue_alias
+    table: map_venue_alias
+    licence: ODC-BY-1.0
+    description: Every Cricsheet venue/city spelling mapped to a canonical venue id.
+  - file: map_match_ids
+    table: map_match_ids
+    licence: CC-BY-SA-4.0
+    description: Cricsheet match id to Cricinfo match id to official match number, one-to-one.
+  - file: report_match_quality
+    table: report_match_quality
+    licence: ODC-BY-1.0
+    description: Per-match consistency checks (tri-state; NULL = not checkable) behind dim_match.passes_quality.
+  - file: report_international_coverage
+    table: report_international_coverage
+    licence: CC-BY-SA-4.0
+    description: Every numbered men's Test, ODI and full-member T20I since 2001, with whether Cricsheet holds it and, if not, why.
+  - file: model_ball_win_probability
+    table: model_ball_win_probability
+    licence: ODbL-1.0
+    description: Per ODI ball, the batting side's win probability before and after it and the swing, each from a model trained on earlier seasons only.
+  - file: model_ball_outcome
+    table: model_ball_outcome
+    licence: ODC-BY-1.0
+    description: Per ODI ball, the probability of each outcome and the expected runs for an average batter in that situation.
+  - file: model_team_elo
+    table: model_team_elo
+    licence: ODC-BY-1.0
+    description: Pre-match Elo of both sides of every ODI, from earlier results only.
+  - file: report_model_scores
+    table: report_model_scores
+    licence: ODbL-1.0
+    description: Held-out log loss and Brier score of every model and baseline.
+  - file: report_model_calibration
+    table: report_model_calibration
+    licence: ODbL-1.0
+    description: Reliability tables for the win-probability and ball-outcome models.
+  - file: report_model_checkpoints
+    table: report_model_checkpoints
+    licence: ODbL-1.0
+    description: Match-level accuracy at the start, the start of the chase and the last five overs.
+  - file: report_model_folds
+    table: report_model_folds
+    licence: ODbL-1.0
+    description: What each walk-forward fold trained on, and its fitted coefficients.

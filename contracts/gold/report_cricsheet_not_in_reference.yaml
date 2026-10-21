@@ -1,0 +1,69 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.report_cricsheet_not_in_reference
+name: report_cricsheet_not_in_reference
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'The other direction of the coverage check: in-scope Cricsheet internationals that could not be matched
+    to the Wikipedia reference list.'
+  limitations: Usually a gap in the reference (match numbers missing from the Wikipedia season pages, mostly ODIs)
+    rather than an error in Cricsheet. Small by design (31 matches in the current build).
+schema:
+- name: report_cricsheet_not_in_reference
+  physicalName: data/gold/report_cricsheet_not_in_reference.parquet
+  physicalType: table
+  logicalType: object
+  description: In-scope Cricsheet Tests, ODIs and T20Is with no linked row in report_international_coverage.
+  dataGranularityDescription: One row per unlinked in-scope Cricsheet international.
+  properties:
+  - name: segment
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''Test'', ''ODI'' or ''T20I''.'
+    required: true
+    quality:
+    - name: valid_segment
+      metric: invalidValues
+      arguments:
+        validValues:
+        - Test
+        - ODI
+        - T20I
+      mustBe: 0
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match identifier (the name of the match's file in Cricsheet's download, e.g. '1000851').
+      For most internationals it equals the ESPNcricinfo match id, but do not rely on that; use map_match_ids. Joins
+      to dim_match.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: dim_match.match_id
+  - name: match_type_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Official match number as Cricsheet gives it.
+  - name: start_date
+    logicalType: date
+    physicalType: DATE
+    description: Start date of the match.
+    required: true
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: report
+- property: sources
+  value:
+  - wiki_fixtures
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - dim_match
+  - report_international_coverage

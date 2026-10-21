@@ -1,0 +1,204 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.models.model_ball_outcome
+name: model_ball_outcome
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: What an average batter and bowler would be expected to produce on each ball, given the situation and
+    era, so real performances can be measured against expectation.
+  limitations: 'Describes an average batter facing an average bowler in that match state and season: it knows nothing
+    about the actual players, pitch or conditions, by design. Outcome classes use total runs off the delivery (a
+    five is counted with fours, sevens with sixes). Extras = wides and no-balls. Numeric outputs are NULL for
+    excluded matches, including unknown target/horizon event times; evaluated and exclusion_reason explain eligibility.'
+schema:
+- name: model_ball_outcome
+  physicalName: data/models/model_ball_outcome.parquet
+  physicalType: table
+  logicalType: object
+  description: 'For every ODI delivery modelled: the probability of each of eight outcomes and the expected runs,
+    from a gradient-boosted classifier trained walk-forward on the ten seasons before the match.'
+  dataGranularityDescription: One row per delivery of innings 1 and 2 of an ODI from 2008 onwards.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (joins gold.fact_delivery and gold.dim_match).
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Innings number: 1 = batting first, 2 = chasing. Super overs are not modelled.'
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Delivery sequence within the innings, wides and no-balls included (as in gold.fact_delivery).
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: trained_through_season
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Last season the model that produced this row was trained on. It is always earlier than the match''s
+      season: every prediction is out of sample.'
+  - name: p_dot
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Probability that this delivery ends as ''dot'': a legal ball with no runs and no wicket.'
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: p_1
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Probability that this delivery ends as ''1'': one run.'
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: p_2
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Probability that this delivery ends as ''2'': two runs.'
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: p_3
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Probability that this delivery ends as ''3'': three runs.'
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: p_4
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Probability that this delivery ends as ''4'': four (or five) runs.'
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: p_6
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Probability that this delivery ends as ''6'': six or more runs.'
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: p_wicket
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Probability that this delivery ends as ''wicket'': a dismissal on this delivery, including run-outs.'
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: p_extra
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Probability that this delivery ends as ''extra'': a wide or no-ball without a wicket.'
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: expected_runs
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Expected total runs off this delivery: the outcome probabilities times the average runs of each
+      outcome in the training seasons.'
+    customProperties:
+    - property: unit
+      value: runs
+  - name: evaluated
+    logicalType: boolean
+    physicalType: BOOLEAN
+    required: true
+    description: True when the match meets the same training and scoring eligibility rules as the win-probability table.
+  - name: exclusion_reason
+    logicalType: string
+    physicalType: VARCHAR
+    description: Reason numeric outputs are withheld; NULL on evaluated rows. Same value as model_ball_win_probability.
+  quality:
+  - name: excluded_rows_have_no_numeric_outputs
+    type: sql
+    query: >-
+      SELECT count(*) FROM ${table} WHERE NOT evaluated AND
+      (p_dot IS NOT NULL OR p_1 IS NOT NULL OR p_2 IS NOT NULL OR p_3 IS NOT NULL OR p_4 IS NOT NULL
+       OR p_6 IS NOT NULL OR p_wicket IS NOT NULL OR p_extra IS NOT NULL OR expected_runs IS NOT NULL)
+    mustBe: 0
+  - name: evaluated_rows_have_finite_outputs
+    type: sql
+    query: >-
+      SELECT count(*) FROM ${table} WHERE evaluated AND
+      (p_dot IS NULL OR p_1 IS NULL OR p_2 IS NULL OR p_3 IS NULL OR p_4 IS NULL OR p_6 IS NULL
+       OR p_wicket IS NULL OR p_extra IS NULL OR expected_runs IS NULL
+       OR NOT isfinite(p_dot + p_1 + p_2 + p_3 + p_4 + p_6 + p_wicket + p_extra + expected_runs))
+    mustBe: 0
+  - name: eligibility_matches_win_probability
+    type: sql
+    query: >-
+      SELECT count(*) FROM ${table} o FULL OUTER JOIN ${table:model_ball_win_probability} w
+      USING (match_id, innings, delivery_number) WHERE o.match_id IS NULL OR w.match_id IS NULL
+      OR o.evaluated IS DISTINCT FROM w.evaluated OR o.exclusion_reason IS DISTINCT FROM w.exclusion_reason
+    mustBe: 0
+  - name: probabilities_sum_to_one
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE abs(p_dot + p_1 + p_2 + p_3 + p_4 + p_6 + p_wicket + p_extra - 1)
+      > 1e-5
+    mustBe: 0
+customProperties:
+- property: layer
+  value: models
+- property: kind
+  value: model
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - fact_delivery
+  - dim_match

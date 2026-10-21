@@ -1,0 +1,133 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.replacements
+name: replacements
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Mid-match replacements: substitutes who take a player''s place (concussion, injury, impact player, super
+    sub, call-ups) and role replacements (a bowler barred, a batter replaced).'
+  limitations: Cricsheet (ODC-BY 1.0); format documented at https://cricsheet.org/format/json/. Sparse and unevenly
+    recorded; 2,917 events in 2,220 matches. Match replacements carry team; role replacements carry role but not
+    team. player_out is NULL on 201 events (the replacement did not name who left). Reasons are as Cricsheet writes
+    them, including some with free text ('excluded - high full pitched balls'). The delivery is the one on which
+    Cricsheet attached the change, which can be the ball after the actual event.
+  usage: Join to balls on (match_id, innings, delivery_number).
+schema:
+- name: replacements
+  physicalName: data/silver/replacements.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per replacement event on a delivery.
+  dataGranularityDescription: One row per replacement (match_id, innings, delivery_number, replacement_number).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id; foreign key to matches. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Delivery to which the change is attached. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: replacement_number
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Order of the event within the delivery (1 to 3); match-type events come before role-type events.
+      Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 4
+    required: true
+    quality:
+    - name: number_1_to_3
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 3
+      mustBe: 0
+  - name: kind
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''match'' (a substitute takes a place in the match) or ''role'' (a player takes over a bowling/batting
+      role without taking a place).'
+    quality:
+    - name: valid_kind
+      metric: invalidValues
+      arguments:
+        validValues:
+        - match
+        - role
+      mustBe: 0
+  - name: role
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'For kind = ''role'': ''bowler'' or ''batter''. NULL for match replacements.'
+    quality:
+    - name: valid_role
+      metric: invalidValues
+      arguments:
+        validValues:
+        - bowler
+        - batter
+      mustBe: 0
+  - name: team
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'For kind = ''match'': the team making the replacement. NULL for role replacements.'
+  - name: player_in
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the player coming in.
+  - name: player_in_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier of player_in; foreign key to people.identifier.
+    relationships:
+    - to: people.identifier
+  - name: player_out
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the player going out. NULL on 201 events.
+  - name: player_out_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier of player_out; foreign key to people.identifier. NULL with player_out.
+    relationships:
+    - to: people.identifier
+  - name: reason
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Why: for match replacements impact_player, concussion_substitute, supersub, injury_substitute,
+      national_callup, national_release, covid_replacement, tactical_substitute, unknown; for role replacements
+      injury, unknown, too many overs, or an exclusion reason (''excluded - high full pitched balls'', ''excluded
+      - running on the pitch'', ''excluded - excessive short-pitched deliveries'').'
+  quality:
+  - name: team_xor_role
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (kind = 'match' AND (team IS NULL OR role IS NOT NULL)) OR (kind
+      = 'role' AND (role IS NULL OR team IS NOT NULL))
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - cricsheet
+- property: upstream
+  value: []

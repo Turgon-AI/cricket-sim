@@ -1,0 +1,262 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.players
+name: players
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Gives each player in the Cricsheet register openly licensed attributes (date of birth, birthplace, sex,
+    national team, career span by format) so players can be described and grouped without non-redistributable data.
+  limitations: 'Covers every player Cricsheet lists in any match since late 2001 (13,741 people, men and women,
+    all formats including domestic leagues), not only the in-scope ones. Only about half (7,195) are linked to a
+    Wikidata item, through the ESPNcricinfo id, so sex, birthplace and citizenship are NULL for the rest; handedness
+    exists for just 18 players and is not usable. Wikidata dates of birth that conflict, equal the 1970-01-01 placeholder
+    or imply an age outside 14 to 50 at the first match are set to NULL with a dob_flag; a date implying an age over
+    50 at the last match is kept here but flagged (gold gives no age at a match where the player would be over 50,
+    and dim_player leaves the date out);
+    only 6,754 players have a date of birth. country is the national team the player actually played for in a Cricsheet
+    international (composite XIs ignored), which is NULL for 2,643 players with no international and no usable citizenship;
+    it is not birth country or citizenship. Cricsheet withholds Afghanistan''s matches, so Afghan players can appear
+    capped for fewer matches than they played. Match counts and dates are over all of Cricsheet with no scope applied;
+    ''ipl'' counts only the men''s Indian Premier League and ''t20i'' every Cricsheet international T20 including
+    women''s. Career aggregates here are whole-career values as of the data cut, so using them as features for an
+    earlier date leaks the future. Contains no Cricinfo or Hawk-Eye derived columns, so it can be exported;
+    cricinfo_players holds those. Career spans and totals are deliberately not here: they summarise the whole
+    snapshot and would leak the future into a model. Use gold.fact_player_match_form (as of each match) or gold.report_player_careers
+    (snapshot summary).'
+schema:
+- name: players
+  physicalName: data/silver/players.parquet
+  physicalType: table
+  logicalType: object
+  description: 'Openly licensed attributes of every player in the Cricsheet register: Wikidata facts (CC0) and facts
+    derived from Cricsheet matches.'
+  dataGranularityDescription: One row per Cricsheet player (cricsheet_id), 13,741 rows.
+  properties:
+  - name: cricsheet_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet people-register identifier (8-character hex), the player's key everywhere in this project.
+      Joins to people.identifier and match_players.player_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: people.identifier
+  - name: name
+    logicalType: string
+    physicalType: VARCHAR
+    description: Player name as written in the Cricsheet register (usually initials plus surname, e.g. 'M King'),
+      not a full name.
+  - name: cricinfo_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: ESPNcricinfo player id from the Cricsheet register (the first of up to three recorded ids). NULL
+      for 21 players with none.
+  - name: wikidata_qid
+    logicalType: string
+    physicalType: VARCHAR
+    description: Wikidata item id (e.g. Q63294179) linked through the ESPNcricinfo id (property P2697). NULL if
+      no item carries the id, or the ids point to several items with different birth dates (wikidata_flag = 'ambiguous').
+  - name: wikidata_candidates
+    logicalType: integer
+    physicalType: BIGINT
+    description: How many Wikidata items carry one of the player's Cricinfo ids (1 or 2). NULL when none do.
+    customProperties:
+    - property: unit
+      value: items
+  - name: wikidata_flag
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''ambiguous'' when several candidate items disagree on date of birth so no link was made; ''several_items_same_dob''
+      when several items agree and one was used. NULL otherwise.'
+    quality:
+    - name: valid_wikidata_flag
+      metric: invalidValues
+      arguments:
+        validValues:
+        - ambiguous
+        - several_items_same_dob
+      mustBe: 0
+  - name: dob
+    logicalType: date
+    physicalType: DATE
+    description: Date of birth from Wikidata at day precision. NULL when not linked, only month/year precision exists,
+      the dates conflict, it is the 1970-01-01 placeholder, or it implies an age outside 14-50 at the first match
+      (see dob_flag). Over 50 at the last match is kept but flagged, because that check reads later matches. 1 January
+      dates are kept but flagged.
+  - name: dob_flag
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Why the date of birth is missing or doubtful: ''conflict'' (several different dates, none preferred),
+      ''placeholder'' (1970-01-01), ''implausible_age_at_first_match'', ''implausible_age_at_last_match'', ''low_precision_only''
+      (only year or month known), ''jan1_low_precision'' (kept, but 1 January is often a year-only default), ''conflict_resolved_by_preferred_rank''
+      (kept, Wikidata marks one date preferred). NULL for a clean date and for unlinked players.'
+    quality:
+    - name: valid_dob_flag
+      metric: invalidValues
+      arguments:
+        validValues:
+        - conflict
+        - placeholder
+        - implausible_age_at_first_match
+        - implausible_age_at_last_match
+        - low_precision_only
+        - jan1_low_precision
+        - conflict_resolved_by_preferred_rank
+      mustBe: 0
+  - name: wikidata_dob_values
+    logicalType: integer
+    physicalType: BIGINT
+    description: Number of distinct day-precision, non-deprecated dates of birth on the linked Wikidata item (0
+      to 2). NULL when the player is not linked.
+    customProperties:
+    - property: unit
+      value: dates
+  - name: birthplace
+    logicalType: string
+    physicalType: VARCHAR
+    description: Birthplace label from Wikidata. NULL when not linked, absent, or several different places are recorded.
+  - name: birthplace_country
+    logicalType: string
+    physicalType: VARCHAR
+    description: Present-day country of the birthplace from Wikidata, e.g. 'United Kingdom' for an England-born
+      player; this is not nationality. NULL when unknown or ambiguous.
+  - name: sex
+    logicalType: string
+    physicalType: VARCHAR
+    description: Sex or gender label from Wikidata ('male', 'female' or 'trans woman'). NULL when not linked or
+      contradictory.
+    quality:
+    - name: valid_sex
+      metric: invalidValues
+      arguments:
+        validValues:
+        - male
+        - female
+        - trans woman
+      mustBe: 0
+  - name: cricsheet_gender
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''male'' or ''female'' according to the Cricsheet matches the player appears in. NULL for the
+      few players who appear in both.'
+    quality:
+    - name: valid_cricsheet_gender
+      metric: invalidValues
+      arguments:
+        validValues:
+        - male
+        - female
+      mustBe: 0
+  - name: handedness
+    logicalType: string
+    physicalType: VARCHAR
+    description: Batting hand from Wikidata ('right', 'left', 'ambidextrous'). Recorded for only 18 players; NULL
+      for everyone else. Not usable as a feature.
+    quality:
+    - name: valid_handedness
+      metric: invalidValues
+      arguments:
+        validValues:
+        - right
+        - left
+        - ambidextrous
+      mustBe: 0
+  - name: country
+    logicalType: string
+    physicalType: VARCHAR
+    description: The national team the player played for in Cricsheet internationals (the most recent one if several,
+      see country_source). For players with no international it is the single Wikidata citizenship if that names
+      a cricket nation. NULL when neither applies.
+  - name: country_source
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How country was decided: ''cricsheet_national_team'' (one national team), ''cricsheet_latest_of_several_national_teams'',
+      ''wikidata_citizenship_no_internationals'', ''unresolved_citizenship_no_internationals'' (citizenship exists
+      but is not a single cricket nation; country NULL) or ''unknown'' (country NULL).'
+    quality:
+    - name: valid_country_source
+      metric: invalidValues
+      arguments:
+        validValues:
+        - cricsheet_national_team
+        - cricsheet_latest_of_several_national_teams
+        - wikidata_citizenship_no_internationals
+        - unresolved_citizenship_no_internationals
+        - unknown
+      mustBe: 0
+  - name: national_teams
+    logicalType: array
+    physicalType: VARCHAR[]
+    description: Sorted list of every national team (Cricsheet team name) the player appeared for in an international
+      match, excluding composite teams such as World XI. NULL when the player has no international.
+  - name: citizenship_consistent
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: TRUE if at least one Wikidata citizenship maps to a national team the player played for, FALSE
+      if none does. NULL when the player has no international or no Wikidata citizenship.
+  - name: country_conflict
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Where Wikidata and Cricsheet facts about the player''s country disagree; country itself is not changed.
+      ''citizenship_not_national_team'': no Wikidata citizenship maps to a national side the player played for in
+      Cricsheet. ''born_in_withheld_nation'': no Cricsheet internationals, born (Wikidata) in a nation whose internationals
+      Cricsheet does not hold (Afghanistan), and no citizenship is that nation, so the Wikidata country may not be
+      the national side (e.g. Gulbadin Naib). NULL when no disagreement is found. Uses no Cricinfo-derived data.'
+    quality:
+    - name: valid_country_conflict
+      metric: invalidValues
+      arguments:
+        validValues:
+        - citizenship_not_national_team
+        - born_in_withheld_nation
+      mustBe: 0
+  - name: citizenships
+    logicalType: array
+    physicalType: VARCHAR[]
+    description: Sorted list of Wikidata country-of-citizenship labels. NULL when not linked or none recorded.
+  - name: wikidata_height_cm
+    logicalType: number
+    physicalType: DOUBLE
+    description: Height in centimetres from Wikidata (median of recorded values, kept only between 120 and 240 cm).
+      Recorded for just 54 players, so NULL for nearly everyone; kept out of the exported table.
+    customProperties:
+    - property: unit
+      value: cm
+    quality:
+    - name: height_plausible
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 120 AND 240
+      mustBe: 0
+  - name: wikidata_dob_quarantine
+    logicalType: array
+    physicalType: DATE[]
+    description: Every distinct day-precision, non-deprecated date of birth found on the linked Wikidata item, before
+      cleaning; lets rejected dates (conflicts, placeholders, impossible ages) be inspected. NULL when none exist.
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 75
+  - name: country_null_iff_unresolved
+    type: sql
+    description: country is NULL exactly for the two unresolved country_source values.
+    query: SELECT count(*) FROM ${table} WHERE (country IS NULL) <> (country_source IN ('unknown', 'unresolved_citizenship_no_internationals'))
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: entity
+- property: sources
+  value:
+  - wikidata_players
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - people
+  - match_players
+  - matches

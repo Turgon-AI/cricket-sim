@@ -1,0 +1,321 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.int_match_weather_daily
+name: int_match_weather_daily
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Summarises the weather over each match day's playing window (temperature, humidity, dew, wind, rain),
+    with a reason when it is missing, giving one ready-to-join row per match day.
+  limitations: 'Internal only: 5,587 windows are placed with Cricinfo ball timestamps, so this table inherits that
+    restriction and is never exported (hourly weather without the phase column is the exported form). Weather exists
+    for only 11,533 of 32,324 match days: unlocated venues (5,710 days) and venues outside the weather plan (15,081
+    days). No day is lost to the archive lag. Two days have partial hours (window_precipitation_mm is NULL on them). On days without
+    ball timestamps (about 78%) the window is a fixed per-format estimate, so the aggregates cover the likely rather
+    than actual playing hours. Values are ERA5 reanalysis at the venue point, which can be a city centre (see weather_location_quality)
+    and which misses some storms; it is not proof of rain delays.'
+schema:
+- name: int_match_weather_daily
+  physicalName: data/gold/int_match_weather_daily.parquet
+  physicalType: table
+  logicalType: object
+  description: Playing-window weather summary per match day, with availability and data-quality flags.
+  dataGranularityDescription: One row per match and match day (match_id, match_day_number), 32,324 rows.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id. Joins to matches.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: match_day_number
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 1-based index of the match day among the match's Cricsheet dates (a one-day match is always 1).
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+    customProperties:
+    - property: unit
+      value: day
+  - name: match_date
+    logicalType: date
+    physicalType: DATE
+    description: Calendar date of this match day, from Cricsheet's match dates (local date).
+  - name: venue_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Canonical venue of the match. Joins to venues.venue_id.
+    relationships:
+    - to: venues.venue_id
+  - name: venue_version
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Venue version whose point the weather was placed at (joins to venue_versions with venue_id).
+    required: true
+  - name: timezone
+    logicalType: string
+    physicalType: VARCHAR
+    description: IANA timezone used to place the playing window. NULL for the 6,612 match days at venues with no
+      timezone.
+  - name: window_source
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How the playing window was set: ''ball_timestamps'' (first to last ball of the day from Cricinfo
+      timestamps, available from late 2019) or ''default_estimate'' (a fixed local-time window per format). NULL
+      when there is no timezone.'
+    quality:
+    - name: valid_window_source
+      metric: invalidValues
+      arguments:
+        validValues:
+        - ball_timestamps
+        - default_estimate
+      mustBe: 0
+  - name: weather_available
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: TRUE when at least one weather hour exists for the window (11,533 days), including any partial
+      days (2 in the current build); FALSE otherwise.
+  - name: weather_missing_reason
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Why weather is absent or incomplete: ''venue_not_geocoded'', ''no_timezone (venue outside the
+      weather plan)'', ''not_in_weather_plan'', ''after_archive_lag'' (date too recent for the archive), ''fetch_failed'',
+      or ''partial_hours'' (some hours missing, so window_precipitation_mm is NULL). NULL when complete.'
+    quality:
+    - name: valid_missing_reason
+      metric: invalidValues
+      arguments:
+        validValues:
+        - venue_not_geocoded
+        - no_timezone (venue outside the weather plan)
+        - not_in_weather_plan
+        - after_archive_lag
+        - fetch_failed
+        - partial_hours
+      mustBe: 0
+  - name: geocode_confidence
+    logicalType: string
+    physicalType: VARCHAR
+    description: Geocode confidence of the venue's point ('high', 'medium', 'low' or 'manual'), copied from venues.
+      NULL when the venue is not located.
+    quality:
+    - name: valid_geocode_confidence
+      metric: invalidValues
+      arguments:
+        validValues:
+        - high
+        - medium
+        - low
+        - manual
+      mustBe: 0
+  - name: weather_location_quality
+    logicalType: string
+    physicalType: VARCHAR
+    description: Quality of the weather location, copied from venues.weather_location_quality ('verified_ground',
+      'unverified_point', 'city_centroid'), but only on days that have weather; NULL otherwise.
+    quality:
+    - name: valid_weather_location_quality
+      metric: invalidValues
+      arguments:
+        validValues:
+        - verified_ground
+        - unverified_point
+        - city_centroid
+      mustBe: 0
+  - name: window_hours_expected
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Number of hourly records the window should contain for the instantaneous variables. NULL when no
+      weather.
+    customProperties:
+    - property: unit
+      value: hours
+  - name: window_hours_present
+    logicalType: integer
+    physicalType: SMALLINT
+    description: How many of those hourly records exist. NULL when no weather.
+    customProperties:
+    - property: unit
+      value: hours
+  - name: window_temperature_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean 2 m air temperature over the window's hours.
+    customProperties:
+    - property: unit
+      value: degrees C
+  - name: window_max_temperature_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Maximum hourly 2 m air temperature in the window.
+    customProperties:
+    - property: unit
+      value: degrees C
+  - name: window_humidity_pct
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean relative humidity over the window.
+    customProperties:
+    - property: unit
+      value: '%'
+    quality:
+    - name: humidity_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  - name: window_dew_point_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean dew point over the window.
+    customProperties:
+    - property: unit
+      value: degrees C
+  - name: window_dew_point_depression_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean of (temperature minus dew point) over the window; small values mean humid air and likely dew.
+    customProperties:
+    - property: unit
+      value: degrees C
+  - name: window_cloud_cover_pct
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean total cloud cover over the window.
+    customProperties:
+    - property: unit
+      value: '%'
+    quality:
+    - name: cloud_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  - name: window_wind_speed_kmh
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean 10 m wind speed over the window.
+    customProperties:
+    - property: unit
+      value: km/h
+  - name: window_wind_direction_deg
+    logicalType: number
+    physicalType: DOUBLE
+    description: Circular mean of the direction the wind blows FROM over the window, degrees clockwise from north.
+    customProperties:
+    - property: unit
+      value: degrees
+    quality:
+    - name: wind_direction_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 360
+      mustBe: 0
+  - name: window_station_pressure_hpa
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean surface (station-level) pressure over the window.
+    customProperties:
+    - property: unit
+      value: hPa
+  - name: window_precipitation_mm
+    logicalType: number
+    physicalType: DOUBLE
+    description: Total precipitation for the hours overlapping the window. NULL if any of those hours is missing
+      (partial_hours) or there is no weather.
+    customProperties:
+    - property: unit
+      value: mm
+    quality:
+    - name: precipitation_non_negative
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1000
+      mustBe: 0
+  - name: window_precip_hours_present
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Number of hourly precipitation records that overlap the window and exist. NULL when no weather.
+    customProperties:
+    - property: unit
+      value: hours
+  - name: window_max_hourly_precipitation_mm
+    logicalType: number
+    physicalType: DOUBLE
+    description: Largest single-hour precipitation inside the window.
+    customProperties:
+    - property: unit
+      value: mm
+  - name: window_hours_with_rain
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Number of window hours with at least 0.1 mm of precipitation.
+    customProperties:
+    - property: unit
+      value: hours
+  - name: pre_match_12h_precipitation_mm
+    logicalType: number
+    physicalType: DOUBLE
+    description: Total precipitation over the 12 hours before the window starts. NULL if fewer than 12 of those
+      hours exist or there is no weather.
+    customProperties:
+    - property: unit
+      value: mm
+    quality:
+    - name: precipitation_non_negative
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1000
+      mustBe: 0
+  - name: pre_match_hours_present
+    logicalType: integer
+    physicalType: SMALLINT
+    description: How many of the 12 pre-match hours exist. NULL when no weather.
+    customProperties:
+    - property: unit
+      value: hours
+  quality:
+  - name: weather_available_iff_hours
+    type: sql
+    description: weather_available is TRUE exactly when window_hours_expected is present.
+    query: SELECT count(*) FROM ${table} WHERE weather_available <> (window_hours_expected IS NOT NULL)
+    mustBe: 0
+  - name: hours_present_within_expected
+    type: sql
+    description: Present hours never exceed expected hours.
+    query: SELECT count(*) FROM ${table} WHERE window_hours_present > window_hours_expected
+    mustBe: 0
+  - name: max_temp_not_below_mean
+    type: sql
+    description: Window maximum temperature is not below the window mean.
+    query: SELECT count(*) FROM ${table} WHERE window_max_temperature_c < window_temperature_c
+    mustBe: 0
+  - name: reason_matches_availability
+    type: sql
+    description: Missing reason is NULL exactly when the day has complete weather.
+    query: SELECT count(*) FROM ${table} WHERE (weather_missing_reason IS NULL) <> (weather_available AND window_precipitation_mm
+      IS NOT NULL)
+    mustBe: 0
+  - name: venue_version_is_the_match_version
+    type: sql
+    description: The weather rows use the venue and venue version of their match (match_venues).
+    query: SELECT count(*) FROM ${table} w JOIN ${table:match_venues} mv USING (match_id) WHERE w.venue_version <>
+      mv.venue_version OR w.venue_id <> mv.venue_id
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: derived
+- property: sources
+  value:
+  - weather
+  - derived
+  - ari
+- property: upstream
+  value:
+  - matches
+  - venues
+  - stg_ari_tracking

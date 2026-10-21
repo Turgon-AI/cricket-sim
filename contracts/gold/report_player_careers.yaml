@@ -1,0 +1,119 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.report_player_careers
+name: report_player_careers
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: A browsable career summary per player and format family, kept apart from features because it covers the
+    whole snapshot.
+  limitations: 'Whole-snapshot totals: they include matches after any given date, so never use them as model inputs
+    (use fact_player_match_form). Only matches Cricsheet holds count.'
+schema:
+- name: report_player_careers
+  physicalName: data/gold/report_player_careers.parquet
+  physicalType: table
+  logicalType: object
+  description: Career totals per player and format family across every Cricsheet match, for players who appear in
+    scope.
+  dataGranularityDescription: One row per (player, format family, gender) for every in-scope player.
+  properties:
+  - name: player_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person id (joins dim_player.cricsheet_id).
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: format_family
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Format family: one_day (ODI and domestic one-day), t20 (T20I, IPL and every T20 league Cricsheet
+      covers) or multi_day (Tests and first-class).'
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: gender
+    logicalType: string
+    physicalType: VARCHAR
+    description: male or female.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: Matches played.
+    customProperties:
+    - property: unit
+      value: matches
+  - name: first_match_date
+    logicalType: date
+    physicalType: DATE
+    description: First match in this format family.
+  - name: last_match_date
+    logicalType: date
+    physicalType: DATE
+    description: Latest match in this format family in the snapshot.
+  - name: bat_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Balls faced (deliveries as striker, wides excluded).
+    customProperties:
+    - property: unit
+      value: balls
+  - name: bat_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: Runs off the bat.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: bat_outs
+    logicalType: integer
+    physicalType: BIGINT
+    description: Times dismissed (retired hurt / not out excluded).
+    customProperties:
+    - property: unit
+      value: dismissals
+  - name: bowl_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Legal balls bowled.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: bowl_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: Runs conceded (off the bat plus wides and no-balls; byes and leg byes are not charged to the bowler).
+    customProperties:
+    - property: unit
+      value: runs
+  - name: bowl_wickets
+    logicalType: integer
+    physicalType: BIGINT
+    description: Wickets credited to the bowler (caught, bowled, lbw, caught and bowled, stumped, hit wicket).
+    customProperties:
+    - property: unit
+      value: wickets
+  quality:
+  - name: first_not_after_last
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE first_match_date > last_match_date
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: report
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - int_player_match_stats
+  - dim_player

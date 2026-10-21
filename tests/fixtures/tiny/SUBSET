@@ -1,0 +1,2 @@
+This folder holds a SUBSET of the real snapshots (scripts/make_fixture.py).
+Checks that only hold for complete data, such as stale venue overrides, are skipped.

@@ -1,0 +1,95 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.cricsheet_missing
+name: cricsheet_missing
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Cricsheet's own published list of matches it knows exist but does not have, so gaps in the data can be
+    explained as 'known missing' rather than guessed.
+  limitations: 'Source is cricsheet.org/missing (ODC-BY 1.0), parsed from HTML. It is a best-effort list: it covers
+    Tests and ODIs by match type and some leagues by competition, not T20Is, and it only lists matches Cricsheet
+    is aware of. Entries have a date and a free-text team pair, no match id, so linking to other tables needs a
+    date (plus or minus one day) and team match, which can collide on busy days. Two rows are exact duplicates in
+    content and differ only by entry_number. list_name is Cricsheet''s heading with the word ''Matches'' removed
+    and is lower-cased after the first letter (''Odi'', ''Super smash'').'
+  usage: Match to wikipedia_fixtures or matches on start_date and teams.
+schema:
+- name: cricsheet_missing
+  physicalName: data/silver/cricsheet_missing.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per entry on the missing-matches page.
+  dataGranularityDescription: One row per listed missing match (list_type, list_name, entry_number).
+  properties:
+  - name: list_type
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Which listing on the page: ''match_type'' (by format, e.g. Test, Odi) or ''competition'' (by league/tournament).'
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    quality:
+    - name: valid_list_type
+      metric: invalidValues
+      arguments:
+        validValues:
+        - match_type
+        - competition
+      mustBe: 0
+  - name: list_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Heading of the list: a format (''Test'', ''Odi'') or a competition name (''One day cup'', ''Syed
+      mushtaq ali trophy'', ...). Part of the key.'
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: gender
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''male'' or ''female'', from the sub-heading of the list.'
+    quality:
+    - name: valid_gender
+      metric: invalidValues
+      arguments:
+        validValues:
+        - male
+        - female
+      mustBe: 0
+  - name: start_date
+    logicalType: date
+    physicalType: DATE
+    description: Date of the missing match as listed (first day).
+    quality:
+    - name: plausible_date
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < DATE '2001-01-01' OR ${column} > DATE '2027-01-01'
+      mustBe: 0
+  - name: teams
+    logicalType: string
+    physicalType: VARCHAR
+    description: Free text of the fixture, normally 'Team A vs Team B'; not parsed into teams.
+  - name: entry_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Position of the entry on the page, from 1 (global across the page). Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 2000
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: reference
+- property: sources
+  value:
+  - cricsheet_missing
+- property: upstream
+  value: []

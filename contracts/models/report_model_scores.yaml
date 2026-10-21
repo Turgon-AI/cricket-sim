@@ -1,0 +1,92 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.models.report_model_scores
+name: report_model_scores
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Proper scoring rules for every model and baseline on held-out balls, so claims about accuracy can be
+    checked.
+  limitations: Ball-level scores weight long innings more and balls within a match are correlated, so differences
+    between models should be read with the per-season rows. Ties score as 0.5.
+schema:
+- name: report_model_scores
+  physicalName: data/models/report_model_scores.parquet
+  physicalType: table
+  logicalType: object
+  description: Log loss and Brier score of the win-probability models (per innings) and the ball-outcome models,
+    on clean held-out balls, for all seasons together, each season, and each era.
+  dataGranularityDescription: One row per target x slice x model x scope.
+  properties:
+  - name: target
+    logicalType: string
+    physicalType: VARCHAR
+    description: win_probability or ball_outcome.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: slice
+    logicalType: string
+    physicalType: VARCHAR
+    description: innings_1 or innings_2 for win probability; all_classes for the ball outcome.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: model
+    logicalType: string
+    physicalType: VARCHAR
+    description: model = the published model; state_logistic = logistic regression on the raw match state; base_rate
+      = constant training rate; phase_average = outcome frequencies by innings, phase and wickets.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: scope
+    logicalType: string
+    physicalType: VARCHAR
+    description: all, a season (e.g. 2019), or an era (2008-2014, 2015-2020, 2021-).
+    primaryKey: true
+    primaryKeyPosition: 4
+    required: true
+  - name: balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Held-out balls scored.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: Distinct matches among them.
+    customProperties:
+    - property: unit
+      value: matches
+  - name: log_loss
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean negative log likelihood (natural log); lower is better.
+    customProperties:
+    - property: unit
+      value: nats
+  - name: brier
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean squared error of the probabilities (summed over classes for the ball outcome); lower is better.
+    customProperties:
+    - property: unit
+      value: score
+customProperties:
+- property: layer
+  value: models
+- property: kind
+  value: report
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - model_ball_win_probability
+  - model_ball_outcome

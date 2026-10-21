@@ -1,0 +1,164 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.cricinfo_ball_outcome_predicted
+name: cricinfo_ball_outcome_predicted
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Holds shot and shot-direction labels that Ari's text model inferred from Cricinfo commentary for balls
+    with no recorded label, kept separate from the delivery predictions because they describe what happened after
+    the ball was struck.
+  limitations: 'Sparse per-ball layer: a row exists only for balls where the source has a value, so a missing row
+    means ''not recorded'', never ''zero'' or ''no''. These are model guesses of labels from Cricinfo commentary
+    text, produced by Ari Adaikalam''s pipeline (the text itself is not stored here), never merged with the recorded
+    Cricinfo labels: rows exist only where the recorded label is missing (no ball has both). The confidence is the
+    model''s own score, uncalibrated and unvalidated (it cannot be checked in this pipeline because predictions
+    and recorded labels never overlap). Most predictions are inferred rather than stated in the text (explicit =
+    FALSE), and inferred ones lean to the commonest class, so the predicted distribution differs from recorded labels.
+    Cricinfo-derived: non-commercial licence, never exported. Because shot and direction describe the outcome, they
+    are outcome-shaped and must not feed a decision model. Shot and direction are predicted independently, so either
+    may be NULL (shot is NULL on 33,695 rows and direction on 60,008). Super overs are included, so innings reaches
+    6.'
+schema:
+- name: cricinfo_ball_outcome_predicted
+  physicalName: data/silver/cricinfo_ball_outcome_predicted.parquet
+  physicalType: table
+  logicalType: object
+  description: Text-model predicted shot played and shot direction, with confidence and whether the commentary stated
+    them explicitly.
+  dataGranularityDescription: One row per ball (match_id, innings, delivery_number) with a predicted shot or direction,
+    340,150 rows over 8,031 matches.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (the same id as the Cricinfo match id for most internationals). Joins to matches.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number within the match, as numbered by Cricsheet (1 to 4; super overs are numbered as
+      further innings). Part of the ball key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Position of the delivery within its innings, counting every delivery including wides and no-balls,
+      starting at 1 (Ari's key convention, equal to balls.delivery_number). Together with match_id and innings it
+      joins this row to balls.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+    customProperties:
+    - property: unit
+      value: deliveries
+  - name: shot_predicted
+    logicalType: string
+    physicalType: VARCHAR
+    description: Predicted shot played, same vocabulary as shot_cricinfo (about 40 values). NULL when only a direction
+      was predicted.
+    customProperties:
+    - property: timingClass
+      value: predicted_outcome
+  - name: shot_predicted_conf
+    logicalType: number
+    physicalType: DOUBLE
+    description: The text model's own confidence in shot_predicted (0 to 1), uncalibrated. NULL when shot_predicted
+      is NULL.
+    customProperties:
+    - property: timingClass
+      value: predicted_outcome
+    - property: unit
+      value: probability (0-1)
+    quality:
+    - name: conf_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: shot_predicted_explicit
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: TRUE if the commentary stated the shot explicitly, FALSE if inferred. NULL when shot_predicted
+      is NULL.
+    customProperties:
+    - property: timingClass
+      value: predicted_outcome
+  - name: direction_predicted
+    logicalType: string
+    physicalType: VARCHAR
+    description: Predicted shot direction, same vocabulary as direction_cricinfo ('cover', 'mid wicket', 'mid off',
+      'mid on', 'point', 'square leg', 'third man', 'fine leg'). NULL when only a shot was predicted.
+    customProperties:
+    - property: timingClass
+      value: predicted_outcome
+    quality:
+    - name: valid_direction
+      metric: invalidValues
+      arguments:
+        validValues:
+        - cover
+        - mid wicket
+        - mid off
+        - mid on
+        - point
+        - square leg
+        - third man
+        - fine leg
+      mustBe: 0
+  - name: direction_predicted_conf
+    logicalType: number
+    physicalType: DOUBLE
+    description: The text model's own confidence in direction_predicted (0 to 1), uncalibrated. NULL when direction_predicted
+      is NULL.
+    customProperties:
+    - property: timingClass
+      value: predicted_outcome
+    - property: unit
+      value: probability (0-1)
+    quality:
+    - name: conf_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: direction_predicted_explicit
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: TRUE if the commentary stated the direction explicitly, FALSE if inferred. NULL when direction_predicted
+      is NULL.
+    customProperties:
+    - property: timingClass
+      value: predicted_outcome
+  quality:
+  - name: shot_fields_null_together
+    type: sql
+    description: Shot value, confidence and explicit flag are present or absent together.
+    query: SELECT count(*) FROM ${table} WHERE (shot_predicted IS NULL) <> (shot_predicted_conf IS NULL) OR (shot_predicted
+      IS NULL) <> (shot_predicted_explicit IS NULL)
+    mustBe: 0
+  - name: direction_fields_null_together
+    type: sql
+    description: Direction value, confidence and explicit flag are present or absent together.
+    query: SELECT count(*) FROM ${table} WHERE (direction_predicted IS NULL) <> (direction_predicted_conf IS NULL)
+      OR (direction_predicted IS NULL) <> (direction_predicted_explicit IS NULL)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - ari
+- property: upstream
+  value:
+  - stg_ari_predictions
+- property: timingClass
+  value: predicted_outcome

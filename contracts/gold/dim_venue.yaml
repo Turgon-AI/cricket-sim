@@ -1,0 +1,343 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.dim_venue
+name: dim_venue
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: >-
+    The venue dimension: one canonical row per ground used in scope, with coordinates, elevation, time zone, geocoding
+    provenance and the sanity checks behind them, so venue effects and weather can be attached.
+  limitations: >-
+    Coordinates come from Wikidata, pinned OpenStreetMap elements, OSM Nominatim or manual overrides, in that order
+    of preference, and are a point for the ground, not its outline. 7 venues are located only to the city centre
+    (geocode_source 'nominatim_city', weather_location_quality 'city_centroid') and 11 are flagged needs_review.
+    Elevation is mostly a 90 m DEM sample at the point. A ground that was rebuilt keeps one venue_id. n_matches
+    and first/last dates count ALL Cricsheet matches at the ground, not only the scope. No ground geometry (boundary
+    size) is included: it failed quality checks.
+schema:
+- name: dim_venue
+  physicalName: data/gold/dim_venue.parquet
+  physicalType: table
+  logicalType: object
+  description: >-
+    Every canonical venue that hosts at least one in-scope match: name, city, country, home team, coordinates, elevation
+    and its source, IANA time zone, Wikidata/OSM references, geocode source and confidence, the results of five
+    sanity checks, review flags and match counts.
+  dataGranularityDescription: One row per canonical venue (ground) referenced by dim_match.
+  properties:
+  - name: venue_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Canonical venue identifier: a slug of the ground's normalised name (the text before the first comma in Cricsheet's
+      venue string), e.g. 'adelaide-oval', with a city suffix where two grounds share a name. Stable when scope
+      changes.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: name
+    logicalType: string
+    physicalType: VARCHAR
+    description: Display name of the ground (its most common Cricsheet spelling).
+    required: true
+  - name: city
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Display city (most common Cricsheet city for the ground). NULL when Cricsheet never gives one.
+  - name: country
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Country the ground is in, as a territory name (e.g. 'Australia', 'England', 'Northern Ireland'; Caribbean
+      grounds get their island, e.g. 'Barbados'): from a manual override, else the home team, else the geocoder's
+      label, confirmed by the point lying inside that country's bounding box.
+    required: true
+  - name: home_team
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Team that plays in at least half of the ground's international matches (at least 3 internationals, men's and
+      women's). NULL at neutral or rarely used grounds.
+  - name: lat
+    logicalType: number
+    physicalType: DOUBLE
+    description: Latitude of the ground point (WGS84).
+    required: true
+    customProperties:
+    - property: unit
+      value: degrees
+    quality:
+    - name: valid_latitude
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -90 AND 90
+      mustBe: 0
+  - name: lon
+    logicalType: number
+    physicalType: DOUBLE
+    description: Longitude of the ground point (WGS84).
+    required: true
+    customProperties:
+    - property: unit
+      value: degrees
+    quality:
+    - name: valid_longitude
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -180 AND 180
+      mustBe: 0
+  - name: elevation_m
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Elevation of the ground above sea level: a manual value, else Wikidata's, else the 90 m DEM sample (elevation_dem_m).
+      NULL when none is available.
+    customProperties:
+    - property: unit
+      value: m
+  - name: elevation_source
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Where elevation_m comes from: 'manual', 'wikidata' or 'open-meteo 90 m DEM at the point'. NULL when elevation_m
+      is NULL.
+  - name: elevation_dem_m
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Elevation reported by Open-Meteo's 90 m digital elevation model for the weather request point, kept only when
+      that point is within 100 m of the ground point. NULL otherwise.
+    customProperties:
+    - property: unit
+      value: m
+  - name: timezone
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      IANA time zone of the ground (e.g. 'Australia/Adelaide'), used to convert weather hours to local time.
+    required: true
+  - name: wikidata_qid
+    logicalType: string
+    physicalType: VARCHAR
+    description: Wikidata item of the ground when matched or pinned. NULL otherwise.
+  - name: osm_ref
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Pinned OpenStreetMap element ('way/<id>' or 'relation/<id>') when the point comes from OSM. NULL otherwise.
+  - name: geocode_source
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      How the point was found: 'wikidata' (automatic name match), 'wikidata_pinned', 'osm_pinned', 'nominatim' (OSM
+      search), 'nominatim_city' (city centre only) or 'manual'.
+    required: true
+    quality:
+    - name: valid_geocode_source
+      metric: invalidValues
+      arguments:
+        validValues:
+        - wikidata
+        - wikidata_pinned
+        - osm_pinned
+        - nominatim
+        - nominatim_city
+        - manual
+      mustBe: 0
+  - name: geocode_confidence
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Confidence in the point: 'manual', 'high', 'medium' or 'low' (low = city centre or weak match).
+    required: true
+    quality:
+    - name: valid_geocode_confidence
+      metric: invalidValues
+      arguments:
+        validValues:
+        - manual
+        - high
+        - medium
+        - low
+      mustBe: 0
+  - name: geocode_matched_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Name of the matched Wikidata/OSM feature with the matching rule in brackets, e.g. 'Adelaide Oval (exact_name)';
+      for manual points, the override's source note.
+    required: true
+  - name: in_geo_plan
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the venue was in the geocoding/weather request plan (always true in scope).
+    required: true
+  - name: geocode_gap
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Reason the point could not be fetched (e.g. a pinned element failed). NULL when geocoded (always in scope).
+  - name: country_check
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Whether the point lies inside its country''s bounding box: ''pass'', ''fail'' or ''unknown''.'
+    required: true
+    quality:
+    - name: valid_check
+      metric: invalidValues
+      arguments:
+        validValues: &id001
+        - pass
+        - fail
+        - unknown
+      mustBe: 0
+  - name: country_evidence
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      What the expected country was taken from, e.g. 'home team Australia', 'geocoder label Namibia', 'override
+      Kenya'.
+    required: true
+  - name: elevation_check
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Whether elevation_m is within max(150 m, 15%) of the city's reference elevation: 'pass', 'fail' or 'unknown'
+      (no reference).
+    required: true
+    quality:
+    - name: valid_check
+      metric: invalidValues
+      arguments:
+        validValues: *id001
+      mustBe: 0
+  - name: city_elevation_m
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Reference elevation of the city from a hand-made table, used by elevation_check. NULL when the city is not
+      in it.
+    customProperties:
+    - property: unit
+      value: m
+  - name: timezone_check
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      'pass' if the time zone is a real place zone (not an Etc/GMT offset, which signals open sea), else 'fail'/'unknown'.
+    required: true
+    quality:
+    - name: valid_check
+      metric: invalidValues
+      arguments:
+        validValues: *id001
+      mustBe: 0
+  - name: sea_check
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      'fail' if the DEM elevation is exactly 0 m (point probably in the sea) and the ground is not marked coastal;
+      'pass'; or 'unknown' (no DEM value).
+    required: true
+    quality:
+    - name: valid_check
+      metric: invalidValues
+      arguments:
+        validValues: *id001
+      mustBe: 0
+  - name: anchor_check
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Whether the point is within 30 km of the city-level geocode of its city: 'pass', 'fail' (3 grounds, acknowledged)
+      or 'unknown' (no usable city geocode).
+    required: true
+    quality:
+    - name: valid_check
+      metric: invalidValues
+      arguments:
+        validValues: *id001
+      mustBe: 0
+  - name: acknowledged_checks
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Comma-separated checks whose failure was reviewed and acknowledged in the venue overrides (e.g. 'anchor').
+      NULL when none.
+  - name: needs_review
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: >-
+      True if the point is not fully trusted: low geocode confidence, a failed or unknown country/elevation/time-zone
+      check, or an override asking for review.
+    required: true
+  - name: review_reasons
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      '; '-separated reasons for needs_review (e.g. 'geocode_confidence=low'). NULL when needs_review is false.
+  - name: weather_location_quality
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      How well the weather point represents the ground: 'verified_ground' (trusted point), 'unverified_point' (needs_review)
+      or 'city_centroid'.
+    required: true
+    quality:
+    - name: valid_weather_location_quality
+      metric: invalidValues
+      arguments:
+        validValues:
+        - verified_ground
+        - unverified_point
+        - city_centroid
+      mustBe: 0
+  - name: note
+    logicalType: string
+    physicalType: VARCHAR
+    description: Free-text note from the manual venue override explaining a fix. NULL when none.
+  - name: n_matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: >-
+      Cricsheet matches played at the ground (all spellings, all Cricsheet matches, not only in scope).
+    required: true
+    customProperties:
+    - property: unit
+      value: matches
+  - name: first_match_date
+    logicalType: date
+    physicalType: DATE
+    description: Start date of the first Cricsheet match at the ground (all matches).
+    required: true
+  - name: last_match_date
+    logicalType: date
+    physicalType: DATE
+    description: Start date of the last Cricsheet match at the ground (all matches).
+    required: true
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 4
+  - name: review_reasons_iff_needs_review
+    description: review_reasons is filled exactly when needs_review is true
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE needs_review <> (review_reasons IS NOT NULL)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: dim
+- property: sources
+  value:
+  - venues_geo
+  - weather
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - venues
+  - dim_match

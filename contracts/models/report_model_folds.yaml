@@ -1,0 +1,113 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.models.report_model_folds
+name: report_model_folds
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: What each walk-forward fold was trained on, and the fitted coefficients, so the model can be inspected
+    and reproduced.
+  limitations: Coefficients are NULL for a fold that had too little history to fit (only on tiny test fixtures).
+schema:
+- name: report_model_folds
+  physicalName: data/models/report_model_folds.parquet
+  physicalType: table
+  logicalType: object
+  description: 'One row per predicted season: the training size, the first-innings par used, and the two linear
+    coefficients of the win-probability model (Elo difference and home advantage) for each innings, and the result
+    of the monotone grid check of each innings model. The match-state terms are splines and are not summarised here.'
+  dataGranularityDescription: One row per season predicted.
+  properties:
+  - name: season
+    logicalType: integer
+    physicalType: BIGINT
+    description: Season predicted (the model was trained on earlier seasons).
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: train_matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: Clean matches available for training.
+    customProperties:
+    - property: unit
+      value: matches
+  - name: test_matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: Matches predicted in the season.
+    customProperties:
+    - property: unit
+      value: matches
+  - name: test_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Balls predicted.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: par_first_innings_total
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean first-innings total over the four previous seasons, the par used for innings-1 projections.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: innings_1_elo_diff
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings-1 log-odds change per Elo point of advantage (the model's linear term).
+  - name: innings_1_batting_at_home
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings-1 log-odds change per step from away (-1) to neutral (0) to home (+1) (the model's linear
+      term).
+  - name: innings_2_elo_diff
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings-2 log-odds change per Elo point of advantage (the model's linear term).
+  - name: innings_2_batting_at_home
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings-2 log-odds change per step from away (-1) to neutral (0) to home (+1) (the model's linear
+      term).
+  - name: innings_1_monotone_violations
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Wrong-way steps of this fold''s innings-1 model on a grid of raw match states (runs 0-500 in 5s,
+      wickets 0-9, ten balls-left values, Elo -300/0/+300, away/neutral/home): WP falling as runs rise, or rising
+      with one more wicket down (train.monotone_violations). Must be 0.'
+    required: true
+    customProperties:
+    - property: unit
+      value: grid steps
+  - name: innings_2_monotone_violations
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Wrong-way steps of this fold''s chase model on a grid of raw match states (runs needed 1-400 in
+      3s, wickets 0-9, ten balls-left values, Elo -300/0/+300, away/neutral/home): WP rising with more runs needed
+      or with one more wicket down (train.monotone_violations). Must be 0.'
+    required: true
+    customProperties:
+    - property: unit
+      value: grid steps
+  quality:
+  - name: win_probability_is_monotone_on_the_state_grid
+    type: sql
+    description: Every fold's win-probability models move the right way on the whole state grid.
+    query: SELECT count(*) FROM ${table} WHERE innings_1_monotone_violations <> 0 OR innings_2_monotone_violations <> 0
+    mustBe: 0
+customProperties:
+- property: layer
+  value: models
+- property: kind
+  value: report
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - model_ball_win_probability

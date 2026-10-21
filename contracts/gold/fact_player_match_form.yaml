@@ -1,0 +1,413 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.fact_player_match_form
+name: fact_player_match_form
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Point-in-time player features: everything known about a player''s record before each in-scope match,
+    safe as model inputs.'
+  limitations: Counts every earlier Cricsheet match of the same format family, including domestic leagues Cricsheet
+    covers, so a debutant in internationals may have prior T20 league form. Matches Cricsheet lacks (see report_international_coverage)
+    are missing from the history, so early-2000s careers start with zero. Rates are NULL until the denominator is
+    non-zero; no smoothing is applied.
+schema:
+- name: fact_player_match_form
+  physicalName: data/gold/fact_player_match_form.parquet
+  physicalType: table
+  logicalType: object
+  description: 'Pre-match record of every player in every in-scope match: career-to-date and last-365-days batting
+    and bowling, days since the last match, and age. Built from int_player_match_stats with windows that end the
+    day before the match.'
+  dataGranularityDescription: One row per (match, player) for every player in the playing XI of an in-scope match.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (joins dim_match).
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: player_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person id (joins dim_player.cricsheet_id).
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: team
+    logicalType: string
+    physicalType: VARCHAR
+    description: Team the player played for in this match.
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+  - name: format_family
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Format family: one_day (ODI and domestic one-day), t20 (T20I, IPL and every T20 league Cricsheet
+      covers) or multi_day (Tests and first-class).'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+  - name: prior_matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Earlier matches played in this format family. Pre-match: computed only from this player''s matches
+      on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: matches
+  - name: prior_batting_matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Earlier matches in which the player faced at least one ball. Pre-match: computed only from this
+      player''s matches on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: matches
+  - name: prior_bowling_matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Earlier matches in which the player bowled at least one legal ball. Pre-match: computed only from
+      this player''s matches on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: matches
+  - name: prior_first_match_date
+    logicalType: date
+    physicalType: DATE
+    description: 'Date of the player''s first earlier match in this format family (NULL on debut). Pre-match: computed
+      only from this player''s matches on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+  - name: days_since_last_match
+    logicalType: integer
+    physicalType: BIGINT
+    description: Days since the player's previous match in this format family (NULL on debut).
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: days
+  - name: age_years
+    logicalType: integer
+    physicalType: INTEGER
+    description: Age in whole years on the first day of the match, from the Wikidata birth date (NULL when unknown,
+      or when it would be over 50 at this match, an implausible birth date).
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: years
+  - name: prior_365d_matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: Matches in this format family in the 365 days before the match.
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: matches
+  - name: prior_bat_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Balls faced (deliveries as striker, wides excluded) in all earlier matches. Pre-match: computed
+      only from this player''s matches on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: balls
+  - name: prior_bat_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Runs off the bat in all earlier matches. Pre-match: computed only from this player''s matches
+      on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: prior_bat_outs
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Times dismissed (retired hurt / not out excluded) in all earlier matches. Pre-match: computed
+      only from this player''s matches on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: dismissals
+  - name: prior_bat_fours
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Fours hit (boundaries, not all-run) in all earlier matches. Pre-match: computed only from this
+      player''s matches on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: fours
+  - name: prior_bat_sixes
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Sixes hit in all earlier matches. Pre-match: computed only from this player''s matches on strictly
+      earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: sixes
+  - name: prior_bat_dots
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Balls faced with no run off the bat in all earlier matches. Pre-match: computed only from this
+      player''s matches on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: balls
+  - name: prior_bat_death_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Balls faced in the death overs (the last 10 overs of a one-day innings, the last 4 of a T20; none
+      in multi-day) in all earlier matches. Pre-match: computed only from this player''s matches on strictly earlier
+      dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: balls
+  - name: prior_bat_death_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Runs off the bat in the death overs in all earlier matches. Pre-match: computed only from this
+      player''s matches on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: prior_bowl_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Legal balls bowled in all earlier matches. Pre-match: computed only from this player''s matches
+      on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: balls
+  - name: prior_bowl_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Runs conceded (off the bat plus wides and no-balls; byes and leg byes are not charged to the bowler)
+      in all earlier matches. Pre-match: computed only from this player''s matches on strictly earlier dates in
+      the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: prior_bowl_wickets
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Wickets credited to the bowler (caught, bowled, lbw, caught and bowled, stumped, hit wicket) in
+      all earlier matches. Pre-match: computed only from this player''s matches on strictly earlier dates in the
+      same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: wickets
+  - name: prior_bowl_death_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Legal balls bowled in the death overs in all earlier matches. Pre-match: computed only from this
+      player''s matches on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: balls
+  - name: prior_bowl_death_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Runs conceded in the death overs in all earlier matches. Pre-match: computed only from this player''s
+      matches on strictly earlier dates in the same format family.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: prior_365d_bat_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Balls faced (deliveries as striker, wides excluded) in the 365 days before the match (the day itself
+      excluded).
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: balls
+  - name: prior_365d_bat_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: Runs off the bat in the 365 days before the match (the day itself excluded).
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: prior_365d_bat_outs
+    logicalType: integer
+    physicalType: BIGINT
+    description: Times dismissed (retired hurt / not out excluded) in the 365 days before the match (the day itself
+      excluded).
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: dismissals
+  - name: prior_365d_bowl_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Legal balls bowled in the 365 days before the match (the day itself excluded).
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: balls
+  - name: prior_365d_bowl_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: Runs conceded (off the bat plus wides and no-balls; byes and leg byes are not charged to the bowler)
+      in the 365 days before the match (the day itself excluded).
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: prior_365d_bowl_wickets
+    logicalType: integer
+    physicalType: BIGINT
+    description: Wickets credited to the bowler (caught, bowled, lbw, caught and bowled, stumped, hit wicket) in
+      the 365 days before the match (the day itself excluded).
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: wickets
+  - name: prior_strike_rate
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Career-to-date batting strike rate: 100 x prior runs / prior balls faced.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs per 100 balls
+  - name: prior_batting_average
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Career-to-date batting average: prior runs / prior dismissals.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: prior_death_strike_rate
+    logicalType: number
+    physicalType: DOUBLE
+    description: Career-to-date death-overs strike rate.
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs per 100 balls
+  - name: prior_economy
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Career-to-date economy rate: 6 x runs conceded / legal balls.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs per over
+  - name: prior_bowling_average
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Career-to-date bowling average: runs conceded / wickets.'
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs
+  - name: prior_death_economy
+    logicalType: number
+    physicalType: DOUBLE
+    description: Career-to-date death-overs economy rate.
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs per over
+  - name: prior_365d_strike_rate
+    logicalType: number
+    physicalType: DOUBLE
+    description: Strike rate over the 365 days before the match.
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs per 100 balls
+  - name: prior_365d_economy
+    logicalType: number
+    physicalType: DOUBLE
+    description: Economy rate over the 365 days before the match.
+    customProperties:
+    - property: timingClass
+      value: pre_ball
+    - property: unit
+      value: runs per over
+  quality:
+  - name: debut_has_no_history
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE prior_matches = 0 AND (prior_bat_balls > 0 OR prior_bowl_balls >
+      0 OR days_since_last_match IS NOT NULL)
+    mustBe: 0
+  - name: history_strictly_before_match
+    type: sql
+    description: The latest earlier match is at least a day before this one.
+    query: SELECT count(*) FROM ${table} WHERE days_since_last_match < 1
+    mustBe: 0
+  - name: recent_window_within_career
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE prior_365d_matches > prior_matches OR prior_365d_bat_balls > prior_bat_balls
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: fact
+- property: sources
+  value:
+  - cricsheet
+  - wikidata_players
+  - derived
+- property: upstream
+  value:
+  - int_player_match_stats
+  - players
+  - dim_match

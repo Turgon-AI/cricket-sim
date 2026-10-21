@@ -1,0 +1,202 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.models.model_ball_win_probability
+name: model_ball_win_probability
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Ball-by-ball win probability for clean men's ODI matches since 2008, from walk-forward models.
+  limitations: 'A tie counts as half a win. Super overs are not modelled. Rows for matches excluded from evaluation
+    are retained with evaluated = false and a reason, but numeric win-probability and expected-runs outputs are NULL:
+    Cricsheet does not identify when revised targets or shortened innings became known. Inputs are the match state,
+    pre-match Elo and an as-of venue-home estimate only: no team selection, pitch, weather or player information.'
+schema:
+- name: model_ball_win_probability
+  physicalName: data/models/model_ball_win_probability.parquet
+  physicalType: table
+  logicalType: object
+  description: 'For every delivery of the first two innings of an in-scope ODI: the batting side''s probability
+    of winning before the ball, after it, and the swing (win probability added), when the match is evaluable. Produced walk-forward (src/cricket_sim/models).
+    See docs/MODEL_CARD.md.'
+  dataGranularityDescription: One row per delivery of innings 1 and 2 of an ODI in a season the model could be trained
+    for (2008 onwards).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (joins gold.fact_delivery and gold.dim_match).
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    quality:
+    - name: in_scope_odi
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE match_id NOT IN (SELECT match_id FROM ${table:dim_match} WHERE
+        segment = 'ODI')
+      mustBe: 0
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Innings number: 1 = batting first, 2 = chasing. Super overs are not modelled.'
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Delivery sequence within the innings, wides and no-balls included (as in gold.fact_delivery).
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: batting_team
+    logicalType: string
+    physicalType: VARCHAR
+    description: Team batting on this ball (the side whose win probability is given).
+  - name: trained_through_season
+    logicalType: integer
+    physicalType: BIGINT
+    description: 'Last season the model that produced this row was trained on. It is always earlier than the match''s
+      season: every prediction is out of sample.'
+  - name: wp_before
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Probability that the batting side wins, given everything known before this ball on evaluated rows; NULL otherwise: the match state
+      (through a learned resources table and smooth spline terms for balls left, wickets down and, when chasing,
+      the required rate), the pre-match Elo difference and home advantage. Monotone by construction: in innings 1
+      it never falls as runs rise, it never rises with a wicket down, and in a chase it never rises as more runs
+      are needed (at least 0.5 once scores are level).'
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: wp_after
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'The batting side''s win probability after this ball: the next ball''s wp_before within an innings;
+      after the last ball of innings 1, the innings-1 model''s value for the state after that ball (so the gap
+      between the innings-1 and chase models at the innings break is credited to no ball, and wpa does not sum
+      across the break); or the actual result after the match''s last ball (1 win, 0 loss, 0.5 tie), on evaluated
+      rows only. NULL otherwise.'
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
+      mustBe: 0
+  - name: wpa
+    logicalType: number
+    physicalType: DOUBLE
+    description: 'Win probability added by this ball for the batting side: wp_after - wp_before. Positive helps
+      the batting side. NULL when the match is not evaluated.'
+    customProperties:
+    - property: unit
+      value: probability
+    quality:
+    - name: probability_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN -1 AND 1
+      mustBe: 0
+  - name: expected_remaining_runs
+    logicalType: number
+    physicalType: DOUBLE
+    description: Expected runs still to come in this innings for an average side, given legal balls left and wickets
+      down (a DLS/WASP-style resources table re-learned each season from earlier first innings); NULL when not evaluated.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: evaluated
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True when the match is clean (no rain rule, a result, both innings of known length, unrevised chase,
+      passes quality) and so counts in report_model_scores.
+  - name: exclusion_reason
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Why a match is not evaluated: no_result, rain_rule_applied, fails_quality_checks, innings_length_unknown
+      or chase_target_not_set. NULL when evaluated.'
+    quality:
+    - name: valid_reason
+      metric: invalidValues
+      arguments:
+        validValues:
+        - no_result
+        - rain_rule_applied
+        - fails_quality_checks
+        - innings_length_unknown
+        - chase_target_not_set
+      mustBe: 0
+  quality:
+  - name: excluded_rows_have_no_numeric_outputs
+    type: sql
+    query: >-
+      SELECT count(*) FROM ${table} WHERE NOT evaluated AND
+      (wp_before IS NOT NULL OR wp_after IS NOT NULL OR wpa IS NOT NULL OR expected_remaining_runs IS NOT NULL)
+    mustBe: 0
+  - name: evaluated_rows_have_finite_outputs
+    type: sql
+    query: >-
+      SELECT count(*) FROM ${table} WHERE evaluated AND
+      (wp_before IS NULL OR wp_after IS NULL OR wpa IS NULL OR expected_remaining_runs IS NULL
+       OR NOT isfinite(wp_before) OR NOT isfinite(wp_after) OR NOT isfinite(wpa)
+       OR NOT isfinite(expected_remaining_runs))
+    mustBe: 0
+  - name: evaluation_status_has_reason
+    type: sql
+    query: >-
+      SELECT count(*) FROM ${table} WHERE evaluated IS NULL
+      OR (evaluated AND exclusion_reason IS NOT NULL) OR (NOT evaluated AND exclusion_reason IS NULL)
+    mustBe: 0
+  - name: wpa_is_after_minus_before
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE abs(wpa - (wp_after - wp_before)) > 1e-5
+    mustBe: 0
+  - name: first_innings_boundary_never_lowers_win_probability
+    type: sql
+    description: 'Evaluated rows only. A boundary ball is fact_delivery.is_four OR is_six with no dismissal on
+      it; every ball of innings 1 counts, the last one included. It never lowers the batting side''s WP by more
+      than 0.001 (the tolerance: the ball also uses up one ball of time, a free spline term, which can outweigh a
+      runs term that is flat where its monotone constraint binds). Chase boundaries are
+      not checked: a four when six were needed off the last ball rightly lowers WP.'
+    query: >-
+      SELECT count(*) FROM ${table} w JOIN ${table:fact_delivery} f USING (match_id, innings, delivery_number)
+      WHERE w.evaluated AND w.innings = 1 AND (f.is_four OR f.is_six) AND f.dismissal_count = 0 AND w.wpa < -0.001
+    mustBe: 0
+  - name: wicket_without_runs_never_raises_win_probability
+    type: sql
+    description: 'Evaluated rows only, both innings, every ball (the last of an innings included). A
+      wicket ball is fact_delivery.dismissal_count > 0 (retirements are not dismissals) with runs_total = 0: runs on
+      the same ball can rightly outweigh the wicket. Such a ball never raises the batting side''s WP by more than
+      0.001 (the same tolerance and reason as first_innings_boundary_never_lowers_win_probability).'
+    query: >-
+      SELECT count(*) FROM ${table} w JOIN ${table:fact_delivery} f USING (match_id, innings, delivery_number)
+      WHERE w.evaluated AND f.dismissal_count > 0 AND f.runs_total = 0 AND w.wpa > 0.001
+    mustBe: 0
+  - name: trained_only_on_earlier_seasons
+    type: sql
+    description: Every prediction comes from a model fitted before the match's season.
+    query: SELECT count(*) FROM ${table} w JOIN ${table:dim_match} m USING (match_id) WHERE w.trained_through_season
+      >= year(m.start_date)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: models
+- property: kind
+  value: model
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - fact_delivery
+  - fact_innings
+  - dim_match
+  - dim_venue

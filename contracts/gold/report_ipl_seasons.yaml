@@ -1,0 +1,62 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.report_ipl_seasons
+name: report_ipl_seasons
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Shows IPL coverage season by season, to spot missing or incomplete seasons.
+  limitations: >-
+    Counts only matches Cricsheet holds; compare against the official number of matches per season. The current
+    season may be partial.
+schema:
+- name: report_ipl_seasons
+  physicalName: data/gold/report_ipl_seasons.parquet
+  physicalType: table
+  logicalType: object
+  description: Number of IPL matches per season in scope and how many pass the quality checks.
+  dataGranularityDescription: One row per IPL season (calendar year of match start).
+  properties:
+  - name: season_year
+    logicalType: integer
+    physicalType: BIGINT
+    description: Calendar year of the IPL season (year of match start dates).
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: IPL matches in scope that season.
+    required: true
+    customProperties:
+    - property: unit
+      value: matches
+  - name: matches_passing_quality
+    logicalType: integer
+    physicalType: BIGINT
+    description: Of those, matches with dim_match.passes_quality = true.
+    required: true
+    customProperties:
+    - property: unit
+      value: matches
+  quality:
+  - name: passing_within_matches
+    description: passing matches never exceed matches
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE matches_passing_quality > matches
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: report
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - dim_match

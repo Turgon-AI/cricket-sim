@@ -1,0 +1,108 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.cricinfo_ball_post
+name: cricinfo_ball_post
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Holds Cricinfo's win-probability and predicted-score model outputs computed AFTER each ball, so they
+    are known only once the ball is over and are kept apart from pre-ball information.
+  limitations: 'Sparse per-ball layer: a row exists only for balls where the source has a value, so a missing row
+    means ''not recorded'', never ''zero'' or ''no''. Same coverage and caveats as cricinfo_ball_pre: 4,239 matches
+    (T20 and ODI only, no Tests, innings 1 and 2), the perspective of the win probability is not independently verified,
+    and the model was fitted after the fact on later seasons, so use as a benchmark or outcome-side signal only.
+    The change from cricinfo_ball_pre to cricinfo_ball_post on the same ball reflects the ball''s own outcome (a wicket moves
+    win probability by about 3.8 points on average). Cricinfo-derived (via Ari Adaikalam''s dataset), non-commercial
+    licence: never exported.'
+schema:
+- name: cricinfo_ball_post
+  physicalName: data/silver/cricinfo_ball_post.parquet
+  physicalType: table
+  logicalType: object
+  description: Cricinfo's win probability and predicted score as they stood after each ball.
+  dataGranularityDescription: One row per ball (match_id, innings, delivery_number) that has a post-ball model value,
+    1,035,202 rows over 4,239 matches.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id (the same id as the Cricinfo match id for most internationals). Joins to matches.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number within the match, as numbered by Cricsheet (1 to 4; super overs are numbered as
+      further innings). Part of the ball key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Position of the delivery within its innings, counting every delivery including wides and no-balls,
+      starting at 1 (Ari's key convention, equal to balls.delivery_number). Together with match_id and innings it
+      joins this row to balls.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+    customProperties:
+    - property: unit
+      value: deliveries
+  - name: win_probability_after
+    logicalType: number
+    physicalType: DOUBLE
+    description: Cricinfo's win probability (percent) after this ball was bowled. NULL when the model gave no value
+      for the ball.
+    customProperties:
+    - property: timingClass
+      value: post_ball
+    - property: unit
+      value: '%'
+    quality:
+    - name: win_probability_in_range
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  - name: predicted_score_after
+    logicalType: integer
+    physicalType: INTEGER
+    description: Cricinfo's predicted score (runs) after this ball; presumably the projected innings total, exact
+      definition not documented. NULL when the model gave no value.
+    customProperties:
+    - property: timingClass
+      value: post_ball
+    - property: unit
+      value: runs
+    quality:
+    - name: predicted_score_non_negative
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1500
+      mustBe: 0
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 4000
+  - name: at_least_one_value
+    type: sql
+    description: Rows are kept only where at least one model value exists.
+    query: SELECT count(*) FROM ${table} WHERE win_probability_after IS NULL AND predicted_score_after IS NULL
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - ari
+- property: upstream
+  value:
+  - stg_ari_tracking
+- property: timingClass
+  value: post_ball

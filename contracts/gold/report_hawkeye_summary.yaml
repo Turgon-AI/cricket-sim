@@ -1,0 +1,91 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.report_hawkeye_summary
+name: report_hawkeye_summary
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: >-
+    Summarises the raw Hawk-Eye feed per competition: how many matches and balls it has and how complete its speed
+    and pitch data are.
+  limitations: >-
+    Describes the raw HawkeyeStats files (ICC feed, frozen February 2022), before linking to Cricsheet; not every
+    match links (e.g. Afghanistan matches cannot). The Hawk-Eye data itself is not redistributable and is not published.
+schema:
+- name: report_hawkeye_summary
+  physicalName: data/gold/report_hawkeye_summary.parquet
+  physicalType: table
+  logicalType: object
+  description: >-
+    Per Hawk-Eye competition file: distinct matches, balls, and the share of balls with a tracked speed and a plausible
+    pitch position.
+  dataGranularityDescription: One row per Hawk-Eye competition file.
+  properties:
+  - name: competition
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Hawk-Eye competition file: ''mensTest'', ''mensODI'' or ''mensIPL''.'
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: Distinct Hawk-Eye match ids in the file.
+    required: true
+    customProperties:
+    - property: unit
+      value: matches
+  - name: balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Ball rows in the file.
+    required: true
+    customProperties:
+    - property: unit
+      value: balls
+  - name: pct_speed
+    logicalType: number
+    physicalType: DOUBLE
+    description: Percentage of balls with a tracked speed (speed > 0; -1 and 0 mean not tracked).
+    required: true
+    customProperties:
+    - property: unit
+      value: '%'
+    quality:
+    - name: between_0_and_100
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  - name: pct_pitch_xy
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Percentage of balls with a plausible pitching position (|pitch_x| < 5 in Hawk-Eye's coordinates); other values
+      mean not tracked.
+    required: true
+    customProperties:
+    - property: unit
+      value: '%'
+    quality:
+    - name: between_0_and_100
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 100
+      mustBe: 0
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 3
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: report
+- property: sources
+  value:
+  - hawkeye
+- property: upstream
+  value:
+  - stg_hawkeye_balls

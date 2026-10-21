@@ -1,0 +1,69 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.venue_aliases
+name: venue_aliases
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Maps every distinct (venue, city) text pair Cricsheet uses to the canonical venue_id, so matches recorded
+    under different spellings of the same ground join to one venue.
+  limitations: Built by name rules plus manual merge, assign and split-by-city overrides; an override that matches
+    nothing fails the build, but a wrong merge or split of two similarly named grounds is still possible. city is
+    NULL for 116 spellings where Cricsheet gives no city, and (venue, NULL) and (venue, city) count as different
+    spellings. n_matches counts all Cricsheet matches with no scope applied.
+schema:
+- name: venue_aliases
+  physicalName: data/silver/venue_aliases.parquet
+  physicalType: table
+  logicalType: object
+  description: Lookup from each Cricsheet venue/city spelling to the canonical venue.
+  dataGranularityDescription: One row per distinct (venue, city) spelling in Cricsheet, 984 rows.
+  properties:
+  - name: venue
+    logicalType: string
+    physicalType: VARCHAR
+    description: Venue string exactly as written in Cricsheet (often 'Ground, City'). Together with city it is the
+      lookup key.
+    required: true
+  - name: city
+    logicalType: string
+    physicalType: VARCHAR
+    description: City string exactly as written in Cricsheet. NULL (116 rows) when the match has no city.
+    required: false
+  - name: venue_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Canonical venue this spelling belongs to. Joins to venues.venue_id.
+    relationships:
+    - to: venues.venue_id
+  - name: n_matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: Number of Cricsheet matches that use exactly this spelling.
+    customProperties:
+    - property: unit
+      value: matches
+    quality:
+    - name: n_matches_positive
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 100000
+      mustBe: 0
+  quality:
+  - type: sql
+    name: venue_city_pairs_unique
+    description: Each (venue, city) spelling appears once; a missing city counts as its own value.
+    query: SELECT count(*) - count(DISTINCT (venue, coalesce(city, '\x00'))) FROM ${table}
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: reference
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value: []

@@ -1,0 +1,9 @@
+# Fixture snapshots (scripts/make_fixture.py)
+ari: v11
+cricsheet: '2026-10-14'
+cricsheet_missing: '2026-10-15'
+hawkeye: 0310d86
+venues_geo: 2026-10-16-36f02dbb
+weather: 2026-10-16-b1cbca77
+wiki_fixtures: '2026-10-15'
+wikidata_players: '2026-10-15'

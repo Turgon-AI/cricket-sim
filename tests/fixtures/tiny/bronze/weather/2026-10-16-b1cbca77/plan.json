@@ -1,0 +1,177 @@
+{
+ "cricsheet_snapshot": "2026-10-14",
+ "deferred": [],
+ "files": [
+  {
+   "aliases": [
+    [
+     "Brisbane Cricket Ground",
+     "Brisbane"
+    ]
+   ],
+   "end": "2021-01-19",
+   "file": "brisbane-cricket-ground__2021-01-15__2021-01-19.json.zst",
+   "lat": -27.48583,
+   "lon": 153.03806,
+   "reused_from": "2026-10-15/brisbane-cricket-ground__2021-01-15__2021-01-19.json.zst",
+   "start": "2021-01-15",
+   "venue_id": "brisbane-cricket-ground"
+  },
+  {
+   "aliases": [
+    [
+     "Eden Park",
+     "Auckland"
+    ]
+   ],
+   "end": "2019-11-10",
+   "file": "eden-park__2019-11-10__2019-11-10.json.zst",
+   "lat": -36.87528,
+   "lon": 174.745,
+   "reused_from": "2026-10-15/eden-park__2019-11-10__2019-11-10.json.zst",
+   "start": "2019-11-10",
+   "venue_id": "eden-park"
+  },
+  {
+   "aliases": [
+    [
+     "Edgbaston",
+     "Birmingham"
+    ]
+   ],
+   "end": "2017-06-15",
+   "file": "edgbaston__2017-06-02__2017-06-15.json.zst",
+   "lat": 52.4558,
+   "lon": -1.90249,
+   "reused_from": "2026-10-15/edgbaston__2017-06-02__2017-06-15.json.zst",
+   "start": "2017-06-02",
+   "venue_id": "edgbaston"
+  },
+  {
+   "aliases": [
+    [
+     "Lord's",
+     "London"
+    ]
+   ],
+   "end": "2019-07-26",
+   "file": "lords__2019-07-14__2019-07-26.json.zst",
+   "lat": 51.5294,
+   "lon": -0.1727,
+   "reused_from": "2026-10-15/lords__2019-07-14__2019-07-26.json.zst",
+   "start": "2019-07-14",
+   "venue_id": "lords"
+  },
+  {
+   "aliases": [
+    [
+     "Narendra Modi Stadium, Ahmedabad",
+     "Ahmedabad"
+    ]
+   ],
+   "end": "2023-11-19",
+   "file": "narendra-modi-stadium__2023-11-19__2023-11-19.json.zst",
+   "lat": 23.09167,
+   "lon": 72.5975,
+   "reused_from": "2026-10-15/narendra-modi-stadium__2023-11-19__2023-11-19.json.zst",
+   "start": "2023-11-19",
+   "venue_id": "narendra-modi-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Old Trafford",
+     "Manchester"
+    ]
+   ],
+   "end": "2019-07-10",
+   "file": "old-trafford__2019-07-06__2019-07-10.json.zst",
+   "lat": 53.45639,
+   "lon": -2.28667,
+   "reused_from": "2026-10-15/old-trafford__2019-07-06__2019-07-10.json.zst",
+   "start": "2019-07-06",
+   "venue_id": "old-trafford"
+  },
+  {
+   "aliases": [
+    [
+     "Rajiv Gandhi International Stadium",
+     "Hyderabad"
+    ]
+   ],
+   "end": "2019-05-12",
+   "file": "rajiv-gandhi-international-stadium__2019-04-29__2019-05-12.json.zst",
+   "lat": 17.4065,
+   "lon": 78.55044,
+   "reused_from": "2026-10-15/rajiv-gandhi-international-stadium__2019-04-29__2019-05-12.json.zst",
+   "start": "2019-04-29",
+   "venue_id": "rajiv-gandhi-international-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Saurashtra Cricket Association Stadium, Rajkot",
+     "Rajkot"
+    ]
+   ],
+   "end": "2024-02-18",
+   "file": "saurashtra-cricket-association-stadium__2024-02-15__2024-02-18.json.zst",
+   "lat": 22.363,
+   "lon": 70.71,
+   "reused_from": "2026-10-15/saurashtra-cricket-association-stadium__2024-02-15__2024-02-18.json.zst",
+   "start": "2024-02-15",
+   "venue_id": "saurashtra-cricket-association-stadium"
+  },
+  {
+   "aliases": [
+    [
+     "Wankhede Stadium",
+     "Mumbai"
+    ]
+   ],
+   "end": "2011-04-15",
+   "file": "wankhede-stadium__2011-04-02__2011-04-15.json.zst",
+   "lat": 18.93892,
+   "lon": 72.82572,
+   "reused_from": "2026-10-15/wankhede-stadium__2011-04-02__2011-04-15.json.zst",
+   "start": "2011-04-02",
+   "venue_id": "wankhede-stadium"
+  }
+ ],
+ "geo_manifest_sha256": "0eeb4e609412900490c8a70942f424d5ad5ce620e639d3c95bb4cc6d85f43679",
+ "geo_snapshot_id": "2026-10-16-36f02dbb",
+ "hourly": [
+  "temperature_2m",
+  "relative_humidity_2m",
+  "dew_point_2m",
+  "cloud_cover",
+  "wind_speed_10m",
+  "wind_direction_10m",
+  "precipitation",
+  "surface_pressure"
+ ],
+ "kind": "weather request plan",
+ "last_available": "2026-10-10",
+ "selection": {
+  "any_of": [
+   {
+    "match_type": "Test",
+    "team_type": "international"
+   },
+   {
+    "match_type": "ODI",
+    "team_type": "international"
+   },
+   {
+    "match_type": "T20",
+    "team_type": "international"
+   },
+   {
+    "event_name": "Indian Premier League"
+   }
+  ],
+  "from_date": "2001-01-01",
+  "gender": "male"
+ },
+ "window_days": 14
+}

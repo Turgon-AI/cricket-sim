@@ -1,0 +1,95 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.powerplays
+name: powerplays
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: The powerplay windows in each innings (mandatory, batting and fielding powerplays), as ball ranges.
+  limitations: 'Cricsheet (ODC-BY 1.0); format documented at https://cricsheet.org/format/json/. Only present for
+    19,702 of 23,132 matches: older and some club matches have no powerplay data, and Cricsheet lists powerplays
+    it knows are missing in matches.cricsheet_missing. Tests have none. The ball labels are text in Cricsheet''s
+    0-based over.ball form, and a window end such as ''5.7'' can include extra deliveries; they are not integers.'
+  usage: Compare from_ball/to_ball with balls.actual_delivery.
+schema:
+- name: powerplays
+  physicalName: data/silver/powerplays.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per powerplay per innings, in the order Cricsheet lists them.
+  dataGranularityDescription: One row per powerplay (match_id, innings, powerplay_number).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id; foreign key to matches. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: powerplay_number
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Order of the powerplay within the innings (1 to 3). Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+    quality:
+    - name: number_1_to_3
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 3
+      mustBe: 0
+  - name: type
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''mandatory'', ''batting'' or ''fielding''.'
+    quality:
+    - name: valid_type
+      metric: invalidValues
+      arguments:
+        validValues:
+        - mandatory
+        - batting
+        - fielding
+      mustBe: 0
+  - name: from_ball
+    logicalType: string
+    physicalType: VARCHAR
+    description: First delivery of the window as 'over.ball' text with a 0-based over (e.g. '0.1' = first ball of
+      the innings).
+    quality:
+    - name: ball_label_shape
+      metric: invalidValues
+      arguments:
+        pattern: '[0-9]+[.][0-9]+'
+      mustBe: 0
+  - name: to_ball
+    logicalType: string
+    physicalType: VARCHAR
+    description: Last delivery of the window as 'over.ball' text (e.g. '5.6' ends the sixth over).
+    quality:
+    - name: ball_label_shape
+      metric: invalidValues
+      arguments:
+        pattern: '[0-9]+[.][0-9]+'
+      mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - cricsheet
+- property: upstream
+  value: []

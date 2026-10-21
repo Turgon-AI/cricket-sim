@@ -1,0 +1,9 @@
+# Snapshots that builds read. Change deliberately (cricket lock <source> <id>), then commit.
+ari: v11
+cricsheet: 2026-10-14-13af720e
+cricsheet_missing: '2026-10-20'
+hawkeye: 0310d86
+venues_geo: 2026-10-21-b6ce21c0
+weather: 2026-10-21-12a9fe44
+wiki_fixtures: '2026-10-20'
+wikidata_players: 2026-10-20-3e5d5bf1

@@ -1,0 +1,282 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.balls
+name: balls
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'The ball-by-ball backbone: one row for every delivery in every Cricsheet match, with who batted, bowled,
+    the runs and extras and whether a wicket or review happened.'
+  limitations: Cricsheet (ODC-BY 1.0); format documented at https://cricsheet.org/format/json/. Contains 11.7M deliveries
+    from all 23,132 matches (no scope filter). Positions follow Cricsheet, so over is 0-based, ball_in_over includes
+    wides/no-balls, and a few hundred overs have other than six legal balls (290 listed as miscounted by Cricsheet;
+    one 7-ball over in match 1298152 is not listed). Pre-late-2017 no-balls have byes folded into the noballs count,
+    which overstates bowler runs conceded in that era. wicket_count includes retirements, so do not use wicket_count
+    > 0 as 'dismissal'. Fielding positions, field settings and ball tracking are NOT here; they come from third-party
+    layers. Afghanistan matches are missing from Cricsheet.
+  usage: Key (match_id, innings, delivery_number). Use is_legal for balls faced/bowled, dismissal_count for wickets
+    and actual_delivery for the over.ball label.
+schema:
+- name: balls
+  physicalName: data/silver/balls.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per delivery bowled, including wides and no-balls, with participants (names and Cricsheet
+    person ids), runs, extras breakdown, wicket and review flags.
+  dataGranularityDescription: One row per delivery (match_id, innings, delivery_number).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id; foreign key to matches. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings of the match in batting order (1 to 8; 3+ includes Test third/fourth innings and super
+      overs). Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+    quality:
+    - name: innings_1_to_8
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 8
+      mustBe: 0
+  - name: batting_team
+    logicalType: string
+    physicalType: VARCHAR
+    description: Team batting in this innings (innings.team).
+  - name: is_super_over
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if the delivery belongs to a super-over innings.
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Running count of every delivery in the innings, wides and no-balls included, from 1. Part of the
+      key. This is Ari Adaikalam's convention, so Ari tracking and Hawk-Eye link on it.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: over
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Over number, 0-based as in Cricsheet (the first over is 0). Add 1 for the usual 'over 1'.
+    customProperties:
+    - property: unit
+      value: over (0-based)
+    quality:
+    - name: non_negative
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 0
+      mustBe: 0
+  - name: ball_in_over
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Position of the delivery within the over counting every delivery incl. wides and no-balls (1 to
+      21). It is NOT the legal ball number: use actual_delivery or legal_balls_in_over_before for that. Overs with
+      more or fewer than 6 legal balls (miscounted overs) are listed in innings.miscounted_overs.'
+    quality:
+    - name: position_1_to_21
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 21
+      mustBe: 0
+  - name: is_legal
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: False for wides and no-balls (the delivery does not count toward the over), true otherwise.
+  - name: batter
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the striker (Cricsheet name, initials+surname).
+  - name: batter_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier of the striker; foreign key to people.identifier. Never NULL.
+    relationships:
+    - to: people.identifier
+  - name: non_striker
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the non-striker.
+  - name: non_striker_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier of the non-striker; foreign key to people.identifier.
+    relationships:
+    - to: people.identifier
+  - name: bowler
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the bowler.
+  - name: bowler_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier of the bowler; foreign key to people.identifier.
+    relationships:
+    - to: people.identifier
+  - name: runs_batter
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Runs scored off the bat on this delivery (0 to 8), including boundaries. Byes and leg-byes are
+      not included.
+    customProperties:
+    - property: unit
+      value: runs
+    quality:
+    - name: runs_0_to_8
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 8
+      mustBe: 0
+  - name: runs_extras
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Extra runs on this delivery: wides + no-balls + byes + leg-byes + penalty.'
+    customProperties:
+    - property: unit
+      value: runs
+    quality:
+    - name: extras_0_to_12
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 12
+      mustBe: 0
+  - name: runs_total
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Total runs added to the innings by this delivery (= runs_batter + runs_extras).
+    customProperties:
+    - property: unit
+      value: runs
+    quality:
+    - name: total_0_to_13
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 13
+      mustBe: 0
+  - name: runs_non_boundary
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True when a 4 or 6 recorded in the runs was not a true boundary (all run, or overthrows). False
+      otherwise.
+  - name: wides
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Runs conceded as wides on this delivery (0 if not a wide; a wide with extra runs can be 2 to 5).
+    customProperties:
+    - property: unit
+      value: runs
+  - name: noballs
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Runs from the no-ball penalty on this delivery (normally 1). Before late 2017 Cricsheet folded
+      byes/leg-byes off a no-ball into this value, so values above 1 are not all no-ball penalty (see noball_includes_byes).
+    customProperties:
+    - property: unit
+      value: runs
+  - name: byes
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Bye runs on this delivery.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: legbyes
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Leg-bye runs on this delivery.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: penalty
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Penalty runs awarded on this delivery (rare; 0 otherwise). Penalty runs recorded at innings level
+      are in innings.penalty_runs_pre/post.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: wicket_count
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Number of wicket events recorded on the delivery (0 to 10, normally 0 or 1). INCLUDES retirements
+      ('retired hurt', 'retired not out'); use dismissal_count for actual dismissals.
+    customProperties:
+    - property: unit
+      value: wickets
+    quality:
+    - name: wickets_0_to_10
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 10
+      mustBe: 0
+  - name: dismissal_count
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Number of batters actually dismissed on the delivery: wicket_count minus retirements (''retired
+      hurt'' and ''retired not out''). ''retired out'' counts as a dismissal.'
+    customProperties:
+    - property: unit
+      value: wickets
+  - name: actual_delivery
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Official over.ball label as text, e.g. ''0.1'' or ''19.6'': 0-based over, then (legal balls already
+      bowled in the over + 1). A wide or no-ball repeats the label of the ball that replaces it.'
+    quality:
+    - name: label_shape
+      metric: invalidValues
+      arguments:
+        pattern: '[0-9]+[.][0-9]+'
+      mustBe: 0
+  - name: legal_balls_in_over_before
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Legal balls already bowled in the over before this delivery (0 to 7). Values above 5 occur in overs
+      listed as miscounted.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: noball_includes_byes
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: 'Heuristic flag: true when noballs > 1 and runs_batter = 0, i.e. the no-ball value probably includes
+      byes/leg-byes folded in (pre-late-2017 Cricsheet convention). Not a source field.'
+  - name: has_review
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if a DRS review happened on this delivery; the details are in reviews.
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 4000
+  - name: total_is_bat_plus_extras
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE runs_total <> runs_batter + runs_extras
+    mustBe: 0
+  - name: extras_add_up
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE runs_extras <> wides + noballs + byes + legbyes + penalty
+    mustBe: 0
+  - name: legal_means_no_wide_or_noball
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE is_legal <> (wides = 0 AND noballs = 0)
+    mustBe: 0
+  - name: dismissals_within_wickets
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE dismissal_count > wicket_count OR dismissal_count < 0
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - cricsheet
+- property: upstream
+  value: []

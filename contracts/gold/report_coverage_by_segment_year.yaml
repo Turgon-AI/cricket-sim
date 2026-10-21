@@ -1,0 +1,213 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.report_coverage_by_segment_year
+name: report_coverage_by_segment_year
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: >-
+    Backs the headline coverage numbers: how many matches and balls each segment has per year, how many
+    pass the quality checks, and what share of balls carry each third-party tracking label.
+  limitations: >-
+    The per-ball labels counted here (Cricinfo line, length, shot, control, wagon wheel, win probability; Hawk-Eye
+    speed and pitch position) are not part of the exported dataset because their sources are not redistributable;
+    only these aggregate percentages are. Cricinfo labels are recorded by an observer after the outcome. Predicted
+    line labels are inferred from commentary text and reported separately, never added to the recorded share. Hawk-Eye
+    data ends in February 2022. The current year is partial.
+schema:
+- name: report_coverage_by_segment_year
+  physicalName: data/gold/report_coverage_by_segment_year.parquet
+  physicalType: table
+  logicalType: object
+  description: >-
+    Per segment and calendar year: matches, matches passing quality, balls, and the share of balls with each label.
+  dataGranularityDescription: One row per segment and calendar year of match start.
+  properties:
+  - name: segment
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''Test'', ''ODI'', ''T20I'' or ''IPL''.'
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    quality:
+    - name: valid_segment
+      metric: invalidValues
+      arguments:
+        validValues:
+        - Test
+        - ODI
+        - T20I
+        - IPL
+      mustBe: 0
+  - name: year
+    logicalType: integer
+    physicalType: BIGINT
+    description: Calendar year of the matches' start dates.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: In-scope matches with at least one ball.
+    required: true
+    customProperties:
+    - property: unit
+      value: matches
+  - name: matches_passing_quality
+    logicalType: integer
+    physicalType: BIGINT
+    description: Of those, matches with dim_match.passes_quality = true.
+    required: true
+    customProperties:
+    - property: unit
+      value: matches
+  - name: balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Deliveries in those matches (wides and no-balls included).
+    required: true
+    customProperties:
+    - property: unit
+      value: balls
+  - name: pct_line_cricinfo
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Percentage (0-100, one decimal) of the segment-year's balls that have a Cricinfo line label. Computed over
+      the non-redistributable Cricinfo (via Ari Adaikalam's dataset) and Hawk-Eye layers, which are not published
+      here.
+    required: true
+    customProperties:
+    - property: unit
+      value: '%'
+  - name: pct_length_cricinfo
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Percentage (0-100, one decimal) of the segment-year's balls that have a Cricinfo length label. Computed over
+      the non-redistributable Cricinfo (via Ari Adaikalam's dataset) and Hawk-Eye layers, which are not published
+      here.
+    required: true
+    customProperties:
+    - property: unit
+      value: '%'
+  - name: pct_shot_cricinfo
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Percentage (0-100, one decimal) of the segment-year's balls that have a Cricinfo shot label. Computed over
+      the non-redistributable Cricinfo (via Ari Adaikalam's dataset) and Hawk-Eye layers, which are not published
+      here.
+    required: true
+    customProperties:
+    - property: unit
+      value: '%'
+  - name: pct_shot_control_cricinfo
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Percentage (0-100, one decimal) of the segment-year's balls that have a Cricinfo shot-control label. Computed
+      over the non-redistributable Cricinfo (via Ari Adaikalam's dataset) and Hawk-Eye layers, which are not published
+      here.
+    required: true
+    customProperties:
+    - property: unit
+      value: '%'
+  - name: pct_wagon
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Percentage (0-100, one decimal) of the segment-year's balls that have a Cricinfo wagon-wheel position. Computed
+      over the non-redistributable Cricinfo (via Ari Adaikalam's dataset) and Hawk-Eye layers, which are not published
+      here.
+    required: true
+    customProperties:
+    - property: unit
+      value: '%'
+  - name: pct_speed_hawkeye
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Percentage (0-100, one decimal) of the segment-year's balls that have a linked Hawk-Eye ball speed. Computed
+      over the non-redistributable Cricinfo (via Ari Adaikalam's dataset) and Hawk-Eye layers, which are not published
+      here.
+    required: true
+    customProperties:
+    - property: unit
+      value: '%'
+  - name: pct_pitch_xy_hawkeye
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Percentage (0-100, one decimal) of the segment-year's balls that have a linked Hawk-Eye pitching (bounce)
+      position. Computed over the non-redistributable Cricinfo (via Ari Adaikalam's dataset) and Hawk-Eye layers,
+      which are not published here.
+    required: true
+    customProperties:
+    - property: unit
+      value: '%'
+  - name: pct_win_probability
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Percentage (0-100, one decimal) of the segment-year's balls that have a Cricinfo win probability after the
+      ball. Computed over the non-redistributable Cricinfo (via Ari Adaikalam's dataset) and Hawk-Eye layers, which
+      are not published here.
+    required: true
+    customProperties:
+    - property: unit
+      value: '%'
+  - name: pct_line_predicted_only
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Percentage (0-100, one decimal) of the segment-year's balls that have no recorded Cricinfo line but a line
+      predicted from commentary text. Computed over the non-redistributable Cricinfo (via Ari Adaikalam's dataset)
+      and Hawk-Eye layers, which are not published here.
+    required: true
+    customProperties:
+    - property: unit
+      value: '%'
+  - name: mean_conf_line_predicted_only
+    logicalType: number
+    physicalType: DOUBLE
+    description: >-
+      Mean confidence (0-1) of those commentary-predicted line labels. NULL when the segment-year has none.
+  quality:
+  - name: percentages_in_range
+    description: every percentage is between 0 and 100
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE NOT (pct_line_cricinfo BETWEEN 0 AND 100 AND pct_length_cricinfo
+      BETWEEN 0 AND 100 AND pct_shot_cricinfo BETWEEN 0 AND 100 AND pct_shot_control_cricinfo BETWEEN 0 AND 100
+      AND pct_wagon BETWEEN 0 AND 100 AND pct_speed_hawkeye BETWEEN 0 AND 100 AND pct_pitch_xy_hawkeye BETWEEN 0
+      AND 100 AND pct_win_probability BETWEEN 0 AND 100 AND pct_line_predicted_only BETWEEN 0 AND 100)
+    mustBe: 0
+  - name: passing_within_matches
+    description: passing matches never exceed matches
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE matches_passing_quality > matches
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: report
+- property: sources
+  value:
+  - cricsheet
+  - ari
+  - hawkeye
+  - derived
+- property: upstream
+  value:
+  - dim_match
+  - balls
+  - hawkeye_ball_delivery
+  - cricinfo_ball_labels
+  - cricinfo_ball_wagon
+  - cricinfo_ball_post
+  - cricinfo_ball_labels_predicted

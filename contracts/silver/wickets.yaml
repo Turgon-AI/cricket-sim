@@ -1,0 +1,134 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.wickets
+name: wickets
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: One row for every wicket event, with the batter out, the way they were dismissed and the fielders involved,
+    so dismissals can be analysed without parsing balls.
+  limitations: 'Cricsheet (ODC-BY 1.0); format documented at https://cricsheet.org/format/json/. Includes retirements:
+    filter is_retirement = false for genuine dismissals (''retired hurt'' and ''retired not out'' are not dismissals;
+    ''retired out'' is). The bowler is not stored here; take it from balls. Fielder lists are missing for a share
+    of run-outs in the source, and substitute fielders are only flagged, not identified. player_out can be the non-striker.'
+  usage: Join to balls on (match_id, innings, delivery_number).
+schema:
+- name: wickets
+  physicalName: data/silver/wickets.parquet
+  physicalType: table
+  logicalType: object
+  description: Wicket events flattened from the deliveries' wickets arrays. 357,296 events on 357,271 deliveries.
+  dataGranularityDescription: One row per wicket event on a delivery (match_id, innings, delivery_number, wicket_number).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id; foreign key to matches. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Innings number. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Delivery on which the wicket event happened; with match_id and innings it identifies the row in
+      balls. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: wicket_number
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Order of the wicket event within the delivery (1 normally; higher only when several batters leave
+      on one delivery). Not the fall-of-wicket number of the innings. Part of the key.
+    primaryKey: true
+    primaryKeyPosition: 4
+    required: true
+    quality:
+    - name: number_1_to_10
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 10
+      mustBe: 0
+  - name: player_out
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the batter who left (may be the non-striker, e.g. a run-out).
+  - name: player_out_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier of that batter; foreign key to people.identifier.
+    relationships:
+    - to: people.identifier
+  - name: kind
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'How the batter left: caught, bowled, lbw, run out, caught and bowled, stumped, hit wicket, retired
+      hurt, retired not out, retired out, obstructing the field, handled the ball, timed out, hit the ball twice.'
+    quality:
+    - name: valid_kind
+      metric: invalidValues
+      arguments:
+        validValues:
+        - caught
+        - bowled
+        - lbw
+        - run out
+        - caught and bowled
+        - stumped
+        - hit wicket
+        - retired hurt
+        - retired not out
+        - retired out
+        - obstructing the field
+        - handled the ball
+        - timed out
+        - hit the ball twice
+      mustBe: 0
+  - name: fielders
+    logicalType: string
+    physicalType: VARCHAR
+    description: Names of the fielders involved (catcher, stumper, run-out fielders) joined by '|'. NULL for kinds
+      with no fielder (bowled, lbw...). Empty string '' for 491 caught/run-out/stumped rows where the fielder is
+      only a named substitute without a name. Run-outs are missing fielders in about 17% of cases (source gap).
+  - name: fielder_ids
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifiers of the fielders, joined by '|' in the same order as fielders; '' where
+      the name is empty.
+  - name: fielder_is_substitute
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if any listed fielder was a substitute rather than a member of the XI.
+  - name: is_retirement
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True for 'retired hurt' and 'retired not out' (the batter may return; not a dismissal). False for
+      'retired out', which is a dismissal.
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 90
+  - name: retirement_flag_matches_kind
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE is_retirement <> (kind IN ('retired hurt', 'retired not out'))
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: event
+- property: sources
+  value:
+  - cricsheet
+- property: upstream
+  value: []

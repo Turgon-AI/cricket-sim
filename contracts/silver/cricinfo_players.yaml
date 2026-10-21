@@ -1,0 +1,87 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.cricinfo_players
+name: cricinfo_players
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Keep the restricted Cricinfo player attributes apart from the open player table, for internal analysis
+    only.
+  limitations: 'Cricinfo-derived, shared by Ari for non-commercial use under Cricinfo''s terms: never exported.
+    Styles and roles are Cricinfo''s current labels, not as of any match.'
+schema:
+- name: cricinfo_players
+  physicalName: data/silver/cricinfo_players.parquet
+  physicalType: table
+  logicalType: object
+  description: 'Ari Adaikalam''s Cricinfo-derived player attributes (batting and bowling style, role, fielding style,
+    full name, Cricinfo id, country), keyed by Cricsheet id. Restricted (non-commercial, Cricinfo''s terms): never
+    exported. The open player facts are in players.'
+  dataGranularityDescription: One row per Cricsheet player who appears in Ari's players file.
+  properties:
+  - name: cricsheet_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet people-register identifier (8-character hex), the player's key everywhere in this project.
+      Joins to people.identifier and match_players.player_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: people.identifier
+  - name: ari_country
+    logicalType: string
+    physicalType: VARCHAR
+    description: Country from Ari Adaikalam's player table (Cricinfo profile). Cricinfo-derived, internal only.
+      NULL if the player is not in that table.
+  - name: ari_batting_style
+    logicalType: string
+    physicalType: VARCHAR
+    description: Batting style from the Cricinfo profile, 'right-hand bat' or 'left-hand bat'. It is today's profile,
+      not as of any match date. NULL if unknown.
+    quality:
+    - name: valid_batting_style
+      metric: invalidValues
+      arguments:
+        validValues:
+        - right-hand bat
+        - left-hand bat
+      mustBe: 0
+  - name: ari_bowling_style
+    logicalType: string
+    physicalType: VARCHAR
+    description: Bowling style from the Cricinfo profile (about 40 values such as 'right-arm offbreak', 'slow left-arm
+      orthodox'), as of today. NULL for non-bowlers or unknown.
+  - name: ari_playing_role
+    logicalType: string
+    physicalType: VARCHAR
+    description: Playing role from the Cricinfo profile (e.g. 'bowler', 'allrounder', 'wicketkeeper batter', 'opening
+      batter'), as of today. NULL for most players.
+  - name: ari_fielding_style
+    logicalType: string
+    physicalType: VARCHAR
+    description: Fielding style from the Cricinfo profile (mostly 'wicketkeeper' or 'occasional wicketkeeper').
+      NULL for most players.
+  - name: ari_full_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: Full name from the Cricinfo profile. NULL if the player is not in Ari's player table.
+  - name: ari_cricinfo_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: ESPNcricinfo id from Ari's player table; agrees with cricinfo_id wherever both exist.
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: entity
+- property: sources
+  value:
+  - ari
+  - cricsheet
+- property: upstream
+  value:
+  - stg_ari_players
+  - people

@@ -1,0 +1,168 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.int_player_match_stats
+name: int_player_match_stats
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: What each player did in each match, the building block for as-of player features.
+  limitations: Every match in Cricsheet, every format and gender (no scope). Super overs excluded. A player who
+    neither batted nor bowled has a row of zeros. Never exported (an intermediate).
+schema:
+- name: int_player_match_stats
+  physicalName: data/gold/int_player_match_stats.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per player per match (from the playing XI in match_players) with batting and bowling totals
+    for the match.
+  dataGranularityDescription: One row per (match, player) for every player listed in a Cricsheet playing XI.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: player_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person id (joins players.cricsheet_id).
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: team
+    logicalType: string
+    physicalType: VARCHAR
+    description: Team the player played for.
+  - name: start_date
+    logicalType: date
+    physicalType: DATE
+    description: First day of the match.
+  - name: gender
+    logicalType: string
+    physicalType: VARCHAR
+    description: male or female, from the match.
+  - name: format_family
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Format family: one_day (ODI and domestic one-day), t20 (T20I, IPL and every T20 league Cricsheet
+      covers) or multi_day (Tests and first-class).'
+  - name: bat_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Balls faced (deliveries as striker, wides excluded).
+    customProperties:
+    - property: unit
+      value: balls
+  - name: bat_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: Runs off the bat.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: bat_outs
+    logicalType: integer
+    physicalType: BIGINT
+    description: Times dismissed (retired hurt / not out excluded).
+    customProperties:
+    - property: unit
+      value: dismissals
+  - name: bat_fours
+    logicalType: integer
+    physicalType: BIGINT
+    description: Fours hit (boundaries, not all-run).
+    customProperties:
+    - property: unit
+      value: fours
+  - name: bat_sixes
+    logicalType: integer
+    physicalType: BIGINT
+    description: Sixes hit.
+    customProperties:
+    - property: unit
+      value: sixes
+  - name: bat_dots
+    logicalType: integer
+    physicalType: BIGINT
+    description: Balls faced with no run off the bat.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: bat_death_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Balls faced in the death overs (the last 10 overs of a one-day innings, the last 4 of a T20; none
+      in multi-day).
+    customProperties:
+    - property: unit
+      value: balls
+  - name: bat_death_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: Runs off the bat in the death overs.
+    customProperties:
+    - property: unit
+      value: runs
+  - name: bowl_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Legal balls bowled.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: bowl_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: Runs conceded (off the bat plus wides and no-balls; byes and leg byes are not charged to the bowler).
+    customProperties:
+    - property: unit
+      value: runs
+  - name: bowl_wickets
+    logicalType: integer
+    physicalType: BIGINT
+    description: Wickets credited to the bowler (caught, bowled, lbw, caught and bowled, stumped, hit wicket).
+    customProperties:
+    - property: unit
+      value: wickets
+  - name: bowl_death_balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Legal balls bowled in the death overs.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: bowl_death_runs
+    logicalType: integer
+    physicalType: BIGINT
+    description: Runs conceded in the death overs.
+    customProperties:
+    - property: unit
+      value: runs
+  quality:
+  - name: balls_non_negative
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE bat_balls < 0 OR bowl_balls < 0 OR bat_runs < 0
+    mustBe: 0
+  - name: death_within_totals
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE bat_death_balls > bat_balls OR bowl_death_balls > bowl_balls
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: derived
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - match_players
+  - matches
+  - balls
+  - wickets

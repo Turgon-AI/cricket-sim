@@ -1,0 +1,77 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.match_venues
+name: match_venues
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Assigns every match to its canonical venue and venue era, the join between matches and the venue and
+    weather tables.
+  limitations: venue_era is the same as venue_id unless the ground was rebuilt or reconfigured after a configured
+    break date (e.g. Wankhede Stadium from 2011), in which case it is '<venue_id>@<date>'; the era breaks are hand-configured
+    and only exist for a few grounds. Covers all 23,132 matches in silver with no scope applied.
+schema:
+- name: match_venues
+  physicalName: data/silver/match_venues.parquet
+  physicalType: table
+  logicalType: object
+  description: Link from each match to its venue and the venue's era at the match date.
+  dataGranularityDescription: One row per match (match_id), 23,132 rows.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match id. Joins to matches.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: matches.match_id
+  - name: venue_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Canonical venue of the match, looked up from the (venue, city) spelling. Joins to venues.venue_id.
+    relationships:
+    - to: venues.venue_id
+  - name: venue_version
+    logicalType: integer
+    physicalType: SMALLINT
+    description: 'Version of the venue valid on the match''s start date (joins to venue_versions with venue_id). Always
+      1 unless venue_context: asof.'
+    required: true
+  - name: venue_era
+    logicalType: string
+    physicalType: VARCHAR
+    description: venue_id for matches before the venue's first configured break date, otherwise '<venue_id>@<break
+      date>' for matches on or after it, so a rebuilt ground can be treated as a different pitch environment.
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 5
+  - name: era_starts_with_venue_id
+    type: sql
+    description: venue_era is the venue_id or the venue_id plus an @date suffix.
+    query: SELECT count(*) FROM ${table} WHERE venue_era <> venue_id AND NOT starts_with(venue_era, venue_id ||
+      '@')
+    mustBe: 0
+  - name: version_valid_on_the_match_date
+    type: sql
+    description: Each match uses the venue version valid on its start date.
+    query: SELECT count(*) FROM ${table} mv JOIN ${table:matches} m USING (match_id) LEFT JOIN ${table:venue_versions}
+      v ON v.venue_id = mv.venue_id AND v.venue_version = mv.venue_version WHERE v.venue_id IS NULL OR (v.venue_version
+      > 1 AND m.start_date < v.valid_from) OR (v.valid_to IS NOT NULL AND m.start_date > v.valid_to)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: reference
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - matches

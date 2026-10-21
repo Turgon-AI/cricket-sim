@@ -1,0 +1,102 @@
+# Column names and types of the RAW upstream files, exactly as DuckDB reads them (before staging renames
+# or casts anything). Checked before staging writes a byte. A build fails if an upstream
+# release changes them; review the change, then update this file deliberately.
+ari_players:
+- player_id:VARCHAR
+- name:VARCHAR
+- cricinfo_id:BIGINT
+- full name:VARCHAR
+- gender:VARCHAR
+- country:VARCHAR
+- batting style:VARCHAR
+- bowling style:VARCHAR
+- playing role:VARCHAR
+- fielding style:VARCHAR
+- first international year:BIGINT
+- last international year:BIGINT
+- major teams:VARCHAR
+- image url:VARCHAR
+ari_predictions:
+- match_id:BIGINT
+- innings:BIGINT
+- delivery_number:BIGINT
+- line:VARCHAR
+- line_confidence:DOUBLE
+- line_explicit:BIGINT
+- length:VARCHAR
+- length_confidence:DOUBLE
+- length_explicit:BIGINT
+- shot:VARCHAR
+- shot_confidence:DOUBLE
+- shot_explicit:BIGINT
+- direction:VARCHAR
+- direction_confidence:DOUBLE
+- direction_explicit:BIGINT
+ari_tracking:
+- match_id:BIGINT
+- innings:BIGINT
+- delivery_number:BIGINT
+- ball_line:VARCHAR
+- ball_length:VARCHAR
+- shot_played:VARCHAR
+- shot_control:VARCHAR
+- wagon_x:BIGINT
+- wagon_y:BIGINT
+- wagon_zone:BIGINT
+- wagon_angle:DOUBLE
+- wagon_distance:DOUBLE
+- wagon_in_ring:BOOLEAN
+- shot_direction:VARCHAR
+- ball_timestamp:TIMESTAMP
+- win_probability:DOUBLE
+- predicted_score:BIGINT
+- ball_events:VARCHAR
+hawkeye_balls:
+- competition:VARCHAR
+- matchId:BIGINT
+- delivery:VARCHAR
+- ball:BIGINT
+- batter:VARCHAR
+- batterId:BIGINT
+- rightHandedBat:VARCHAR
+- nonStriker:VARCHAR
+- nonStrikerId:BIGINT
+- bowler:VARCHAR
+- bowlerId:BIGINT
+- rightArmedBowl:VARCHAR
+- bowlingStyle:VARCHAR
+- ballSpeed:DOUBLE
+- dismissalDetails:VARCHAR
+- runs:VARCHAR
+- batterRuns:BIGINT
+- bowlerRuns:BIGINT
+- extras:VARCHAR
+- pitchX:VARCHAR
+- pitchY:VARCHAR
+- stumpsX:VARCHAR
+- stumpsY:VARCHAR
+- fieldX:VARCHAR
+- fieldY:VARCHAR
+people:
+- identifier:VARCHAR
+- name:VARCHAR
+- unique_name:VARCHAR
+- key_bcci:VARCHAR
+- key_bcci_2:VARCHAR
+- key_bigbash:VARCHAR
+- key_cricbuzz:VARCHAR
+- key_cricheroes:VARCHAR
+- key_crichq:VARCHAR
+- key_cricinfo:VARCHAR
+- key_cricinfo_2:VARCHAR
+- key_cricinfo_3:VARCHAR
+- key_cricingif:VARCHAR
+- key_cricketarchive:VARCHAR
+- key_cricketarchive_2:VARCHAR
+- key_cricketworld:VARCHAR
+- key_nvplay:VARCHAR
+- key_nvplay_2:VARCHAR
+- key_opta:VARCHAR
+- key_opta_2:VARCHAR
+- key_pulse:VARCHAR
+- key_pulse_2:VARCHAR

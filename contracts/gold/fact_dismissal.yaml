@@ -1,0 +1,148 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.fact_dismissal
+name: fact_dismissal
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: >-
+    Who was out on which ball and how, with the fielders involved, for every dismissal and retirement in scope.
+  limitations: >-
+    Includes retirements: 'retired hurt' and 'retired not out' (is_retirement = true) are not dismissals and do
+    not count as wickets; 'retired out' is a dismissal. Fielder names are as Cricsheet writes them; substitute fielders
+    may lack a Cricsheet identifier. Run outs sometimes have no fielder recorded.
+schema:
+- name: fact_dismissal
+  physicalName: data/gold/fact_dismissal.parquet
+  physicalType: table
+  logicalType: object
+  description: >-
+    Every wicket entry Cricsheet records on an in-scope delivery: the player out, the mode of dismissal, the fielders
+    credited, whether a substitute fielded, and whether it was a retirement.
+  dataGranularityDescription: >-
+    One row per wicket entry on a delivery, keyed by (match_id, innings, delivery_number, wicket_number); a ball
+    can carry two entries (e.g. a catch plus a retirement).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Cricsheet match identifier (the name of the match's file in Cricsheet's download, e.g. '1000851'). For most
+      internationals it equals the ESPNcricinfo match id, but do not rely on that; use map_match_ids. Joins to dim_match.match_id.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: dim_match.match_id
+  - name: innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: >-
+      Innings number within the match, from 1, in batting order. Super overs continue the numbering (a tied T20
+      with one super over has innings 3 and 4 as its super-over innings).
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: delivery_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: >-
+      Position of the delivery within its innings, from 1, counting every delivery including wides and no-balls.
+      Follows Ari Adaikalam's key convention, so (match_id, innings, delivery_number) also joins to that Kaggle
+      dataset. Joins to fact_delivery.
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: wicket_number
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Order of this wicket entry on the delivery, from 1 (2 only when a ball has two entries).
+    primaryKey: true
+    primaryKeyPosition: 4
+    required: true
+  - name: player_out
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name of the player out (or retiring), as written in Cricsheet.
+    required: true
+  - name: player_out_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier of the player out. Joins to dim_player.cricsheet_id.
+    relationships:
+    - to: dim_player.cricsheet_id
+  - name: kind
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Mode of dismissal as Cricsheet records it: 'caught', 'bowled', 'lbw', 'run out', 'caught and bowled', 'stumped',
+      'hit wicket', 'obstructing the field', 'handled the ball', 'hit the ball twice', 'timed out', 'retired out',
+      or the retirements 'retired hurt' and 'retired not out'.
+    required: true
+    quality:
+    - name: valid_kind
+      metric: invalidValues
+      arguments:
+        validValues:
+        - caught
+        - bowled
+        - lbw
+        - run out
+        - caught and bowled
+        - stumped
+        - retired hurt
+        - hit wicket
+        - obstructing the field
+        - retired out
+        - retired not out
+        - timed out
+        - handled the ball
+        - hit the ball twice
+      mustBe: 0
+  - name: fielders
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Fielders credited (catcher, run-out fielders, wicketkeeper for a stumping), '|'-separated, as written in Cricsheet.
+      NULL when none is credited (bowled, lbw, caught and bowled, and some run outs).
+  - name: fielder_ids
+    logicalType: string
+    physicalType: VARCHAR
+    description: >-
+      Cricsheet person identifiers of the fielders, '|'-separated in the same order as fielders; an empty slot would
+      mean that fielder has no identifier (none in the current scope). NULL when fielders is NULL.
+  - name: fielder_is_substitute
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True if any credited fielder was a substitute.
+    required: true
+  - name: is_retirement
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: >-
+      True for 'retired hurt' and 'retired not out', which are not dismissals and do not count as wickets. False
+      for every other kind, including 'retired out'.
+    required: true
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 80
+  - name: retirement_matches_kind
+    description: is_retirement is true exactly for 'retired hurt' and 'retired not out'
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE is_retirement <> (kind IN ('retired hurt', 'retired not out'))
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: fact
+- property: sources
+  value:
+  - cricsheet
+- property: upstream
+  value:
+  - wickets
+  - matches

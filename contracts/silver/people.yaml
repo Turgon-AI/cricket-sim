@@ -1,0 +1,164 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.people
+name: people
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Cricsheet''s register of every person who appears in its data: a stable 8-character identifier and the
+    ids the same person has on other cricket sites. It is the dimension that every player id in the Cricsheet tables
+    joins to.'
+  limitations: Cricsheet (ODC-BY 1.0); format documented at https://cricsheet.org/format/json/. Includes umpires,
+    referees and other officials as well as players (4,910 of 18,651 people never appear in any squad list). External-id
+    columns are sparse and sources are uneven (Cricinfo 99.8%, Pulse 11%, Cricbuzz 0.3%). The register has no birth
+    date, handedness or country; those come from other tables. Names are not unique. Cricsheet may merge or split
+    identities in later releases.
+  usage: Join to balls.batter_id/bowler_id/non_striker_id, wickets.player_out_id, match_players.player_id and others
+    on identifier.
+schema:
+- name: people
+  physicalName: data/silver/people.parquet
+  physicalType: table
+  logicalType: object
+  description: The Cricsheet people.csv register, loaded as text. 18,651 people.
+  dataGranularityDescription: One row per person (identifier).
+  properties:
+  - name: identifier
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Cricsheet person identifier: 8 characters of 0-9 and a-f, stable across all matches. Primary key;
+      the target of every *_id column in the silver tables.'
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    quality:
+    - name: hex8
+      metric: invalidValues
+      arguments:
+        pattern: '[0-9a-f]{8}'
+      mustBe: 0
+  - name: name
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Name as Cricsheet usually writes it (initials plus surname). Not unique: at least 317 people share
+      a name with someone else.'
+  - name: unique_name
+    logicalType: string
+    physicalType: VARCHAR
+    description: Name made unique by Cricsheet, adding a number or fuller first name when two people share a name
+      (e.g. 'GA Bartlett (2)'). Unique in this table.
+    quality:
+    - name: unique_name_is_unique
+      metric: duplicateValues
+      mustBe: 0
+  - name: key_bcci
+    logicalType: string
+    physicalType: VARCHAR
+    description: BCCI id (opaque text), as text, from the Cricsheet register. NULL when Cricsheet has no mapping
+      for this person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_bcci_2
+    logicalType: string
+    physicalType: VARCHAR
+    description: Second bcci id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping for this
+      person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_bigbash
+    logicalType: string
+    physicalType: VARCHAR
+    description: Big Bash League player id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping
+      for this person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_cricbuzz
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricbuzz player id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping for
+      this person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_cricheroes
+    logicalType: string
+    physicalType: VARCHAR
+    description: CricHeroes id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping for this
+      person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_crichq
+    logicalType: string
+    physicalType: VARCHAR
+    description: CricHQ id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping for this person.
+      A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_cricinfo
+    logicalType: string
+    physicalType: VARCHAR
+    description: ESPNcricinfo player id as text (digits only); matches stg_ari_players.cricinfo_id. NULL for 45
+      people.
+  - name: key_cricinfo_2
+    logicalType: string
+    physicalType: VARCHAR
+    description: Second espncricinfo id for the same person, as text, from the Cricsheet register. NULL when Cricsheet
+      has no mapping for this person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_cricinfo_3
+    logicalType: string
+    physicalType: VARCHAR
+    description: Third espncricinfo id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping
+      for this person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_cricingif
+    logicalType: string
+    physicalType: VARCHAR
+    description: CricInfo GIF/Cricingif id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping
+      for this person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_cricketarchive
+    logicalType: string
+    physicalType: VARCHAR
+    description: CricketArchive player id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping
+      for this person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_cricketarchive_2
+    logicalType: string
+    physicalType: VARCHAR
+    description: Second cricketarchive id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping
+      for this person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_cricketworld
+    logicalType: string
+    physicalType: VARCHAR
+    description: CricketWorld id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping for this
+      person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_nvplay
+    logicalType: string
+    physicalType: VARCHAR
+    description: NV Play id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping for this person.
+      A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_nvplay_2
+    logicalType: string
+    physicalType: VARCHAR
+    description: Second nv play id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping for
+      this person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_opta
+    logicalType: string
+    physicalType: VARCHAR
+    description: Opta id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping for this person.
+      A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_opta_2
+    logicalType: string
+    physicalType: VARCHAR
+    description: Second opta id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping for this
+      person. A person can hold more than one id for a site (the _2/_3 columns).
+  - name: key_pulse
+    logicalType: string
+    physicalType: VARCHAR
+    description: ICC Pulselive id as text (the id used in the Hawk-Eye feed; links stg_hawkeye_balls pulse ids to
+      people). NULL for about 89% of people. No value occurs in both key_pulse and key_pulse_2.
+  - name: key_pulse_2
+    logicalType: string
+    physicalType: VARCHAR
+    description: Second icc pulselive id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping
+      for this person. A person can hold more than one id for a site (the _2/_3 columns).
+  quality:
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 90
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: entity
+- property: sources
+  value:
+  - cricsheet
+- property: upstream
+  value: []
