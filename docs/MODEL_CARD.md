@@ -8,9 +8,11 @@
 >   127,515 such rows in this run has a number.
 > - Each fold checks at run time that its training rows are clean, come from earlier seasons and share no match
 >   with the scored season.
-> - Win probability is now monotone: more runs never lower the batting side's chance and more wickets never raise
->   it (first-innings boundaries and wickets, chase wickets and runs needed). 0 wrong-way steps on the state grid in
->   all 19 folds, and contract rules on every evaluated ball.
+> - Win probability is monotone in the state terms whose direction cricket fixes, with balls left held fixed: a
+>   higher projected total (innings 1) or fewer runs needed (chase) never lowers the batting side's chance, and more
+>   wickets down never raises it. 0 wrong-way steps on the state grid in all 19 folds. On real balls, which also use
+>   up a ball, the contract checks that no first-innings boundary lowers it and no wicket without runs raises it,
+>   within 0.001.
 > - WPA no longer bridges the innings break: the last ball of innings 1 ends at the first-innings model's own end
 >   state, so the jump between the two models goes to no ball.
 > **Still open:** the model family was chosen on the same walk-forward folds that are scored here, and no locked
@@ -101,8 +103,9 @@ Ties score as 0.5. Every model is compared with baselines fitted on the same row
 ## Evaluation data
 
 1,740 clean held-out ODIs, 2008-2026: no rain rule, a result, both innings of known length, an unrevised chase,
-and every quality check passed. That is 962,915 balls. Rain-affected matches, no-results and the like are still
-predicted but flagged `evaluated = false`, and they are not scored.
+and every quality check passed. That is 962,915 balls. Rain-affected matches, no-results, innings of unknown length and
+the one match that fails quality are not predicted: their rows are in the tables with `evaluated = false`, an
+`exclusion_reason` and no numbers (127,515 rows), and they are not scored.
 
 ## Results
 
@@ -178,8 +181,8 @@ The full tables are in `report_model_calibration`.
 
 ## Caveats and recommendations
 
-- **Use `wp_before` only on evaluated rows** for analysis that needs reliable probabilities. Rain-affected
-  matches are predicted as if no overs were lost.
+- **Only evaluated rows carry numbers.** Rain-affected matches, no-results and innings of unknown length have
+  NULL win probability, WPA and expected runs, with the reason in `exclusion_reason`.
 - **Early seasons (2008-2010) are trained on less history** (460-630 matches), and Elo ratings are less settled
   then (see `model_team_elo.rated_before`).
 - **Win probability added** credits the whole swing of a ball to the striker; the bowler and fielders are not

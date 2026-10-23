@@ -26,6 +26,9 @@ def main(argv=None) -> None:
     sub.add_parser("backup", help="copy bronze to the rclone remote")
     sub.add_parser("restore", help="fetch locked bronze snapshots from the rclone remote")
     sub.add_parser("status", help="show locked snapshots and local availability")
+    p = sub.add_parser("prune", help="free disk: drop retained previous generations, failed stages and quarantines")
+    p.add_argument("--keep", type=int, default=1, help="previous generations to keep per kind (default 1; 0 keeps none)")
+    p.add_argument("--dry-run", action="store_true", help="list what would be removed without removing it")
     args = parser.parse_args(argv)
 
     if args.cmd == "ingest":
@@ -78,6 +81,13 @@ def main(argv=None) -> None:
         from . import remote
 
         getattr(remote, args.cmd)()
+    elif args.cmd == "prune":
+        from .transaction import prune
+
+        freed = prune(paths.DATA, keep=args.keep, dry_run=args.dry_run)
+        for path, size in freed.items():
+            print(f"{'would remove' if args.dry_run else 'removed'} {path} ({size / 1e6:.0f} MB)")
+        print(f"{'would free' if args.dry_run else 'freed'} {sum(freed.values()) / 1e9:.2f} GB in {len(freed)} item(s)")
     elif args.cmd == "status":
         for source, sid in sorted(bronze.read_lock().items()):
             local = "ok" if not bronze.verify(source, sid) else "MISSING/CORRUPT"

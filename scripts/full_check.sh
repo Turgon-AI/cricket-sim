@@ -43,8 +43,9 @@ step "build"     uv run cricket build $ALLOW_DIRTY
 step "model"     uv run cricket model $ALLOW_DIRTY
 step "contracts" uv run cricket contracts
 
-# An export folder is named from the data fingerprint. If one with that name exists and differs (for example
-# it was made from another commit), `cricket export` refuses to replace it, so move it aside first (never delete).
+# An export folder is named from the data fingerprint. An identical re-export replaces it in place. If one with
+# that name exists and differs (for example it was made from another commit), `cricket export` refuses to replace
+# it; only then is it moved aside (never deleted) and the export run again.
 move_old_export() {
   local name
   name="$(uv run python -I -c "import json; print(json.load(open('$DATA/gold/run.json'))['build_fingerprint'][:12])")"
@@ -54,7 +55,7 @@ move_old_export() {
     echo "moved the previous export of this data aside to $DATA/export-replaced/"
   fi
 }
-do_export() { move_old_export; uv run cricket export $ALLOW_DIRTY; }
+do_export() { uv run cricket export $ALLOW_DIRTY || { move_old_export; uv run cricket export $ALLOW_DIRTY; }; }
 step "export"    do_export
 
 full_data_checks() {

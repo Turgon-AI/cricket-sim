@@ -53,8 +53,10 @@ restricted sources.
 - **Software:** Python 3.12 and [uv](https://docs.astral.sh/uv/). Every package is pinned in `uv.lock`
   (DuckDB 1.4.1, PyArrow 21).
 - **Hardware:** timed on a laptop with 16 GB of RAM. DuckDB is capped at 3 GB, so 8 GB of RAM
-  should be enough. About 0.9 GB of disk is used: bronze 0.26 GB, the export 0.33 GB, the rest silver, gold,
-  staging and models.
+  should be enough. About 1.5 GB of disk is used: bronze 0.3 GB, the export 0.33 GB, silver, gold, staging and
+  models 0.3 GB, and one previous generation of each (kept under `data/.history/` so a build, model run or export
+  can be undone). Each successful run drops the generation before that. `cricket prune` frees the rest: failed
+  stages and rollback quarantines, or every previous generation with `--keep 0`.
 - **Run time:**
   - `model`: about 6 minutes (19 walk-forward seasons).
   - `ingest all`: about 1.5 hours for a first full run. Venues and weather take most of that: 382

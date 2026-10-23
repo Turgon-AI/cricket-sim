@@ -1,9 +1,14 @@
 """Off-path generation and recoverable publication for local pipeline artifacts.
 
 Writers share one advisory lock. Publication journals every destination before moving
-it; interrupted commits roll back on the next pipeline command. Original generations
-and failed stages are retained. External readers must avoid the short publication
-window or acquire the same lock; multi-directory rename is not a filesystem primitive.
+it; interrupted commits roll back on the next pipeline command. External readers must
+avoid the short publication window or acquire the same lock; multi-directory rename is
+not a filesystem primitive.
+
+Retention: every successful publish keeps the previous generation of its kind (build,
+model, export) in .history/ and its stage in .pending/, so one undo is always possible,
+and prunes anything older of that kind. Failed stages (no journal) and rollback
+quarantines (.aborted/) are kept until `cricket prune`, which also takes --keep N.
 """
 
 from contextlib import contextmanager
@@ -11,6 +16,7 @@ import fcntl
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import uuid
@@ -130,11 +136,67 @@ def publish(data: Path, stage: Path, names: list[str], prepare=None) -> None:
             os.replace(generated, live)
         record['state'] = 'committed'
         _save(journal, record)
+        _prune_kind(data, _kind(record), keep=1)
     except BaseException:
         _rollback(data, record)
         record['state'] = 'rolled_back'
         _save(journal, record)
         raise
+
+
+def _kind(record: dict) -> str:
+    """'build', 'model' or 'export': the stage name is <kind>-<uuid> under .pending/."""
+    return Path(record['stage']).name.rsplit('-', 1)[0]
+
+
+def _journals(data: Path) -> list[dict]:
+    """Every journal, oldest first (by its own write time)."""
+    paths = sorted((data/'.transactions').glob('*.json'), key=lambda p: (p.stat().st_mtime, p.name))
+    return [{**json.loads(p.read_text()), '_path': p} for p in paths]
+
+
+def _dir_bytes(path: Path) -> int:
+    return sum(p.stat().st_size for p in path.rglob('*') if p.is_file() and not p.is_symlink()) if path.exists() else 0
+
+
+def _remove(path: Path, freed: dict, dry_run: bool) -> None:
+    """Delete one retained directory or journal file (never following a symlink out of it)."""
+    if path.is_symlink() or not path.exists():
+        return
+    freed[str(path)] = _dir_bytes(path) if path.is_dir() else path.stat().st_size
+    if not dry_run:
+        shutil.rmtree(path) if path.is_dir() else path.unlink()
+
+
+def _prune_kind(data: Path, kind: str, keep: int, dry_run: bool = False, freed: dict | None = None) -> dict:
+    """Caller holds writer_lock. Drop every finished generation of `kind` except the newest `keep` committed
+    ones: the .history backup (the generation that publish replaced), the .pending stage and the journal.
+    A rolled-back journal left nothing worth keeping, so it always goes. Prepared journals are never touched."""
+    freed = {} if freed is None else freed
+    finished = [r for r in _journals(data) if r['state'] != 'prepared' and _kind(r) == kind]
+    committed = [r for r in finished if r['state'] == 'committed']
+    protected = {r['id'] for r in committed[len(committed) - keep:]} if keep > 0 else set()
+    for record in (r for r in finished if r['id'] not in protected):
+        _remove(data/record['backup'], freed, dry_run)
+        _remove(data/record['stage'], freed, dry_run)
+        _remove(record['_path'], freed, dry_run)
+    return freed
+
+
+def prune(data: Path, keep: int = 1, dry_run: bool = False) -> dict:
+    """`cricket prune`: free the disk that retained generations use. Keeps the newest `keep` finished
+    generations of each kind (0 keeps none), then removes failed stages (a .pending/ directory no journal
+    names) and rollback quarantines (.aborted/). Returns {path: bytes} of what was (or would be) removed."""
+    with writer_lock(data):
+        freed = {}
+        for kind in sorted({_kind(r) for r in _journals(data)}):
+            _prune_kind(data, kind, keep, dry_run, freed)
+        referenced = {data/r['stage'] for r in _journals(data)}
+        for stage in sorted((data/'.pending').glob('*')) if (data/'.pending').exists() else []:
+            if stage not in referenced:
+                _remove(stage, freed, dry_run)
+        _remove(data/'.aborted', freed, dry_run)
+        return freed
 
 
 def run_worker(stage: Path, job: str, settings: dict) -> None:

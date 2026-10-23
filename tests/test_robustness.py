@@ -281,3 +281,66 @@ def test_pending_publications_lists_only_prepared_journals(tmp_path):
     assert [r["id"] for r in transaction.pending_publications(tmp_path)] == ["deadbeef"]
     transaction.recover(tmp_path)
     assert transaction.pending_publications(tmp_path) == []
+
+
+# ---------------------------------------------------------------- Retained generations are pruned
+
+def _finished_journal(data: Path, kind: str, ident: str, mtime: float) -> None:
+    stage, backup = data / ".pending" / f"{kind}-{ident}", data / ".history" / ident
+    for folder in (stage / "gold", backup / "gold"):
+        folder.mkdir(parents=True)
+        (folder / "t.parquet").write_bytes(b"x" * 1000)
+    record = {"id": ident, "state": "committed", "stage": f".pending/{kind}-{ident}", "backup": f".history/{ident}",
+              "destinations": ["gold"], "existed": {"gold": True}}
+    path = data / ".transactions" / f"{ident}.json"
+    transaction._save(path, record)
+    os.utime(path, (mtime, mtime))
+
+
+def test_publish_keeps_one_previous_generation_per_kind(tmp_path):
+    for i, (kind, ident) in enumerate([("build", "b1"), ("build", "b2"), ("model", "m1"), ("build", "b3")]):
+        _finished_journal(tmp_path, kind, ident, 1_700_000_000 + i)
+    _prepared_journal(tmp_path)                       # a killed publish is never pruned
+    (tmp_path / ".pending" / "build-failed").mkdir()  # a failed generation has no journal
+    stage = tmp_path / ".pending" / "build-new"
+    (stage / "gold").mkdir(parents=True)
+    (tmp_path / "gold").mkdir()
+    with transaction.writer_lock(tmp_path):
+        pass                                          # recover() rolls the prepared journal back
+    with transaction.writer_lock(tmp_path):
+        transaction.publish(tmp_path, stage, ["gold"])
+    journals = {p.stem: json.loads(p.read_text())["state"] for p in (tmp_path / ".transactions").glob("*.json")}
+    # the new build's own backup holds the generation it replaced, so keep=1 means exactly one undo
+    assert sorted(journals.items()) == sorted({"m1": "committed", journals_new(journals): "committed"}.items())
+    for old in ("b1", "b2", "b3"):
+        assert not (tmp_path / ".history" / old).exists() and not (tmp_path / ".pending" / f"build-{old}").exists()
+    assert (tmp_path / ".history" / "m1").exists() and (tmp_path / ".pending" / "model-m1").exists()
+    assert (tmp_path / ".pending" / "build-failed").exists()         # failed stages wait for `cricket prune`
+    assert "deadbeef" not in journals                                 # rolled back, so nothing worth keeping
+
+
+def journals_new(journals: dict) -> str:
+    return next(k for k in journals if k not in {"m1", "b1", "b2", "b3", "deadbeef"})
+
+
+def test_prune_command_frees_old_generations_failed_stages_and_quarantines(tmp_path):
+    for i, (kind, ident) in enumerate([("build", "b1"), ("build", "b2"), ("export", "e1")]):
+        _finished_journal(tmp_path, kind, ident, 1_700_000_000 + i)
+    (tmp_path / ".pending" / "model-failed").mkdir(parents=True)
+    (tmp_path / ".pending" / "model-failed" / "big").write_bytes(b"y" * 5000)
+    (tmp_path / ".aborted" / "x").mkdir(parents=True)
+    _prepared_journal(tmp_path)
+    (tmp_path / ".history" / "deadbeef").mkdir(parents=True)
+    dry = transaction.prune(tmp_path, keep=1, dry_run=True)
+    assert (tmp_path / ".history" / "b1").exists()                   # a dry run removes nothing
+    assert {Path(p).name for p in dry} >= {"b1", "build-b1", "model-failed", ".aborted"}
+    assert sum(dry.values()) >= 2000 + 5000
+    freed = transaction.prune(tmp_path, keep=1)
+    assert freed == dry
+    assert not (tmp_path / ".history" / "b1").exists() and (tmp_path / ".history" / "b2").exists()
+    assert (tmp_path / ".history" / "e1").exists()
+    assert not (tmp_path / ".pending" / "model-failed").exists() and not (tmp_path / ".aborted").exists()
+    assert transaction.prune(tmp_path, keep=0) and not any((tmp_path / ".history").iterdir())
+    result = cli(tmp_path, FIXTURE, "prune", "--dry-run")
+    assert result.returncode == 0 and "would free 0.00 GB" in result.stdout
+
