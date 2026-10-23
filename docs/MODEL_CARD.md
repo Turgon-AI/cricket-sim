@@ -1,7 +1,7 @@
 # Model card: ODI ball-by-ball win probability and expected runs
 
-> **Status (2026-10-21):** Every number below was regenerated from the current code (build `38eb3e0f0d008218`,
-> model run `3ff5af32a03d292d`).
+> **Status (2026-10-23):** Every number below was regenerated from the current code (build `b10fc68581d151e1`,
+> model run `0f4e92549d533de9`).
 > **What the code guarantees:**
 > - Venue home status uses only matches on earlier dates (`dataset.home_teams_as_of`).
 > - Win probabilities, expected runs and outcome probabilities are withheld on unevaluated rows: none of the
@@ -15,15 +15,21 @@
 >   within 0.001.
 > - WPA no longer bridges the innings break: the last ball of innings 1 ends at the first-innings model's own end
 >   state, so the jump between the two models goes to no ball.
-> **Still open:** the model family was chosen on the same walk-forward folds that are scored here, and no locked
-> temporal holdout has been run. The first-innings gain over the state logistic is small (0.1892 against 0.1937).
-> The model has the lower first-innings Brier in 15 of 19 seasons (two-sided sign test p = 0.02), but those are the
-> folds the family was chosen on, the reports hold no confidence intervals, and there is no baseline with the same
-> inputs (the state logistic has no home term). The boosted expected-runs table is far off in rare late states
-> with few wickets down. Read the scores as walk-forward estimates, not holdout results.
+> - Every score carries a 95% interval from 1,000 bootstrap resamples of whole matches (`report_model_scores`),
+>   and `report_model_paired` scores the model against each baseline on the same balls with an interval and a
+>   sign test over seasons.
+> - A locked temporal holdout is run every time: one fit on the 1,790 clean matches before 2023, scored once on
+>   2023-2026 (`scope = holdout_2023-2026`). It agrees with the walk-forward folds on the same seasons within
+>   0.001, so the fold choice did not flatter the model.
+> **Still open:** the model family was chosen on the same walk-forward folds that are scored here; the holdout
+> above is a check on those folds, not a fresh choice. There is no baseline with the same inputs (the state
+> logistic has no home term), so the first-innings gain of 0.0044 Brier is over a weaker baseline. The recent
+> seasons score worse than the all-years headline (0.195 against 0.189 in the first innings), and 2026 is the
+> worst season in both innings. The boosted expected-runs table is far off in rare late states with few wickets
+> down.
 
 Structured after *Model Cards for Model Reporting* (Mitchell et al., 2019). Numbers are from model run
-`3ff5af32a03d292d` (model fingerprint), built on data build `38eb3e0f0d008218`. They are in
+`0f4e92549d533de9` (model fingerprint), built on data build `b10fc68581d151e1`. They are in
 `data/models/report_model_*.parquet`, which also ships with the dataset.
 
 ## Model details
@@ -59,7 +65,9 @@ actual training rows are clean, come from earlier seasons and share no match wit
 covers that guard. The model-family choice was made on the same folds used for the reported scores, so a locked
 holdout is still needed.
 
-**Licence:** ODC-BY 1.0 for the outputs (derived from Cricsheet). The code is MIT.
+**Licence:** the ball-outcome and Elo tables are ODC-BY 1.0 (derived from Cricsheet). The win-probability table and
+the report tables are ODbL 1.0 because the model's home-advantage input comes from the venue context, whose
+lineage includes OpenStreetMap geocoding; `cricket export` derives every file's licence from lineage. The code is MIT.
 
 ## Intended use
 
@@ -113,20 +121,31 @@ the one match that fails quality are not predicted: their rows are in the tables
 
 ## Results
 
-**Walk-forward metrics, regenerated on 2026-10-21 from the current source; not a locked holdout** (lower is better):
+**Brier score, regenerated on 2026-10-23 from the current source** (lower is better; brackets are 95% intervals
+from 1,000 bootstrap resamples of whole matches). The first two columns are the walk-forward folds over all 19
+seasons; the last two are the locked holdout, one fit on every clean season before 2023 scored once on 2023-2026
+(410 matches):
 
-| | innings 1 Brier | innings 1 log loss | innings 2 Brier | innings 2 log loss |
+| | innings 1, all years | innings 2, all years | innings 1, holdout 2023-26 | innings 2, holdout 2023-26 |
 |---|---|---|---|---|
-| **this model** | **0.1892** | **0.5659** | **0.1197** | **0.3797** |
-| state logistic | 0.1937 | 0.5764 | 0.1213 | 0.3842 |
-| base rate | 0.2474 | 0.6936 | 0.2469 | 0.6934 |
+| **this model** | **0.1892** [0.181, 0.198] | **0.1197** [0.112, 0.128] | **0.1955** [0.180, 0.211] | **0.1286** [0.111, 0.145] |
+| state logistic | 0.1937 [0.186, 0.203] | 0.1213 [0.113, 0.129] | 0.2046 [0.189, 0.221] | 0.1328 [0.116, 0.151] |
+| base rate | 0.2474 [0.246, 0.249] | 0.2469 [0.245, 0.248] | 0.2475 [0.245, 0.250] | 0.2470 [0.244, 0.249] |
+
+Log loss, all years: model 0.5659 and 0.3797, state logistic 0.5764 and 0.3842, base rate 0.6936 and 0.6934
+(innings 1 and 2). The walk-forward folds on 2023-2026 alone score 0.1947 and 0.1279, within 0.001 of the
+holdout.
+
+**Is the edge over the state logistic real?** On the same balls (`report_model_paired`), the model's Brier is
+lower by 0.0044 [0.0025, 0.0065] in the first innings and 0.0016 [0.0007, 0.0026] in the chase, and it has the
+lower Brier in 15 of 19 seasons in both innings (two-sided sign test p = 0.019). So the gain is small but not
+noise. It is a gain over a baseline without the home input; a same-input baseline is still missing.
 
 **By era:**
-- **Innings 1:** the model has the lowest Brier in every era (0.189, 0.182 and 0.195), but only against the
-  baselines above, none of which gets the home input. Against a baseline given the same inputs the
-  first-innings gain is not shown (see the status note).
+- **Innings 1:** the model has the lowest Brier in every era (0.189, 0.182 and 0.195). The paired gain over the
+  state logistic is clear only from 2021 (0.0085 [0.0047, 0.0122]); in 2008-14 the interval includes zero.
 - **Innings 2:** it is best in 2015-20 (0.107) and 2021- (0.131). In 2008-14 it is slightly worse than the
-  state logistic (0.1203 against 0.1195).
+  state logistic (0.1202 against 0.1195, 3 of 7 seasons; the interval includes zero).
 
 **Match-level Brier, side batting first wins:**
 
@@ -136,8 +155,8 @@ the one match that fails quality are not predicted: their rows are in the tables
 | first ball of the chase | 1,740 | **0.167** | 0.176 | 0.247 |
 | chase, 30 balls left | 856 | 0.076 | 0.080 | 0.244 |
 
-No interval is computed for these checkpoints. The 30-balls-left gap (0.004 on 856 matches) is too small to
-read as a real difference.
+These checkpoints carry no interval. The 30-balls-left gap (0.003 on 856 matches) is too small to read as a
+real difference.
 
 **Ball outcome, eight classes:**
 
@@ -176,11 +195,16 @@ The full tables are in `report_model_calibration`.
   the batting side wins 80% of the time, and when it says 94%, 90%. Underconfident at the low end: when it says
   15%, the side wins 19%. Because win probability can no longer fall as runs rise, huge totals (above about 300
   in the 2015 fold) sit flat near 0.87-0.90 and stay under-confident.
-- **Chases:** the chasing side wins 3-5 points more often than predicted in the 15-65% range. The gap shows
-  in 2008-14 as well as in later eras, so it is not only that chasing became easier faster than the model,
-  trained on earlier seasons, adjusts. From 2021 the model is also overconfident for the chasing side above
-  65%: when it says 75%, the side wins 70% of the time. This is the main known weakness. A recalibration step
-  fitted on the most recent seasons is a candidate fix.
+- **Chases:** the chasing side wins 3-5 points more often than predicted in the 15-65% range over all years.
+  By era the picture is not one bias: in 2008-14 and 2015-20 the model is under-confident for the chaser above
+  65% (when it says 75%, the side wins 77-78%), and from 2021 it is over-confident there (when it says 75%, the
+  side wins 70%). The 2026-10-23 audit split the 2021- gap by season (balls where the model gave the chaser 70% or
+  more): the model over-shot the observed win rate by 0.8, 3.7, 3.2 and 7.6 points in 2021, 2022, 2024 and 2026
+  and under-shot it by 1.1 and 0.6 points in 2023 and 2025, and a Platt or isotonic recalibration fitted
+  on the previous season made every slice worse (chase Brier from 2021: 0.1306 to 0.1310 and 0.1360). So this is
+  drift plus season-to-season noise, not a stable bias a recalibrator can learn from last season; the fix, if
+  any, is a model input that tracks why chasing got easier. The audit is in
+  turgon-exports/cricket-sim-audit-2026-10-23 (not part of this repo).
 - **Ball outcomes:** wicket and six probabilities are well calibrated up to about 12%. Above that, the rare
   high-probability balls (end-of-innings slogging) are somewhat overconfident for sixes.
 
@@ -201,9 +225,11 @@ The full tables are in `report_model_calibration`.
   then (see `model_team_elo.rated_before`).
 - **Win probability added** credits the whole swing of a ball to the striker; the bowler and fielders are not
   separated out. It does not include the innings break.
+- **Seeds:** the win-probability model is deterministic; the resources table and the ball-outcome model are
+  gradient-boosted with seed 20261016. In the 2026-10-23 audit a different seed moved the headline Brier by at
+  most 0.0001 and log loss by 0.0002, so the fourth decimal of a score is not stable under reseeding.
 - **Known gaps:**
-  - recalibration;
   - as-of player features;
   - T20 versions.
 
-<!-- cricket-sim card stamp: build_fingerprint=38eb3e0f0d008218 model_fingerprint=3ff5af32a03d292d innings_1_brier=0.1892 innings_2_brier=0.1197 -->
+<!-- cricket-sim card stamp: build_fingerprint=b10fc68581d151e1 model_fingerprint=0f4e92549d533de9 innings_1_brier=0.1892 innings_2_brier=0.1197 -->

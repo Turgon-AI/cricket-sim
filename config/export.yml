@@ -84,3 +84,7 @@ files:
     table: report_model_folds
     licence: ODbL-1.0
     description: What each walk-forward fold trained on, and its fitted coefficients.
+  - file: report_model_paired
+    table: report_model_paired
+    licence: ODbL-1.0
+    description: The model against each baseline on the same balls, with a bootstrap interval and a sign test over seasons.

@@ -1351,15 +1351,18 @@ Tri-state data-quality checks for every Cricsheet match, plus the overall passes
 | column | type | description |
 |---|---|---|
 | `match_id` **key** | VARCHAR | Cricsheet match identifier (the name of the match's file in Cricsheet's download, e.g. '1000851'). For most internationals it equals the ESPNcricinfo match id, but do not rely on that; use map_match_ids. |
-| `runs_add_up` | BOOLEAN | True if on every ball of the match runs_total = runs_batter + runs_extras. Tri-state: NULL would mean not checkable (no balls). |
-| `extras_add_up` | BOOLEAN | True if on every ball runs_extras = wides + noballs + byes + legbyes + penalty. Tri-state: NULL = not checkable (no balls). |
+| `runs_add_up` | BOOLEAN | True if on every ball of the match runs_total = runs_batter + runs_extras. Tri-state: NULL would mean not checkable (no balls). Guards the parser: it has never failed on Cricsheet data as of the 2026-10-14 snapshot, and the headline publishes how often each check fires. |
+| `extras_add_up` | BOOLEAN | True if on every ball runs_extras = wides + noballs + byes + legbyes + penalty. Tri-state: NULL = not checkable (no balls). Guards the parser: it has never failed on Cricsheet data as of the 2026-10-14 snapshot, and the headline publishes how often each check fires. |
 | `overs_consistent` | BOOLEAN | True if every over has exactly balls_per_over legal balls, except the last over of an innings (may be shorter) and overs Cricsheet itself lists as miscounted by the umpire. False flags an unexplained short or long over. NULL = not checkable (no balls per over recorded, or no balls). |
 | `wickets_within_limit` | BOOLEAN | True if no innings has more dismissals than its limit (10, or 2 in a super over); retired hurt / retired not out are not counted. NULL = not checkable. |
+| `bowler_quota_respected` | BOOLEAN | Limited-overs matches with no rain rule only: True if no bowler started more than ceil(scheduled overs / 5) overs in an innings (10 in a 50-over match, 4 in a 20-over match; a 7-ball over Cricsheet lists as miscounted is still one over). Super overs are not counted. NULL = not checkable (Tests, a rain rule, no balls). Has not failed on any Cricsheet match as of the 2026-10-14 snapshot; the headline publishes how often it fires. |
+| `batters_within_limit` | BOOLEAN | True if no innings has more than 12 distinct batters: eleven plus at most one concussion replacement (ICC playing conditions since August 2019). NULL = not checkable (no balls). Has not failed on any Cricsheet match as of the 2026-10-14 snapshot (nine innings have exactly 12); the headline publishes how often it fires. |
 | `target_matches` | BOOLEAN | Limited-overs matches only: True if the stated second-innings target equals the first-innings total (penalty runs included) + 1. Checked only when no rain rule applied and the target is over the full scheduled overs; NULL otherwise (Tests, revised or missing targets, matches without a second innings). |
 | `result_consistent` | BOOLEAN | True if the recorded result follows from the innings totals: a win by runs means the winner batted first and the margin equals the run difference (Tests: total runs difference); a win by wickets means the winner outscored the other side. NULL = not checkable: no winner (draw, tie, no result), a rain rule or award (method set), or a Test won by an innings. |
 | `result_in_ball_stream` | BOOLEAN | True if the recorded winner also follows from the ball stream alone (delivery runs and pre-innings penalties; post-innings penalty runs are not on any ball). False if the result needs events outside the ball stream: the winner only wins once a post-innings penalty award is added (match 1420222, won by 5 untimed penalty runs after its balls ended 4 short). Such a match fails passes_quality, so models do not count it as evaluated. NULL = not checkable: same cases as result_consistent. |
 | `is_awarded` required | BOOLEAN | True if the match was awarded rather than played out (Cricsheet outcome method 'Awarded', e.g. the 2006 Oval Test). Awarded matches always fail passes_quality. |
 | `has_balls` required | BOOLEAN | True if Cricsheet recorded at least one innings for the match. |
+| `cricsheet_missing_fields_noted` required | BOOLEAN | True if Cricsheet's own file notes a missing field for the match (a fielding powerplay, the player of the match, reviews). Informational: it is not a defect in the ball stream and never fails passes_quality. |
 | `passes_quality` required | BOOLEAN | Overall verdict: True unless at least one check above is explicitly False or the match was awarded. NULL checks (not checkable) never fail a match. Never NULL. |
 
 ### int_match_weather_daily
@@ -1630,15 +1633,18 @@ In-scope copy of int_match_quality: one tri-state check per column and the overa
 | column | type | description |
 |---|---|---|
 | `match_id` **key** | VARCHAR | Cricsheet match identifier (the name of the match's file in Cricsheet's download, e.g. '1000851'). For most internationals it equals the ESPNcricinfo match id, but do not rely on that; use map_match_ids. Joins to dim_match.match_id. |
-| `runs_add_up` | BOOLEAN | True if on every ball of the match runs_total = runs_batter + runs_extras. Tri-state: NULL would mean not checkable (no balls). |
-| `extras_add_up` | BOOLEAN | True if on every ball runs_extras = wides + noballs + byes + legbyes + penalty. Tri-state: NULL = not checkable (no balls). |
+| `runs_add_up` | BOOLEAN | True if on every ball of the match runs_total = runs_batter + runs_extras. Tri-state: NULL would mean not checkable (no balls). Guards the parser: it has never failed on Cricsheet data as of the 2026-10-14 snapshot, and the headline publishes how often each check fires. |
+| `extras_add_up` | BOOLEAN | True if on every ball runs_extras = wides + noballs + byes + legbyes + penalty. Tri-state: NULL = not checkable (no balls). Guards the parser: it has never failed on Cricsheet data as of the 2026-10-14 snapshot, and the headline publishes how often each check fires. |
 | `overs_consistent` | BOOLEAN | True if every over has exactly balls_per_over legal balls, except the last over of an innings (may be shorter) and overs Cricsheet itself lists as miscounted by the umpire. False flags an unexplained short or long over. NULL = not checkable (no balls per over recorded, or no balls). |
 | `wickets_within_limit` | BOOLEAN | True if no innings has more dismissals than its limit (10, or 2 in a super over); retired hurt / retired not out are not counted. NULL = not checkable. |
+| `bowler_quota_respected` | BOOLEAN | Limited-overs matches with no rain rule only: True if no bowler started more than ceil(scheduled overs / 5) overs in an innings (10 in a 50-over match, 4 in a 20-over match; a 7-ball over Cricsheet lists as miscounted is still one over). Super overs are not counted. NULL = not checkable (Tests, a rain rule, no balls). Has not failed on any Cricsheet match as of the 2026-10-14 snapshot; the headline publishes how often it fires. |
+| `batters_within_limit` | BOOLEAN | True if no innings has more than 12 distinct batters: eleven plus at most one concussion replacement (ICC playing conditions since August 2019). NULL = not checkable (no balls). Has not failed on any Cricsheet match as of the 2026-10-14 snapshot (nine innings have exactly 12); the headline publishes how often it fires. |
 | `target_matches` | BOOLEAN | Limited-overs matches only: True if the stated second-innings target equals the first-innings total (penalty runs included) + 1. Checked only when no rain rule applied and the target is over the full scheduled overs; NULL otherwise (Tests, revised or missing targets, matches without a second innings). |
 | `result_consistent` | BOOLEAN | True if the recorded result follows from the innings totals: a win by runs means the winner batted first and the margin equals the run difference (Tests: total runs difference); a win by wickets means the winner outscored the other side. NULL = not checkable: no winner (draw, tie, no result), a rain rule or award (method set), or a Test won by an innings. |
 | `result_in_ball_stream` | BOOLEAN | True if the recorded winner also follows from the ball stream alone (delivery runs and pre-innings penalties; post-innings penalty runs are not on any ball). False if the result needs events outside the ball stream: the winner only wins once a post-innings penalty award is added (match 1420222, won by 5 untimed penalty runs after its balls ended 4 short). Such a match fails passes_quality, so models do not count it as evaluated. NULL = not checkable: same cases as result_consistent. |
 | `is_awarded` required | BOOLEAN | True if the match was awarded rather than played out (Cricsheet outcome method 'Awarded', e.g. the 2006 Oval Test). Awarded matches always fail passes_quality. |
 | `has_balls` required | BOOLEAN | True if Cricsheet recorded at least one innings for the match. |
+| `cricsheet_missing_fields_noted` required | BOOLEAN | True if Cricsheet's own file notes a missing field for the match (a fielding powerplay, the player of the match, reviews). Informational: it is not a defect in the ball stream and never fails passes_quality. |
 | `passes_quality` required | BOOLEAN | Overall verdict: True unless at least one check above is explicitly False or the match was awarded. NULL checks (not checkable) never fail a match. Never NULL. |
 
 ### report_player_careers
@@ -1678,6 +1684,7 @@ Written by `cricket model`: walk-forward ODI win probability and ball-outcome pr
 | [`report_model_calibration`](#report_model_calibration) | One row per target x slice x model x era x bin. | target, slice, model, era, bin |
 | [`report_model_checkpoints`](#report_model_checkpoints) | One row per checkpoint x model. | checkpoint, model |
 | [`report_model_folds`](#report_model_folds) | One row per season predicted. | season |
+| [`report_model_paired`](#report_model_paired) | One row per target x slice x baseline x scope. | target, slice, baseline, scope |
 | [`report_model_scores`](#report_model_scores) | One row per target x slice x model x scope. | target, slice, model, scope |
 | [`report_model_vs_cricinfo_internal`](#report_model_vs_cricinfo_internal) | One row per innings. | innings |
 
@@ -1813,6 +1820,34 @@ One row per predicted season: the training size, the first-innings par used, and
 | `innings_1_monotone_violations` required | BIGINT | Wrong-way steps of this fold's innings-1 model on a grid of raw match states (runs 0-500 in 5s, wickets 0-9, ten balls-left values, Elo -300/0/+300, away/neutral/home): WP falling as runs rise, or rising with one more wicket down (train.monotone_violations). Must be 0. (grid steps) |
 | `innings_2_monotone_violations` required | BIGINT | Wrong-way steps of this fold's chase model on a grid of raw match states (runs needed 1-400 in 3s, wickets 0-9, ten balls-left values, Elo -300/0/+300, away/neutral/home): WP rising with more runs needed or with one more wicket down (train.monotone_violations). Must be 0. (grid steps) |
 
+### report_model_paired
+
+The model against one baseline on the same balls: the mean per-ball difference in Brier and log loss (model minus baseline, so negative means the model is better), its 95% interval from 1,000 bootstrap resamples of whole matches, and a two-sided sign test on the number of seasons in which the model's Brier is lower.
+
+- **One row is:** One row per target x slice x baseline x scope.
+- **Key:** `target`, `slice`, `baseline`, `scope`
+- **Kind:** report · **Sources:** cricsheet, derived · **Built from:** `model_ball_win_probability`, `model_ball_outcome`
+
+- **Limitations:** Clean held-out balls only. The sign test treats seasons as exchangeable and ignores their size. The baselines do not all get the same inputs as the model (the state logistic has no home term).
+
+| column | type | description |
+|---|---|---|
+| `target` **key** | VARCHAR | win_probability or ball_outcome. |
+| `slice` **key** | VARCHAR | innings_1 or innings_2 for win probability; all_classes for the ball outcome. |
+| `baseline` **key** | VARCHAR | The baseline compared (see report_model_scores.model). |
+| `scope` **key** | VARCHAR | all, or an era (2008-2014, 2015-2020, 2021-). |
+| `balls` | BIGINT | Held-out balls on which both have a prediction. (balls) |
+| `matches` | BIGINT | Distinct matches among them. (matches) |
+| `seasons` | BIGINT | Seasons in the scope. (seasons) |
+| `seasons_model_better` | BIGINT | Seasons in which the model's ball-weighted Brier is lower than the baseline's. (seasons) |
+| `sign_test_p` | DOUBLE | Two-sided binomial p-value of seasons_model_better out of the seasons where the two differ, under a fair coin (a season where both score the same is a tie and is dropped; 1 when every season ties). |
+| `brier_diff` | DOUBLE | Mean per-ball Brier of the model minus the baseline; negative = model better. (score) |
+| `brier_diff_lo` | DOUBLE | 2.5th percentile of brier_diff over 1,000 resamples of whole matches. (score) |
+| `brier_diff_hi` | DOUBLE | 97.5th percentile of the same resamples. (score) |
+| `log_loss_diff` | DOUBLE | Mean per-ball log loss of the model minus the baseline; negative = model better. (nats) |
+| `log_loss_diff_lo` | DOUBLE | 2.5th percentile of log_loss_diff over the same resamples. (nats) |
+| `log_loss_diff_hi` | DOUBLE | 97.5th percentile of the same resamples. (nats) |
+
 ### report_model_scores
 
 Log loss and Brier score of the win-probability models (per innings) and the ball-outcome models, on clean held-out balls, for all seasons together, each season, and each era.
@@ -1828,11 +1863,15 @@ Log loss and Brier score of the win-probability models (per innings) and the bal
 | `target` **key** | VARCHAR | win_probability or ball_outcome. |
 | `slice` **key** | VARCHAR | innings_1 or innings_2 for win probability; all_classes for the ball outcome. |
 | `model` **key** | VARCHAR | model = the published model; state_logistic = logistic regression on the raw match state; base_rate = constant training rate; phase_average = outcome frequencies by innings, phase and wickets; player_venue_average = the phase frequencies scaled by the striker's, bowler's and venue's shrunk observed-over-expected ratios from the training seasons (Cricsheet ids only, no tracking). |
-| `scope` **key** | VARCHAR | all, a season (e.g. 2019), or an era (2008-2014, 2015-2020, 2021-). |
+| `scope` **key** | VARCHAR | all, a season (e.g. 2019), an era (2008-2014, 2015-2020, 2021-), or holdout_<from>-<to> for the locked temporal holdout (one fit on every clean season before <from>, scored once on <from> to <to>; the walk-forward rows refit every season on more history). |
 | `balls` | BIGINT | Held-out balls scored. (balls) |
 | `matches` | BIGINT | Distinct matches among them. (matches) |
 | `log_loss` | DOUBLE | Mean negative log likelihood (natural log); lower is better. (nats) |
 | `brier` | DOUBLE | Mean squared error of the probabilities (summed over classes for the ball outcome); lower is better. (score) |
+| `log_loss_lo` | DOUBLE | 2.5th percentile of log_loss over 1,000 bootstrap resamples of whole matches (balls of one match share its result, so the match is the unit). (nats) |
+| `log_loss_hi` | DOUBLE | 97.5th percentile of the same resamples. (nats) |
+| `brier_lo` | DOUBLE | 2.5th percentile of brier over the same match-level resamples. (score) |
+| `brier_hi` | DOUBLE | 97.5th percentile of the same resamples. (score) |
 
 ### report_model_vs_cricinfo_internal
 

@@ -2,7 +2,7 @@
 
 Structured after *Datasheets for Datasets* (Gebru et al., 2021). Describes the dataset export
 (`cricket export` → `data/export/<build fingerprint>/`). Every number here comes from `data/gold/headline.json`
-of build `38eb3e0f0d008218` unless stated; the column-level documentation is the export's README.md (generated from
+of build `b10fc68581d151e1` unless stated; the column-level documentation is the export's README.md (generated from
 the data contracts) and `croissant.json` (MLCommons Croissant 1.0).
 
 ## Motivation
@@ -10,9 +10,9 @@ the data contracts) and `croissant.json` (MLCommons Croissant 1.0).
 **Why was it created?** To be a trustworthy foundation for ball-level cricket modelling, starting with an open,
 calibrated ODI win-probability and expected-runs model. Existing open
 ball-by-ball data (Cricsheet) records what happened; this dataset adds state features computed before each ball.
-Fixture truncation tests check that tested pre-ball values do not change when later balls are removed; this is
-regression evidence on the committed fixture, not a proof over every production row. The dataset also adds venue,
-weather, player context and per-match quality checks.
+Truncation checks confirm that pre-ball values do not change when later balls are removed, on the committed
+fixture in every CI run and on 200 random production matches cut at 20 points each in every full-data check. The
+dataset also adds venue, weather, player context and per-match quality checks.
 
 **Affiliation:** not affiliated with Cricsheet, the ICC, ESPNcricinfo or any team.
 
@@ -76,7 +76,7 @@ Each `fact_delivery` column is labelled, in the contract and the README, with on
 total, or the match winner (`dim_match`).
 
 **Is anything missing?**
-- **Weather:** 100% of matches have it.
+- **Weather:** 99.97% of matches have it (two matches at a venue that could not be geocoded have none).
 - **Player birth dates:** 90.5% of in-scope players have one (Wikidata).
 - **Player country:** `dim_player.country` is kept as built. `country_conflict` flags the 191 in-scope players
   whose Wikidata citizenship names no national side they played for in Cricsheet; the country itself is not
@@ -87,13 +87,33 @@ total, or the match winner (`dim_match`).
 - **Rain-revised chases:** 419 innings carry `target_status = 'revised_timing_unknown'`. Cricsheet records only
   the final revised target, not when it was set.
 
-**Are there errors or noise?** The seven arithmetic and consistency checks in `report_match_quality` pass for
+**Are there errors or noise?** The nine arithmetic and consistency checks in `report_match_quality` pass for
 5,868 of 5,871 scoped matches (99.95%). This is an internal-consistency rate, not a scorecard reconciliation
 accuracy estimate. The three flagged matches are: a 7-ball over in Zimbabwe v South Africa (T20I, 2022), the 2006 Oval Test, which was awarded
 to England when Pakistan did not take the field, and Canada v Nepal (ODI, 2024), which Nepal won only through 5 post-innings penalty runs that are on no ball
 (`result_in_ball_stream = false`). All three stay in the data with `passes_quality = false`. Cricsheet itself is volunteer-built and occasionally
 corrected; `dim_match.cricsheet_revision` records the revision used. No in-scope chase is flagged `inconsistent_with_balls` any more: the three that were had a 7-ball
 over that Cricsheet lists as miscounted, which the ball limit now allows for.
+
+A pass rate means little unless the checks can fail, so `headline.json` publishes how often each one passed, failed
+or was not checkable on the matches in scope (a check is not checkable where its precondition is absent: no
+scheduled overs, a rain rule, no winner). Two checks have never failed on Cricsheet data; they guard the parser.
+
+| check | passed | failed | not checkable |
+|---|---|---|---|
+| `runs_add_up` (runs = batter + extras on every ball) | 5,871 | 0 | 0 |
+| `extras_add_up` (extras = wides + no-balls + byes + leg byes + penalty) | 5,871 | 0 | 0 |
+| `overs_consistent` (six legal balls an over unless listed as miscounted) | 5,870 | 1 | 0 |
+| `wickets_within_limit` (at most 10 dismissals, 2 in a super over) | 5,871 | 0 | 0 |
+| `bowler_quota_respected` (no bowler starts more than a fifth of the scheduled overs) | 4,681 | 0 | 1,190 |
+| `batters_within_limit` (at most 12 batters an innings: eleven plus a concussion replacement) | 5,871 | 0 | 0 |
+| `target_matches` (unrevised target = first-innings total + 1) | 4,437 | 0 | 1,434 |
+| `result_consistent` (the stated margin follows from the totals) | 5,038 | 0 | 833 |
+| `result_in_ball_stream` (the winner follows from the balls alone) | 5,037 | 1 | 833 |
+
+One match was awarded (always a failure), and 178 carry Cricsheet's own note that a field is missing (a fielding
+powerplay, the player of the match, reviews); that note is recorded in `cricsheet_missing_fields_noted` and never
+fails a match, since the ball stream is complete.
 
 **Is it self-contained?** Yes, as files. It is a derivative of the sources below, credited per file in
 LICENSES.md.
@@ -203,4 +223,4 @@ reported to Cricsheet (cricsheet.org), so everyone downstream benefits.
 **Can others contribute?** Yes, through pull requests. Every change must pass the contracts, the fixture build
 and the leakage test in CI.
 
-<!-- cricket-sim card stamp: build_fingerprint=38eb3e0f0d008218 matches_in_scope=5871 balls_in_scope=3657877 pct_matches_with_weather=100 pct_in_scope_players_with_dob_wikidata=90.5 afghanistan_withheld_odis=188 -->
+<!-- cricket-sim card stamp: build_fingerprint=b10fc68581d151e1 matches_in_scope=5871 balls_in_scope=3657877 pct_matches_with_weather=99.97 pct_in_scope_players_with_dob_wikidata=90.5 afghanistan_withheld_odis=188 -->

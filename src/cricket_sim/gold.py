@@ -115,6 +115,21 @@ WITH totals AS (
 ), wicket_checks AS (
     SELECT match_id, bool_and(dismissals <= CASE WHEN is_super_over THEN 2 ELSE 10 END) AS wickets_within_limit
     FROM totals GROUP BY match_id
+), bowler_checks AS (
+    -- a bowler may start at most ceil(scheduled overs / 5) overs (a 7-ball over Cricsheet lists as miscounted
+    -- is still one over). Checked only where the scheduled length held (no rain rule); super overs left out;
+    -- NULL for Tests and rain-affected matches
+    SELECT o.match_id, bool_and(o.overs_started <= ceil(m.scheduled_overs / 5.0)) AS bowler_quota_respected
+    FROM (SELECT match_id, innings, bowler_id, count(DISTINCT over) AS overs_started
+          FROM balls WHERE NOT is_super_over GROUP BY ALL) o
+    JOIN matches m USING (match_id)
+    WHERE m.scheduled_overs IS NOT NULL AND m.method IS NULL
+    GROUP BY o.match_id
+), batter_checks AS (
+    -- eleven batters plus at most one concussion replacement (ICC playing conditions since August 2019)
+    SELECT match_id, bool_and(batters <= 12) AS batters_within_limit
+    FROM (SELECT match_id, innings, count(DISTINCT batter_id) AS batters FROM balls GROUP BY ALL)
+    GROUP BY match_id
 ), limited AS (
     SELECT m.match_id, m.winner, m.win_by_runs, m.win_by_wickets, m.method, m.result,
         t1.team AS team1_bat, t1.runs AS r1, t2.team AS team2_bat, t2.runs AS r2, t2.dismissals AS d2,
@@ -156,26 +171,37 @@ WITH totals AS (
 ), checks AS (
     SELECT m.match_id,
         bc.runs_add_up, bc.extras_add_up, oc.overs_consistent, wc.wickets_within_limit,
+        bwc.bowler_quota_respected, btc.batters_within_limit,
         lc.target_matches,
         coalesce(lc.result_consistent, tc.result_consistent) AS result_consistent,
         coalesce(lc.result_in_ball_stream, tc.result_in_ball_stream) AS result_in_ball_stream,
         coalesce(m.method = 'Awarded', false) AS is_awarded,
-        m.n_innings > 0 AS has_balls
+        m.n_innings > 0 AS has_balls,
+        -- Cricsheet's own note that a field is missing (a fielding powerplay, the player of the match, reviews):
+        -- recorded so its frequency is visible; it is not a defect in the ball stream and never fails a match
+        m.cricsheet_missing IS NOT NULL AS cricsheet_missing_fields_noted
     FROM matches m
     LEFT JOIN ball_checks bc USING (match_id)
     LEFT JOIN over_checks oc USING (match_id)
     LEFT JOIN wicket_checks wc USING (match_id)
+    LEFT JOIN bowler_checks bwc USING (match_id)
+    LEFT JOIN batter_checks btc USING (match_id)
     LEFT JOIN limited_checks lc USING (match_id)
     LEFT JOIN test_checks tc USING (match_id)
 )
 SELECT *,
     -- only an explicit false fails; coalesce must wrap the whole OR, or one NULL check leaks NULL
     coalesce(NOT (runs_add_up IS FALSE OR extras_add_up IS FALSE OR overs_consistent IS FALSE
-        OR wickets_within_limit IS FALSE OR target_matches IS FALSE OR result_consistent IS FALSE
-        OR result_in_ball_stream IS FALSE), true)
+        OR wickets_within_limit IS FALSE OR bowler_quota_respected IS FALSE OR batters_within_limit IS FALSE
+        OR target_matches IS FALSE OR result_consistent IS FALSE OR result_in_ball_stream IS FALSE), true)
         AND NOT is_awarded AS passes_quality
 FROM checks
 """
+# The tri-state checks, in table order. The headline publishes how often each one passed, failed or was not
+# checkable on the matches in scope, so a check that can never fail is visible as such.
+QUALITY_CHECKS = ["runs_add_up", "extras_add_up", "overs_consistent", "wickets_within_limit",
+                  "bowler_quota_respected", "batters_within_limit", "target_matches", "result_consistent",
+                  "result_in_ball_stream"]
 
 
 def _reference_where(scope: dict) -> str:
@@ -569,6 +595,13 @@ def _headline(con, scope: dict) -> dict:
         "matches_in_scope": total_matches,
         "balls_in_scope": total_balls,
         "matches_passing_quality_pct": round(100.0 * passing / total_matches, 2),
+        "quality_checks": {
+            **{c: dict(zip(["passed", "failed", "not_checkable"], q(
+                f"SELECT count(*) FILTER ({c}), count(*) FILTER (NOT {c}), count(*) FILTER ({c} IS NULL) "
+                "FROM report_match_quality"))) for c in QUALITY_CHECKS},
+            "awarded": q("SELECT count(*) FILTER (is_awarded) FROM report_match_quality")[0],
+            "cricsheet_missing_fields_noted": q(
+                "SELECT count(*) FILTER (cricsheet_missing_fields_noted) FROM report_match_quality")[0]},
         "pct_balls_line_cricinfo": line_c,
         "pct_balls_length_cricinfo": length_c,
         "pct_balls_shot_cricinfo": shot_c,
@@ -587,7 +620,7 @@ def _headline(con, scope: dict) -> dict:
         "cricsheet_known_missing_in_scope": dict(con.execute(
             "SELECT list_name, count(*) FROM report_cricsheet_known_missing GROUP BY ALL ORDER BY ALL").fetchall()),
         "pct_matches_with_weather": q("SELECT round(100.0 * avg(CASE WHEN EXISTS (SELECT 1 FROM int_match_weather_daily w "
-                                      "WHERE w.match_id = d.match_id AND w.weather_available) THEN 1 ELSE 0 END), 1) FROM dim_match d")[0],
+                                      "WHERE w.match_id = d.match_id AND w.weather_available) THEN 1 ELSE 0 END), 2) FROM dim_match d")[0],
         "venues": q("SELECT count(*) || ' canonical venues with weather plans, ' || count(*) FILTER (NOT needs_review) "
                     "|| ' trusted at ground level' FROM venues WHERE in_geo_plan")[0],
         "pct_in_scope_players_with_dob_wikidata": q(

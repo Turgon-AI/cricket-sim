@@ -47,7 +47,9 @@ schema:
   - name: scope
     logicalType: string
     physicalType: VARCHAR
-    description: all, a season (e.g. 2019), or an era (2008-2014, 2015-2020, 2021-).
+    description: all, a season (e.g. 2019), an era (2008-2014, 2015-2020, 2021-), or holdout_<from>-<to> for the
+      locked temporal holdout (one fit on every clean season before <from>, scored once on <from> to <to>; the
+      walk-forward rows refit every season on more history).
     primaryKey: true
     primaryKeyPosition: 4
     required: true
@@ -79,6 +81,42 @@ schema:
     customProperties:
     - property: unit
       value: score
+  - name: log_loss_lo
+    logicalType: number
+    physicalType: DOUBLE
+    description: 2.5th percentile of log_loss over 1,000 bootstrap resamples of whole matches (balls of one match
+      share its result, so the match is the unit).
+    customProperties:
+    - property: unit
+      value: nats
+  - name: log_loss_hi
+    logicalType: number
+    physicalType: DOUBLE
+    description: 97.5th percentile of the same resamples.
+    customProperties:
+    - property: unit
+      value: nats
+  - name: brier_lo
+    logicalType: number
+    physicalType: DOUBLE
+    description: 2.5th percentile of brier over the same match-level resamples.
+    customProperties:
+    - property: unit
+      value: score
+  - name: brier_hi
+    logicalType: number
+    physicalType: DOUBLE
+    description: 97.5th percentile of the same resamples.
+    customProperties:
+    - property: unit
+      value: score
+  quality:
+  - name: interval_contains_point
+    description: every interval brackets its point estimate
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE log_loss_lo IS NOT NULL AND NOT (log_loss_lo <= log_loss AND log_loss
+      <= log_loss_hi AND brier_lo <= brier AND brier <= brier_hi)
+    mustBe: 0
 customProperties:
 - property: layer
   value: models

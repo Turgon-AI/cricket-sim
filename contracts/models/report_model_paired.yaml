@@ -1,0 +1,152 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.models.report_model_paired
+name: report_model_paired
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Whether the model's edge over each baseline is real, scored on the same balls, with an interval and a
+    sign test over seasons, so a small headline gap can be read for what it is.
+  limitations: Clean held-out balls only. The sign test treats seasons as exchangeable and ignores their size. The
+    baselines do not all get the same inputs as the model (the state logistic has no home term).
+schema:
+- name: report_model_paired
+  physicalName: data/models/report_model_paired.parquet
+  physicalType: table
+  logicalType: object
+  description: 'The model against one baseline on the same balls: the mean per-ball difference in Brier and log
+    loss (model minus baseline, so negative means the model is better), its 95% interval from 1,000 bootstrap
+    resamples of whole matches, and a two-sided sign test on the number of seasons in which the model''s Brier is
+    lower.'
+  dataGranularityDescription: One row per target x slice x baseline x scope.
+  properties:
+  - name: target
+    logicalType: string
+    physicalType: VARCHAR
+    description: win_probability or ball_outcome.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+  - name: slice
+    logicalType: string
+    physicalType: VARCHAR
+    description: innings_1 or innings_2 for win probability; all_classes for the ball outcome.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: baseline
+    logicalType: string
+    physicalType: VARCHAR
+    description: The baseline compared (see report_model_scores.model).
+    primaryKey: true
+    primaryKeyPosition: 3
+    required: true
+  - name: scope
+    logicalType: string
+    physicalType: VARCHAR
+    description: all, or an era (2008-2014, 2015-2020, 2021-).
+    primaryKey: true
+    primaryKeyPosition: 4
+    required: true
+  - name: balls
+    logicalType: integer
+    physicalType: BIGINT
+    description: Held-out balls on which both have a prediction.
+    customProperties:
+    - property: unit
+      value: balls
+  - name: matches
+    logicalType: integer
+    physicalType: BIGINT
+    description: Distinct matches among them.
+    customProperties:
+    - property: unit
+      value: matches
+  - name: seasons
+    logicalType: integer
+    physicalType: BIGINT
+    description: Seasons in the scope.
+    customProperties:
+    - property: unit
+      value: seasons
+  - name: seasons_model_better
+    logicalType: integer
+    physicalType: BIGINT
+    description: Seasons in which the model's ball-weighted Brier is lower than the baseline's.
+    customProperties:
+    - property: unit
+      value: seasons
+  - name: sign_test_p
+    logicalType: number
+    physicalType: DOUBLE
+    description: Two-sided binomial p-value of seasons_model_better out of the seasons where the two differ,
+      under a fair coin (a season where both score the same is a tie and is dropped; 1 when every season ties).
+  - name: brier_diff
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean per-ball Brier of the model minus the baseline; negative = model better.
+    customProperties:
+    - property: unit
+      value: score
+  - name: brier_diff_lo
+    logicalType: number
+    physicalType: DOUBLE
+    description: 2.5th percentile of brier_diff over 1,000 resamples of whole matches.
+    customProperties:
+    - property: unit
+      value: score
+  - name: brier_diff_hi
+    logicalType: number
+    physicalType: DOUBLE
+    description: 97.5th percentile of the same resamples.
+    customProperties:
+    - property: unit
+      value: score
+  - name: log_loss_diff
+    logicalType: number
+    physicalType: DOUBLE
+    description: Mean per-ball log loss of the model minus the baseline; negative = model better.
+    customProperties:
+    - property: unit
+      value: nats
+  - name: log_loss_diff_lo
+    logicalType: number
+    physicalType: DOUBLE
+    description: 2.5th percentile of log_loss_diff over the same resamples.
+    customProperties:
+    - property: unit
+      value: nats
+  - name: log_loss_diff_hi
+    logicalType: number
+    physicalType: DOUBLE
+    description: 97.5th percentile of the same resamples.
+    customProperties:
+    - property: unit
+      value: nats
+  quality:
+  - name: interval_contains_point
+    description: every interval brackets its point estimate
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE brier_diff_lo IS NOT NULL AND NOT (brier_diff_lo <= brier_diff AND
+      brier_diff <= brier_diff_hi AND log_loss_diff_lo <= log_loss_diff AND log_loss_diff <= log_loss_diff_hi)
+    mustBe: 0
+  - name: p_value_in_range
+    description: a p-value is between 0 and 1
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE sign_test_p < 0 OR sign_test_p > 1
+    mustBe: 0
+customProperties:
+- property: layer
+  value: models
+- property: kind
+  value: report
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - model_ball_win_probability
+  - model_ball_outcome

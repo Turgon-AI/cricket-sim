@@ -14,15 +14,15 @@ Decided 2026-10-15, before any model is built, so the test can't be bent to fit 
    - Cricsheet-only player and venue averages (no tracking);
    - Cricinfo's own published win probability, wherever it exists.
 
-## What was actually run (recorded 2026-10-23, after model run `3ff5af32a03d292d`)
+## What was actually run (recorded 2026-10-23, after model run `0f4e92549d533de9`)
 
 The plan above is left as written on 2026-10-15. This section records where the build kept to it and where it
 did not, so nobody has to read the code to find out.
 
 | planned | status | where |
 |---|---|---|
-| walk-forward, train only on earlier seasons | done, with a run-time guard per fold | `models/train.py`, `report_model_folds` |
-| ball-level log loss and Brier over eight outcome classes | done | `report_model_scores` |
+| walk-forward, train only on earlier seasons | done, with a run-time guard per fold; since 2026-10-23 a locked holdout runs beside it (one fit on clean seasons before 2023, scored once on 2023-2026, scope `holdout_2023-2026`), and it agrees with the folds on those seasons within 0.001 | `models/train.py`, `report_model_folds`, `report_model_scores` |
+| ball-level log loss and Brier over eight outcome classes | done; since 2026-10-23 every score carries a 95% interval from 1,000 bootstrap resamples of whole matches, and `report_model_paired` gives the model-minus-baseline difference with its interval and a sign test over seasons (the plan asked for neither; a reviewer would) | `report_model_scores`, `report_model_paired` |
 | match-level Brier at fixed checkpoints | done, at the first ball, the first ball of the chase and 30 balls left in the chase (the plan said start, halfway, final 5 overs) | `report_model_checkpoints` |
 | calibration by era | done; by format is moot, the models are ODI-only | `report_model_calibration` |
 | baseline: format and phase averages | done, as the base rate and the by-innings-phase-wickets class frequencies for ball outcomes, and a logistic regression on the raw match state for win probability | `report_model_scores`, models `base_rate`, `phase_average`, `state_logistic` |
@@ -31,8 +31,8 @@ did not, so nobody has to read the code to find out.
 
 Two things the plan did not foresee are also in force: rain-affected matches, no-results and innings of unknown
 length get no prediction at all (the plan only excluded them from training and scoring), and the model family was
-chosen on the same walk-forward folds that are reported, so there is no locked holdout yet (see the status note
-at the top of docs/MODEL_CARD.md).
+chosen on the same walk-forward folds that are reported. The locked holdout checks those folds; it is not a fresh
+model choice (see the status note at the top of docs/MODEL_CARD.md).
 
 ## Data rules that make this test honest
 

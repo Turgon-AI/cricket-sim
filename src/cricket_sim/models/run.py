@@ -72,17 +72,19 @@ def _cricinfo_comparison(con, clean: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(out, columns=["innings", "balls", "perspective", "model_brier", "cricinfo_brier"]).round(5)
 
 
-def run(first_season: int = train.FIRST_TEST_SEASON, min_train_matches: int = 300, allow_dirty: bool = False) -> None:
+def run(first_season: int = train.FIRST_TEST_SEASON, min_train_matches: int = 300, allow_dirty: bool = False,
+        holdout_from_season: int = train.HOLDOUT_FROM_SEASON) -> None:
     with writer_lock(MODELS.parent):
         stage = new_stage(MODELS.parent, "model")
         for name in ("staging", "silver", "gold"):
             (stage/name).symlink_to(MODELS.parent/name, target_is_directory=True)
         run_worker(stage, "model", {"first_season": first_season, "min_train_matches": min_train_matches,
-                                    "allow_dirty": allow_dirty})
+                                    "allow_dirty": allow_dirty, "holdout_from_season": holdout_from_season})
         publish(MODELS.parent, stage, ["models"])
 
 
-def _run(first_season: int, min_train_matches: int, allow_dirty: bool) -> None:
+def _run(first_season: int, min_train_matches: int, allow_dirty: bool,
+         holdout_from_season: int = train.HOLDOUT_FROM_SEASON) -> None:
     code = _git_state()
     if code["dirty"] and not allow_dirty:
         raise SystemExit("working tree has uncommitted changes; commit first or pass --allow-dirty")
@@ -121,7 +123,19 @@ def _run(first_season: int, min_train_matches: int, allow_dirty: bool) -> None:
            "match_id, team")
 
     clean = df[df["is_clean"]].reset_index(drop=True)
-    _write(con, "report_model_scores", report.scores(clean), "target, slice, model, scope")
+    scores = report.scores(clean)
+    # the locked holdout: one fit, scored once; its 'all' rows join the scores under a holdout_<from>-<to> scope
+    holdout_pred, holdout_fold = train.locked_holdout(rows, holdout_from_season, min_train_matches)
+    holdout_scope = None
+    if not holdout_pred.empty:
+        hold = rows.merge(holdout_pred, on=KEYS)
+        hold = hold[hold["is_clean"]].reset_index(drop=True)
+        if not hold.empty:
+            holdout_scope = f"holdout_{holdout_from_season}-{int(hold['season'].max())}"
+            hs = report.scores(hold)
+            scores = pd.concat([scores, hs[hs["scope"] == "all"].assign(scope=holdout_scope)], ignore_index=True)
+    _write(con, "report_model_scores", scores, "target, slice, model, scope")
+    _write(con, "report_model_paired", report.paired(clean), "target, slice, baseline, scope")
     _write(con, "report_model_calibration", report.calibration(clean), "target, slice, model, era, bin")
     _write(con, "report_model_checkpoints", report.checkpoints(clean), "checkpoint, model")
     fold_rows = []
@@ -145,7 +159,10 @@ def _run(first_season: int, min_train_matches: int, allow_dirty: bool) -> None:
     tables = {f"models/{p.stem}": fingerprint(con, p) for p in sorted(MODELS.glob("*.parquet"))}
     run_info = {"build_fingerprint": build_run["build_fingerprint"], "code": code,
                 "settings": {"first_season": first_season, "min_train_matches": min_train_matches,
-                             "seed": train.SEED}, "contract_checks": checks, "tables": tables,
+                             "holdout_from_season": holdout_from_season, "holdout_scope": holdout_scope,
+                             "holdout_train_matches": holdout_fold.get("train_matches"),
+                             "bootstrap_resamples": report.BOOT_RESAMPLES, "seed": train.SEED},
+                "contract_checks": checks, "tables": tables,
                 "model_fingerprint": hashlib.sha256(json.dumps(tables, sort_keys=True).encode()).hexdigest()}
     (MODELS / "run.json").write_text(json.dumps(run_info, indent=2) + "\n")
     print(f"model fingerprint {run_info['model_fingerprint'][:16]}  ({len(tables)} tables, {checks['checks_passed']} checks)")

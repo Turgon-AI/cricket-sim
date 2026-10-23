@@ -137,7 +137,7 @@ def test_export_is_gold_only_licensed_and_described(tiny_build):
                       "dim_player", "dim_venue", "map_venue_alias", "map_match_ids", "report_match_quality",
                       "report_international_coverage", "model_ball_win_probability", "model_ball_outcome",
                       "model_team_elo", "report_model_scores", "report_model_calibration", "report_model_checkpoints",
-                      "report_model_folds", "fact_player_match_form", "report_player_careers"}
+                      "report_model_folds", "report_model_paired", "fact_player_match_form", "report_player_careers"}
     assert {"README.md", "LICENSES.md", "croissant.json", "DATASET_CARD.md", "NOTICE"} <= {p.name for p in out.iterdir()}
     croissant = json.loads((out / "croissant.json").read_text())
     assert croissant["conformsTo"] == "http://mlcommons.org/croissant/1.0"

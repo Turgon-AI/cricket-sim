@@ -168,3 +168,30 @@ def test_phase_baseline_boundaries():
     assert got == ["1|powerplay|0-2", "1|powerplay|0-2", "1|middle|0-2", "1|middle|0-2", "1|death|0-2", "1|death|0-2",
                    "1|powerplay|0-2", "1|powerplay|3-5", "1|powerplay|3-5", "1|powerplay|6-7", "1|powerplay|6-7",
                    "1|powerplay|8+"]
+
+
+
+def test_every_score_interval_brackets_its_point_estimate_and_is_reproducible():
+    df = _scored_frame()
+    a, b = report.scores(df), report.scores(df)
+    assert a.equals(b)                                                     # fixed bootstrap seed
+    has, none = a[a["brier_lo"].notna()], a[a["brier_lo"].isna()]
+    assert (has["matches"] >= 2).all() and (none["matches"] < 2).all()     # one match cannot be resampled
+    assert len(has) == 7                                                   # scope 'all': 3 innings-1 rows and 4 outcome rows span 3 matches
+    assert (has["brier_lo"] <= has["brier"]).all() and (has["brier"] <= has["brier_hi"]).all()
+    assert (has["log_loss_lo"] <= has["log_loss"]).all() and (has["log_loss"] <= has["log_loss_hi"]).all()
+
+
+def test_paired_difference_is_zero_with_p_one_when_the_model_equals_the_baseline():
+    df = _scored_frame()
+    df["wp_state_logistic"] = df["wp_model"]                               # identical predictions
+    p = report.paired(df)
+    same = p[(p["target"] == "win_probability") & (p["baseline"] == "state_logistic") & (p["scope"] == "all")]
+    assert len(same) == 2 and (same["brier_diff"] == 0).all() and (same["seasons_model_better"] == 0).all()
+    assert (same["sign_test_p"] == 1).all()
+    base = p[(p["target"] == "win_probability") & (p["baseline"] == "base_rate") & (p["slice"] == "innings_1")
+             & (p["scope"] == "all")].iloc[0]
+    # innings 1: m1 (won, 0.8), m2 (lost, 0.6), m3 (won, 0.9) against a flat 0.5: Brier 0.0433 vs 0.25
+    assert math.isclose(base["brier_diff"], ((0.04 + 0.36 + 0.01) / 3) - 0.25, abs_tol=1e-5)
+    assert base["brier_diff_lo"] <= base["brier_diff"] <= base["brier_diff_hi"]
+    assert set(p["target"]) == {"win_probability", "ball_outcome"}

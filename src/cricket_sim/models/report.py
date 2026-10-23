@@ -1,17 +1,24 @@
 """Proper scoring rules and calibration, on clean held-out balls only (docs/VALIDATION.md).
 
 Every prediction scored here came from a model fitted on earlier seasons. Ties score as an outcome of 0.5.
+Every score carries a 95% interval from a bootstrap over matches (the balls of one match share its result, so
+balls are not the independent unit), and `paired` scores the model against each baseline on the same balls:
+the mean difference with its interval, and a two-sided sign test over seasons.
 """
 
 import numpy as np
 import pandas as pd
+from scipy.stats import binomtest
 
 from .dataset import CLASSES
 
 EPS = 1e-12
 WP_MODELS = {"model": "wp_model", "state_logistic": "wp_state_logistic", "base_rate": "wp_base_rate"}
 OUTCOME_MODELS = {"model": "p_", "phase_average": "phase_p_", "player_venue_average": "pv_p_", "base_rate": "base_p_"}
+PAIRED_BASELINES = {"win_probability": ["state_logistic", "base_rate"],
+                    "ball_outcome": ["phase_average", "player_venue_average", "base_rate"]}
 ERAS = [(0, 2014, "2008-2014"), (2015, 2020, "2015-2020"), (2021, 9999, "2021-")]
+BOOT_RESAMPLES, BOOT_SEED = 1000, 20261023
 
 
 def _binary(p: np.ndarray, y: np.ndarray) -> tuple[float, float]:
@@ -23,32 +30,116 @@ def _era(season: int) -> str:
     return next(name for lo, hi, name in ERAS if lo <= season <= hi)
 
 
+def _wp_loss(df: pd.DataFrame, col: str) -> tuple[np.ndarray, np.ndarray]:
+    """Per-ball log loss and Brier of a win-probability column (NaN where the column is NaN)."""
+    p = np.clip(df[col].to_numpy(dtype=float), EPS, 1 - EPS)
+    y = df["batting_won"].to_numpy(dtype=float)
+    return -(y * np.log(p) + (1 - y) * np.log(1 - p)), (p - y) ** 2
+
+
+def _outcome_loss(df: pd.DataFrame, prefix: str) -> tuple[np.ndarray, np.ndarray]:
+    """Per-ball multiclass log loss and Brier (summed over classes) of an outcome-probability block."""
+    yi = df["outcome_class"].map(CLASSES.index).to_numpy()
+    P = np.clip(df[[f"{prefix}{c}" for c in CLASSES]].to_numpy(dtype=float), EPS, 1)
+    onehot = np.eye(len(CLASSES))[yi]
+    return -np.log(P[np.arange(len(df)), yi]), ((P - onehot) ** 2).sum(axis=1)
+
+
+def _by_match(match_id: np.ndarray, ll: np.ndarray, br: np.ndarray) -> pd.DataFrame:
+    g = pd.DataFrame({"m": match_id, "ll": ll, "br": br}).groupby("m")
+    out = g[["ll", "br"]].sum()
+    out["n"] = g.size()
+    return out
+
+
+def _interval(sums: np.ndarray, n: np.ndarray, rng: np.random.Generator) -> tuple[float, float]:
+    """2.5th and 97.5th percentile of the ball-weighted mean under BOOT_RESAMPLES resamples of whole matches."""
+    m = len(n)
+    if m < 2:
+        return float("nan"), float("nan")
+    idx = rng.integers(0, m, size=(BOOT_RESAMPLES, m))
+    means = sums[idx].sum(axis=1) / n[idx].sum(axis=1)
+    lo, hi = np.percentile(means, [2.5, 97.5])
+    return float(lo), float(hi)
+
+
+def _scopes(df: pd.DataFrame, seasons: bool = True) -> list[tuple[str, pd.Index]]:
+    groups = [("all", df.index)]
+    if seasons:
+        groups += [(str(s), g.index) for s, g in df.groupby("season")]
+    return groups + [(e, df.index[df["season"].map(_era) == e]) for e in [name for *_, name in ERAS]]
+
+
 def scores(df: pd.DataFrame) -> pd.DataFrame:
-    """df: clean held-out balls with predictions, `season`, `batting_won`, `outcome_class`."""
-    out = []
-    y_cls = df["outcome_class"].map(CLASSES.index).to_numpy()
-    groups = [("all", df.index)] + [(str(s), g.index) for s, g in df.groupby("season")] + \
-             [(e, df.index[df["season"].map(_era) == e]) for e in [name for *_, name in ERAS]]
-    for scope, idx in groups:
+    """df: clean held-out balls with predictions, `season`, `batting_won`, `outcome_class`. One row per target x
+    slice x model x scope with the ball-weighted log loss and Brier and their match-bootstrap 95% intervals."""
+    out, rng = [], np.random.default_rng(BOOT_SEED)
+    losses = {("win_probability", name): _wp_loss(df, col) for name, col in WP_MODELS.items()}
+    losses.update({("ball_outcome", name): _outcome_loss(df, prefix) for name, prefix in OUTCOME_MODELS.items()})
+    for scope, idx in _scopes(df):
+        pos = df.index.get_indexer(idx)
+        sub = df.iloc[pos]
+        if sub.empty:
+            continue
+        for innings in (1, 2):
+            inn = (sub["innings"] == innings).to_numpy()
+            for name in WP_MODELS:
+                ll, br = (a[pos][inn] for a in losses[("win_probability", name)])
+                ok = ~np.isnan(ll)
+                if ok.any():
+                    by = _by_match(sub["match_id"].to_numpy()[inn][ok], ll[ok], br[ok])
+                    out.append(("win_probability", f"innings_{innings}", name, scope, int(ok.sum()), len(by),
+                                float(ll[ok].mean()), float(br[ok].mean()),
+                                *_interval(by["ll"].to_numpy(), by["n"].to_numpy(), rng),
+                                *_interval(by["br"].to_numpy(), by["n"].to_numpy(), rng)))
+        for name in OUTCOME_MODELS:
+            ll, br = (a[pos] for a in losses[("ball_outcome", name)])
+            by = _by_match(sub["match_id"].to_numpy(), ll, br)
+            out.append(("ball_outcome", "all_classes", name, scope, len(sub), len(by), float(ll.mean()), float(br.mean()),
+                        *_interval(by["ll"].to_numpy(), by["n"].to_numpy(), rng),
+                        *_interval(by["br"].to_numpy(), by["n"].to_numpy(), rng)))
+    cols = ["target", "slice", "model", "scope", "balls", "matches", "log_loss", "brier",
+            "log_loss_lo", "log_loss_hi", "brier_lo", "brier_hi"]
+    return pd.DataFrame(out, columns=cols).round({c: 5 for c in cols[6:]})
+
+
+def paired(df: pd.DataFrame) -> pd.DataFrame:
+    """The model against each baseline on the same balls: mean per-ball difference (model minus baseline, so
+    negative means the model is better) with its match-bootstrap interval, and a two-sided sign test on the
+    number of seasons in which the model's Brier is lower. Scopes: all and the eras."""
+    out, rng = [], np.random.default_rng(BOOT_SEED)
+    for scope, idx in _scopes(df, seasons=False):
         sub = df.loc[idx]
         if sub.empty:
             continue
         for innings in (1, 2):
             s = sub[sub["innings"] == innings]
-            for name, col in WP_MODELS.items():
-                ok = s[col].notna()
+            ll_m, br_m = _wp_loss(s, WP_MODELS["model"])
+            for baseline in PAIRED_BASELINES["win_probability"]:
+                ll_b, br_b = _wp_loss(s, WP_MODELS[baseline])
+                ok = ~(np.isnan(ll_m) | np.isnan(ll_b))
                 if ok.any():
-                    ll, br = _binary(s.loc[ok, col].to_numpy(), s.loc[ok, "batting_won"].to_numpy())
-                    out.append(("win_probability", f"innings_{innings}", name, scope, int(ok.sum()),
-                                int(s.loc[ok, "match_id"].nunique()), ll, br))
-        yi = y_cls[df.index.get_indexer(idx)]
-        for name, prefix in OUTCOME_MODELS.items():
-            P = np.clip(sub[[f"{prefix}{c}" for c in CLASSES]].to_numpy(), EPS, 1)
-            onehot = np.eye(len(CLASSES))[yi]
-            out.append(("ball_outcome", "all_classes", name, scope, len(sub), int(sub["match_id"].nunique()),
-                        float(-np.mean(np.log(P[np.arange(len(sub)), yi]))), float(np.mean(((P - onehot) ** 2).sum(axis=1)))))
-    cols = ["target", "slice", "model", "scope", "balls", "matches", "log_loss", "brier"]
-    return pd.DataFrame(out, columns=cols).round({"log_loss": 5, "brier": 5})
+                    out.append(_paired_row("win_probability", f"innings_{innings}", baseline, scope, s[ok],
+                                           ll_m[ok] - ll_b[ok], br_m[ok] - br_b[ok], rng))
+        ll_m, br_m = _outcome_loss(sub, OUTCOME_MODELS["model"])
+        for baseline in PAIRED_BASELINES["ball_outcome"]:
+            ll_b, br_b = _outcome_loss(sub, OUTCOME_MODELS[baseline])
+            out.append(_paired_row("ball_outcome", "all_classes", baseline, scope, sub, ll_m - ll_b, br_m - br_b, rng))
+    cols = ["target", "slice", "baseline", "scope", "balls", "matches", "seasons", "seasons_model_better",
+            "sign_test_p", "brier_diff", "brier_diff_lo", "brier_diff_hi", "log_loss_diff", "log_loss_diff_lo",
+            "log_loss_diff_hi"]
+    return pd.DataFrame(out, columns=cols).round({c: 5 for c in cols[8:]})
+
+
+def _paired_row(target, slice_, baseline, scope, s, dll, dbr, rng) -> tuple:
+    by = _by_match(s["match_id"].to_numpy(), dll, dbr)
+    by_season = pd.DataFrame({"season": s["season"].to_numpy(), "d": dbr}).groupby("season")["d"].mean()
+    seasons, better = len(by_season), int((by_season < 0).sum())
+    decided = int((by_season != 0).sum())  # a season where both score the same is a tie: dropped from the test
+    p = float(binomtest(better, decided, 0.5).pvalue) if decided else 1.0
+    return (target, slice_, baseline, scope, len(s), len(by), seasons, better, p,
+            float(dbr.mean()), *_interval(by["br"].to_numpy(), by["n"].to_numpy(), rng),
+            float(dll.mean()), *_interval(by["ll"].to_numpy(), by["n"].to_numpy(), rng))
 
 
 def calibration(df: pd.DataFrame, bins: int = 10) -> pd.DataFrame:

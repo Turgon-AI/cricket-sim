@@ -18,7 +18,7 @@ replication packages.
 turns the pinned snapshots into typed third-party tables (**staging**), conformed facts for every match
 (**silver**) and in-scope analysis tables (**gold**: `dim_*`, `fact_*`, `map_*`, `report_*`). Every table is
 checked against its data contract on every build. `cricket export` writes the licence-checked dataset export.
-A build takes about 3.5 minutes on a laptop. A 10-match fixture of the same pipeline runs in CI on every
+A build takes about 4.5 minutes on a laptop. A 10-match fixture of the same pipeline runs in CI on every
 push.
 
 Venue context is as-of (`venue_context: asof` in `config/venue_overrides.yml`): a match's venue name, search strings,
@@ -58,11 +58,12 @@ restricted sources.
   can be undone). Each successful run drops the generation before that. `cricket prune` frees the rest: failed
   stages and rollback quarantines, or every previous generation with `--keep 0`.
 - **Run time:**
-  - `model`: about 6 minutes (19 walk-forward seasons).
-  - `ingest all`: about 1.5 hours for a first full run. Venues and weather take most of that: 382
-    rate-limited geocoding calls (1 request per second) and 3,897 weather files (one per venue version and
-    match window, because venue context is as-of). Later runs reuse cached responses.
-  - `build`: about 3.5 minutes.
+  - `model`: about 9 minutes (19 walk-forward seasons, a locked holdout fit and 1,000 bootstrap resamples per score).
+  - `ingest all`: about 1.5 hours for a first full run. Venues and weather take most of that: one geocoding
+    request per second (the locked snapshot made 35 new calls and reused 379 cached answers) and 3,897 weather
+    windows, one per venue version and match window, because venue context is as-of. Later runs reuse cached
+    responses.
+  - `build`: about 4.5 minutes.
   - `contracts` and `export`: under 1 minute.
   - Test suite: about 3 minutes on the full data (about 400 tests).
 - **Network:** needed only for `ingest`. Builds are offline.
@@ -105,8 +106,11 @@ Every headline number in the dataset card is in `data/gold/headline.json`, compu
 - **Pre-ball state:** every pre-ball value is checked twice:
   - **During the build:** each ball's state must equal the previous state plus the previous ball.
   - **In the tests:** `tests/test_leakage.py` cuts each committed fixture match off at hundreds of points and
-    confirms that no tested `pre_ball` column changes. This is fixture evidence, not a proof over every
-    production row. The walk-forward model split also has a direct test that fit rows come only from prior seasons.
+    confirms that no tested `pre_ball` column changes.
+  - **On production rows:** `scripts/full_check.sh` runs `scripts/preball_invariance.py`, which re-parses 200
+    random in-scope matches from the locked Cricsheet zip, cuts each at 20 random points and recomputes the state:
+    no `pre_ball` column may change (4,000 cuts, about a minute). The walk-forward model split also has a direct
+    test that fit rows come only from prior seasons.
 - **Real scorecards:** the 2011, 2019 and 2023 World Cup finals, Dhoni's 2019 run-out, a DLS chase, a super
   over and Test penalty runs are pinned to their published numbers (`tests/test_end_to_end.py`).
 - **Reproducibility:** the fixture is built twice and must give identical fingerprints.
@@ -119,10 +123,11 @@ matches, associate-team T20Is, a model input that leaks the result) pass CI. Run
 full bronze data, before a release and after any change to `gold.py`, `cricsheet_parse.py`, `models/` or the scope:
 
 ```bash
-scripts/full_check.sh [DATA_DIR]    # default: $CRICKET_SIM_FULL_DATA, else ./data (about 15 minutes)
+scripts/full_check.sh [DATA_DIR]    # default: $CRICKET_SIM_FULL_DATA, else ./data (about 20 minutes)
 ```
 
-It runs `verify`, `build`, `model`, `contracts` and `export` on that data, then checks the full-data-only cases:
+It runs `verify`, `build`, the production pre-ball invariance check, `model`, `contracts` and `export` on that
+data, then checks the full-data-only cases:
 retirements, awarded matches never passing quality, the scope recomputed from silver (T20Is need two full-member
 teams), the headline and coverage numbers against the tables, and model scores that are too good to be true. It
 stops at the first failing step and exits non-zero. It adds `--allow-dirty` when the git tree has changes.

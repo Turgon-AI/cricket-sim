@@ -218,8 +218,8 @@ def _quality(second_innings_runs, post):
     con = duckdb.connect()
     con.execute("""CREATE TABLE matches (match_id VARCHAR, winner VARCHAR, win_by_runs SMALLINT, win_by_wickets SMALLINT,
                    win_by_innings SMALLINT, method VARCHAR, result VARCHAR, balls_per_over SMALLINT,
-                   scheduled_overs SMALLINT, n_innings SMALLINT)""")
-    con.execute("INSERT INTO matches VALUES ('m', 'B', NULL, 9, NULL, NULL, NULL, 6, 20, 2)")
+                   scheduled_overs SMALLINT, n_innings SMALLINT, cricsheet_missing VARCHAR)""")
+    con.execute("INSERT INTO matches VALUES ('m', 'B', NULL, 9, NULL, NULL, NULL, 6, 20, 2, NULL)")
     con.execute("""CREATE TABLE innings (match_id VARCHAR, innings SMALLINT, team VARCHAR, is_super_over BOOLEAN,
                    target_runs INTEGER, target_balls INTEGER, penalty_runs_pre SMALLINT, penalty_runs_post SMALLINT,
                    miscounted_overs VARCHAR)""")
@@ -227,10 +227,11 @@ def _quality(second_innings_runs, post):
                 f"('m', 2, 'B', false, 11, 120, NULL, {post}, NULL)")
     con.execute("""CREATE TABLE balls (match_id VARCHAR, innings SMALLINT, over SMALLINT, is_legal BOOLEAN,
                    runs_total SMALLINT, runs_batter SMALLINT, runs_extras SMALLINT, wides SMALLINT, noballs SMALLINT,
-                   byes SMALLINT, legbyes SMALLINT, penalty SMALLINT, dismissal_count SMALLINT)""")
+                   byes SMALLINT, legbyes SMALLINT, penalty SMALLINT, dismissal_count SMALLINT,
+                   is_super_over BOOLEAN, bowler_id VARCHAR, batter_id VARCHAR)""")
     a = second_innings_runs
-    con.execute("INSERT INTO balls VALUES ('m', 1, 0, true, 10, 10, 0, 0, 0, 0, 0, 0, 0), "
-                f"('m', 2, 0, true, {a}, {a}, 0, 0, 0, 0, 0, 0, 0)")
+    con.execute("INSERT INTO balls VALUES ('m', 1, 0, true, 10, 10, 0, 0, 0, 0, 0, 0, 0, false, 'bwl', 'bat'), "
+                f"('m', 2, 0, true, {a}, {a}, 0, 0, 0, 0, 0, 0, 0, false, 'bwl', 'bat')")
     return con.execute(f"SELECT * FROM ({gold.QUALITY_SQL})").fetchdf().iloc[0]
 
 

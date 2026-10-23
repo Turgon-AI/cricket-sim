@@ -46,6 +46,7 @@ from .dataset import CLASSES
 
 SEED = 20261016
 FIRST_TEST_SEASON = 2008
+HOLDOUT_FROM_SEASON = 2023  # locked holdout: one fit on every clean season before this, scored once from it on
 RESOURCE_SEASONS, PAR_SEASONS, OUTCOME_SEASONS = 8, 4, 10
 WP_SPLINES = {1: ["projected_vs_par", "scheduled_balls_remaining_before", "innings_wickets_before"],
               2: ["chase_difficulty", "scheduled_balls_remaining_before", "innings_wickets_before", "log_required_rate"]}
@@ -323,59 +324,92 @@ def _season_split(rows: pd.DataFrame, season: int) -> tuple[pd.DataFrame, pd.Dat
     return rows[(rows["season"] < season) & rows["is_clean"]], rows[rows["season"] == season]
 
 
-def walk_forward(rows: pd.DataFrame, first_season: int = FIRST_TEST_SEASON,
-                 min_train_matches: int = 300) -> tuple[pd.DataFrame, list[dict]]:
-    """One prediction row per ball of every season with enough earlier clean matches, plus a record per fold."""
+def _fit_fold(train: pd.DataFrame, test: pd.DataFrame, season: int, n_train: int) -> tuple[pd.DataFrame, dict]:
+    """Fit every model and baseline on `train` (clean rows of seasons before `season`) and predict every ball of
+    `test`. Returns one prediction row per test ball and a record of the fold."""
+    first = train[(train["innings"] == 1) & (train["season"] >= season - RESOURCE_SEASONS)]
+    resources = Resources(_prior_only(first, season, "resource table"))
+    recent = first[first["season"] >= season - PAR_SEASONS]
+    par = float(_prior_only(recent, season, "par score").groupby("match_id")["innings_total"].first().mean())
+    train_f, test_f = add_resource_features(train, resources, par), add_resource_features(test, resources, par)
+    pred = test[["match_id", "innings", "delivery_number"]].copy()
+    pred["trained_through_season"] = int(train["season"].max())
+    pred["train_matches"] = n_train
+    pred["expected_remaining_runs"] = test_f["expected_remaining_runs"].to_numpy()
+    fold = {"season": int(season), "train_matches": int(n_train), "test_matches": int(test["match_id"].nunique()),
+            "test_balls": len(test), "par_first_innings_total": round(par, 1)}
+    pred["wp_model_end"] = np.nan
+    for innings in (1, 2):
+        fold[f"innings_{innings}_monotone_violations"] = 0
+        tr, mask = train_f[train_f["innings"] == innings], (test_f["innings"] == innings).to_numpy()
+        if tr.empty or not mask.any():
+            continue
+        te = test_f[mask]
+        gam = WinProbabilityGAM(innings).fit(_prior_only(tr, season, f"innings {innings} win probability"))
+        pred.loc[mask, "wp_model"], fold[f"coefficients_innings_{innings}"] = gam.predict(te), gam.coefficients
+        fold[f"innings_{innings}_monotone_violations"] = monotone_violations(gam, resources, par)
+        if innings == 1:  # WP after the last ball of innings 1, from the same model (see run._wp_after)
+            last = test[test["innings"] == 1].sort_values(["match_id", "delivery_number"]).groupby("match_id").tail(1)
+            pred.loc[last.index, "wp_model_end"] = gam.predict(innings_end_state(last, resources, par))
+        pred.loc[mask, "wp_state_logistic"], _ = _logit(_prior_only(tr, season, "state logistic"), te,
+                                                        STATE_LOGIT[innings])
+        rows_t, y, w = _with_ties_split(_prior_only(tr, season, "base rate"))
+        pred.loc[mask, "wp_base_rate"] = float(np.average(y, weights=w))
+    recent_train = train[train["season"] >= season - OUTCOME_SEASONS]
+    oc = fit_outcome(_prior_only(recent_train, season, "ball outcome"), test)
+    for k, cls in enumerate(CLASSES):
+        pred[f"p_{cls}"] = oc["model"][:, k]
+        pred[f"phase_p_{cls}"] = oc["phase_average"][:, k]
+        pred[f"base_p_{cls}"] = oc["base_rate"][:, k]
+        pred[f"pv_p_{cls}"] = oc["player_venue_average"][:, k]
+    pred["expected_runs"] = oc["model"] @ oc["class_mean_runs"]
+    return pred, fold
+
+
+def _prepare(rows: pd.DataFrame) -> pd.DataFrame:
     dataset.check_inputs_are_pre_ball(fitted_inputs(), RESOURCE_FEATURES)
     rows = rows.copy()
     rows["innings_total"] = rows["match_id"].map(innings_totals(rows))
+    return rows
+
+
+def _guard(train: pd.DataFrame, test: pd.DataFrame, season: int) -> None:
+    """Check the actual rows passed downstream to every fitter, not a hard-coded provenance label."""
+    if (not train.empty and (train["season"].max() >= season or not train["is_clean"].all())) or \
+            set(train["match_id"]) & set(test["match_id"]):
+        raise ValueError(f"season {season}: training rows contain held-out or excluded matches")
+
+
+def walk_forward(rows: pd.DataFrame, first_season: int = FIRST_TEST_SEASON,
+                 min_train_matches: int = 300) -> tuple[pd.DataFrame, list[dict]]:
+    """One prediction row per ball of every season with enough earlier clean matches, plus a record per fold."""
+    rows = _prepare(rows)
     out, folds = [], []
     for season in sorted(s for s in rows["season"].unique() if s >= first_season):
         train, test = _season_split(rows, season)
-        # Check the actual rows passed downstream to every fitter, not a hard-coded provenance label.
-        if (not train.empty and (train["season"].max() >= season or not train["is_clean"].all())) or \
-                set(train["match_id"]) & set(test["match_id"]):
-            raise ValueError(f"season {season}: training rows contain held-out or excluded matches")
+        _guard(train, test, season)
         n_train = train["match_id"].nunique()
         if n_train < min_train_matches or test.empty:
             continue
-        first = train[(train["innings"] == 1) & (train["season"] >= season - RESOURCE_SEASONS)]
-        resources = Resources(_prior_only(first, season, "resource table"))
-        recent = first[first["season"] >= season - PAR_SEASONS]
-        par = float(_prior_only(recent, season, "par score").groupby("match_id")["innings_total"].first().mean())
-        train_f, test_f = add_resource_features(train, resources, par), add_resource_features(test, resources, par)
-        pred = test[["match_id", "innings", "delivery_number"]].copy()
-        pred["trained_through_season"] = int(train["season"].max())
-        pred["train_matches"] = n_train
-        pred["expected_remaining_runs"] = test_f["expected_remaining_runs"].to_numpy()
-        fold = {"season": int(season), "train_matches": int(n_train), "test_matches": int(test["match_id"].nunique()),
-                "test_balls": len(test), "par_first_innings_total": round(par, 1)}
-        pred["wp_model_end"] = np.nan
-        for innings in (1, 2):
-            fold[f"innings_{innings}_monotone_violations"] = 0
-            tr, mask = train_f[train_f["innings"] == innings], (test_f["innings"] == innings).to_numpy()
-            if tr.empty or not mask.any():
-                continue
-            te = test_f[mask]
-            gam = WinProbabilityGAM(innings).fit(_prior_only(tr, season, f"innings {innings} win probability"))
-            pred.loc[mask, "wp_model"], fold[f"coefficients_innings_{innings}"] = gam.predict(te), gam.coefficients
-            fold[f"innings_{innings}_monotone_violations"] = monotone_violations(gam, resources, par)
-            if innings == 1:  # WP after the last ball of innings 1, from the same model (see run._wp_after)
-                last = test[test["innings"] == 1].sort_values(["match_id", "delivery_number"]).groupby("match_id").tail(1)
-                pred.loc[last.index, "wp_model_end"] = gam.predict(innings_end_state(last, resources, par))
-            pred.loc[mask, "wp_state_logistic"], _ = _logit(_prior_only(tr, season, "state logistic"), te,
-                                                            STATE_LOGIT[innings])
-            rows_t, y, w = _with_ties_split(_prior_only(tr, season, "base rate"))
-            pred.loc[mask, "wp_base_rate"] = float(np.average(y, weights=w))
-        recent_train = train[train["season"] >= season - OUTCOME_SEASONS]
-        oc = fit_outcome(_prior_only(recent_train, season, "ball outcome"), test)
-        for k, cls in enumerate(CLASSES):
-            pred[f"p_{cls}"] = oc["model"][:, k]
-            pred[f"phase_p_{cls}"] = oc["phase_average"][:, k]
-            pred[f"base_p_{cls}"] = oc["base_rate"][:, k]
-            pred[f"pv_p_{cls}"] = oc["player_venue_average"][:, k]
-        pred["expected_runs"] = oc["model"] @ oc["class_mean_runs"]
+        pred, fold = _fit_fold(train, test, season, n_train)
         out.append(pred)
         folds.append(fold)
         print(f"  season {season}: trained on {n_train} matches, predicted {len(test):,} balls")
     return (pd.concat(out, ignore_index=True) if out else pd.DataFrame()), folds
+
+
+def locked_holdout(rows: pd.DataFrame, from_season: int = HOLDOUT_FROM_SEASON,
+                   min_train_matches: int = 300) -> tuple[pd.DataFrame, dict]:
+    """The locked temporal holdout of docs/VALIDATION.md: ONE fit on every clean season before `from_season`,
+    scored once on every ball from `from_season` on. The walk-forward folds refit each season on more history,
+    so this is the stricter number; the two should agree if the fold choice did not flatter the model."""
+    rows = _prepare(rows)
+    train = rows[(rows["season"] < from_season) & rows["is_clean"]]
+    test = rows[rows["season"] >= from_season]
+    _guard(train, test, from_season)
+    n_train = train["match_id"].nunique()
+    if n_train < min_train_matches or test.empty:
+        return pd.DataFrame(), {}
+    pred, fold = _fit_fold(train, test, from_season, n_train)
+    print(f"  locked holdout from {from_season}: trained on {n_train} matches, predicted {len(test):,} balls")
+    return pred, fold

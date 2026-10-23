@@ -276,23 +276,26 @@ def test_the_real_model_inputs_pass_the_guard():
 # ---------------------------------------------------------------- walk-forward fits
 
 # A fit that reads `rows` (every season) instead of the fold's training rows.
+# Each mutation makes one fit inside train._fit_fold (the per-fold body walk_forward and locked_holdout share)
+# see the scored season's rows as well as the training rows.
 WALK_FORWARD_LEAKS = {
     "resources_and_par_include_the_scored_season": (
         'first = train[(train["innings"] == 1) & (train["season"] >= season - RESOURCE_SEASONS)]',
-        'first = rows[(rows["innings"] == 1) & (rows["season"] >= season - RESOURCE_SEASONS) & (rows["season"] <= season)]'),
+        'first = pd.concat([train, test])[lambda d: (d["innings"] == 1) & (d["season"] >= season - RESOURCE_SEASONS)]'),
     "ball_outcome_model_includes_the_scored_season": (
         'recent_train = train[train["season"] >= season - OUTCOME_SEASONS]',
-        'recent_train = rows[(rows["season"] >= season - OUTCOME_SEASONS) & (rows["season"] <= season)]'),
+        'recent_train = pd.concat([train, test])[lambda d: d["season"] >= season - OUTCOME_SEASONS]'),
 }
 
 
 def _mutated_walk_forward(old: str, new: str, guard: bool = True):
-    source = textwrap.dedent(inspect.getsource(train.walk_forward))
-    assert source.count(old) == 1, "the walk_forward line this mutation targets has changed"
+    fold = textwrap.dedent(inspect.getsource(train._fit_fold))
+    assert fold.count(old) == 1, "the _fit_fold line this mutation targets has changed"
     namespace = dict(vars(train))
     if not guard and "_prior_only" in namespace:
         namespace["_prior_only"] = lambda frame, *args: frame
-    exec(source.replace(old, new), namespace)
+    exec(fold.replace(old, new), namespace)                                    # the leaky fold
+    exec(textwrap.dedent(inspect.getsource(train.walk_forward)), namespace)   # a walk_forward that calls it
     return namespace["walk_forward"]
 
 

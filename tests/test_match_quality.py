@@ -20,26 +20,30 @@ def _quality(*matches: dict) -> dict:
     con = duckdb.connect()
     con.execute("""CREATE TABLE matches (match_id VARCHAR, winner VARCHAR, win_by_runs SMALLINT, win_by_wickets SMALLINT,
                    win_by_innings SMALLINT, method VARCHAR, result VARCHAR, balls_per_over SMALLINT,
-                   scheduled_overs SMALLINT, n_innings SMALLINT)""")
+                   scheduled_overs SMALLINT, n_innings SMALLINT, cricsheet_missing VARCHAR)""")
     con.execute("""CREATE TABLE innings (match_id VARCHAR, innings SMALLINT, team VARCHAR, is_super_over BOOLEAN,
                    target_runs INTEGER, target_balls INTEGER, penalty_runs_pre SMALLINT, penalty_runs_post SMALLINT,
                    miscounted_overs VARCHAR)""")
     con.execute("""CREATE TABLE balls (match_id VARCHAR, innings SMALLINT, over SMALLINT, is_legal BOOLEAN,
                    runs_total SMALLINT, runs_batter SMALLINT, runs_extras SMALLINT, wides SMALLINT, noballs SMALLINT,
-                   byes SMALLINT, legbyes SMALLINT, penalty SMALLINT, dismissal_count SMALLINT)""")
+                   byes SMALLINT, legbyes SMALLINT, penalty SMALLINT, dismissal_count SMALLINT,
+                   is_super_over BOOLEAN, bowler_id VARCHAR, batter_id VARCHAR)""")
     for m in matches:
         mid, inns = m["id"], m["inns"]
-        con.execute("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        con.execute("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [mid, m.get("winner"), m.get("by_runs"), m.get("by_wkts"), m.get("by_inns"), m.get("method"),
-                     m.get("result"), m.get("bpo", 6), m.get("sched", 20), len(inns)])
+                     m.get("result"), m.get("bpo", 6), m.get("sched", 20), len(inns), m.get("missing")])
         for n, i in enumerate(inns, start=1):
             con.execute("INSERT INTO innings VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         [mid, n, i["team"], i.get("super", False), i.get("target"), i.get("tballs"),
                          i.get("pen_pre"), i.get("pen_post"), i.get("miscounted")])
             default = [(0, True, i["runs"], i["runs"], 0, 0, 0, 0, 0, 0, i.get("dismissals", 0))]
-            for over, legal, total, bat, extras, wides, noballs, byes, legbyes, penalty, dismissals in i.get("balls", default):
-                con.execute("INSERT INTO balls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                            [mid, n, over, legal, total, bat, extras, wides, noballs, byes, legbyes, penalty, dismissals])
+            # a ball tuple may carry a 12th and 13th value: the bowler id and the batter id (default one of each)
+            for over, legal, total, bat, extras, wides, noballs, byes, legbyes, penalty, dismissals, *who in i.get("balls", default):
+                bowler, batter = (who + ["bwl", "bat"])[:2] if len(who) < 2 else who[:2]
+                con.execute("INSERT INTO balls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            [mid, n, over, legal, total, bat, extras, wides, noballs, byes, legbyes, penalty, dismissals,
+                             i.get("super", False), bowler, batter])
     df = con.execute(f"SELECT * FROM ({gold.QUALITY_SQL})").fetchdf()
     return {r["match_id"]: r for _, r in df.iterrows()}
 
@@ -69,7 +73,8 @@ def _null(value) -> bool:
 
 def test_a_clean_limited_overs_match_passes_every_check():
     row = _quality(_t20())["m"]
-    for check in ("runs_add_up", "extras_add_up", "overs_consistent", "wickets_within_limit", "target_matches",
+    for check in ("runs_add_up", "extras_add_up", "overs_consistent", "wickets_within_limit", "bowler_quota_respected",
+                  "batters_within_limit", "target_matches",
                   "result_consistent", "result_in_ball_stream"):
         assert _is(row[check]), check
     assert _is(row["passes_quality"])
@@ -213,3 +218,69 @@ def test_test_match_won_by_wickets_needs_the_winner_ahead_and_an_innings_win_is_
 def test_a_match_with_no_balls_has_nothing_to_fail():
     rows = _quality({"id": "washout", "result": "no result", "inns": []})
     assert not _is(rows["washout"]["has_balls"]) and _is(rows["washout"]["passes_quality"])
+
+
+# ---------------------------------------------------------------- bowler quota, batter count, Cricsheet's own note
+
+def _overs(spells: dict, runs_per_over: int = 1, extra_ball_in_over: int | None = None) -> list:
+    """Overs 0, 1, 2, ... bowled in turn by the bowlers in `spells` ({bowler: overs}), six legal balls each (seven
+    in `extra_ball_in_over`, like a miscounted over), one run per ball."""
+    balls, over = [], 0
+    for bowler, n in spells.items():
+        for _ in range(n):
+            for _ in range(7 if over == extra_ball_in_over else 6):
+                balls.append((over, True, 1, 1, 0, 0, 0, 0, 0, 0, 0, bowler, "bat"))
+            over += 1
+    return balls
+
+
+def _innings_of(balls: list, team: str = "A") -> dict:
+    return {"team": team, "runs": sum(b[2] for b in balls), "balls": balls}
+
+
+def _chase_of(first: dict, runs: int = 5, **kw) -> dict:
+    return {"team": "B", "runs": runs, "target": first["runs"] + 1, "tballs": 120, **kw}
+
+
+def test_a_bowler_may_start_a_fifth_of_the_scheduled_overs_and_not_one_more():
+    # a 20-over match allows 4 overs a bowler; ten overs of six singles make 60, the chaser makes 5
+    ok_first, bad_first = _innings_of(_overs({"x": 4, "y": 4, "z": 2})), _innings_of(_overs({"x": 5, "y": 4, "z": 1}))
+    rows = _quality({"id": "ok", "winner": "A", "by_runs": 55, "inns": [ok_first, _chase_of(ok_first)]},
+                    {"id": "bad", "winner": "A", "by_runs": 55, "inns": [bad_first, _chase_of(bad_first)]})
+    assert _is(rows["ok"]["bowler_quota_respected"]) and _is(rows["ok"]["passes_quality"])
+    assert _false(rows["bad"]["bowler_quota_respected"]) and not _is(rows["bad"]["passes_quality"])
+
+
+def test_a_seven_ball_over_is_still_one_over_for_the_quota():
+    first = _innings_of(_overs({"x": 4, "y": 4, "z": 2}, extra_ball_in_over=0))
+    first["miscounted"] = '{"0": 7}'
+    rows = _quality({"id": "seven", "winner": "A", "by_runs": 56, "inns": [first, _chase_of(first)]})
+    assert _is(rows["seven"]["bowler_quota_respected"]) and _is(rows["seven"]["overs_consistent"])
+    assert _is(rows["seven"]["passes_quality"])
+
+
+def test_the_quota_is_not_checked_in_a_test_or_after_a_rain_rule():
+    long = _innings_of(_overs({"x": 30}))                                   # 180 runs by one bowler
+    test = {"id": "t", "sched": None, "winner": "A", "by_runs": 70,
+            "inns": [long, {"team": "B", "runs": 80}, {"team": "A", "runs": 50}, {"team": "B", "runs": 80}]}
+    rain_first = _innings_of(_overs({"x": 5, "y": 5}))
+    rain = {"id": "rain", "winner": "A", "method": "D/L", "by_runs": 55, "inns": [rain_first, _chase_of(rain_first)]}
+    rows = _quality(test, rain)
+    assert _null(rows["t"]["bowler_quota_respected"]) and _null(rows["rain"]["bowler_quota_respected"])
+    assert _is(rows["t"]["passes_quality"]) and _is(rows["rain"]["passes_quality"])
+
+
+def test_twelve_batters_is_a_concussion_replacement_but_thirteen_is_not():
+    def batting(n):  # one single each, six balls an over, a new batter every ball
+        return [(k // 6, True, 1, 1, 0, 0, 0, 0, 0, 0, 0, "bwl", f"bat{k}") for k in range(n)]
+    twelve, thirteen = _innings_of(batting(12)), _innings_of(batting(13))
+    rows = _quality({"id": "twelve", "winner": "A", "by_runs": 7, "inns": [twelve, _chase_of(twelve)]},
+                    {"id": "thirteen", "winner": "A", "by_runs": 8, "inns": [thirteen, _chase_of(thirteen)]})
+    assert _is(rows["twelve"]["batters_within_limit"]) and _is(rows["twelve"]["passes_quality"])
+    assert _false(rows["thirteen"]["batters_within_limit"]) and not _is(rows["thirteen"]["passes_quality"])
+
+
+def test_cricsheets_own_missing_fields_note_is_recorded_and_never_fails_a_match():
+    rows = _quality(_t20("noted", missing='["player_of_match"]'), _t20("clean"))
+    assert _is(rows["noted"]["cricsheet_missing_fields_noted"]) and _is(rows["noted"]["passes_quality"])
+    assert _false(rows["clean"]["cricsheet_missing_fields_noted"])

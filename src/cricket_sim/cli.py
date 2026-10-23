@@ -21,6 +21,8 @@ def main(argv=None) -> None:
     p.add_argument("--allow-dirty", action="store_true", help="run from uncommitted code (recorded in run.json)")
     p.add_argument("--first-season", type=int, default=2008, help="first season to predict (default 2008)")
     p.add_argument("--min-train-matches", type=int, default=300, help="skip seasons with less history (default 300)")
+    p.add_argument("--holdout-from-season", type=int, default=2023,
+                   help="locked holdout: one fit on clean seasons before this, scored once from it on (default 2023)")
     sub.add_parser("contracts", help="lint every data contract and check the built tables against them")
     sub.add_parser("docs", help="regenerate the data dictionary and lineage graph from the contracts")
     sub.add_parser("backup", help="copy bronze to the rclone remote")
@@ -55,7 +57,8 @@ def main(argv=None) -> None:
     elif args.cmd == "model":
         from .models.run import run
 
-        run(first_season=args.first_season, min_train_matches=args.min_train_matches, allow_dirty=args.allow_dirty)
+        run(first_season=args.first_season, min_train_matches=args.min_train_matches, allow_dirty=args.allow_dirty,
+            holdout_from_season=args.holdout_from_season)
     elif args.cmd == "contracts":
         import duckdb
 

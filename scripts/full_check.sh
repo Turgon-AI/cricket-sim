@@ -10,7 +10,8 @@
 # The sample variables CRICKET_SIM_DATA and CRICKET_SIM_SNAPSHOTS are ignored: this is always the full data and
 # the repo's own config/ snapshot lock. No network is used.
 #
-# Steps: verify, build, model, contracts, export, then the full-data-only checks below.
+# Steps: verify, build, pre-ball invariance on production rows, model, contracts, export, then the full-data-only
+# checks below.
 # A dirty git tree is allowed (--allow-dirty is added, and recorded in run.json): this is a check, not a release.
 set -euo pipefail
 
@@ -40,6 +41,8 @@ step() {  # step <name> <command...>: run it, show the time, stop at the first f
 
 step "verify"    uv run cricket verify
 step "build"     uv run cricket build $ALLOW_DIRTY
+# pre-ball state on production rows: 200 random matches cut at 20 random points each, re-parsed and recomputed
+step "pre-ball invariance (production rows)" uv run python scripts/preball_invariance.py --matches 200 --cuts 20
 step "model"     uv run cricket model $ALLOW_DIRTY
 step "contracts" uv run cricket contracts
 

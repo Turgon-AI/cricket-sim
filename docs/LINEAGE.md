@@ -83,6 +83,7 @@ flowchart LR
     report_model_calibration[report_model_calibration]
     report_model_checkpoints[report_model_checkpoints]
     report_model_folds[report_model_folds]
+    report_model_paired[report_model_paired]
     report_model_scores[report_model_scores]
     report_model_vs_cricinfo_internal[report_model_vs_cricinfo_internal]
   end
@@ -206,6 +207,8 @@ flowchart LR
   model_ball_outcome --> report_model_calibration
   model_ball_win_probability --> report_model_checkpoints
   model_ball_win_probability --> report_model_folds
+  model_ball_win_probability --> report_model_paired
+  model_ball_outcome --> report_model_paired
   model_ball_win_probability --> report_model_scores
   model_ball_outcome --> report_model_scores
   model_ball_win_probability --> report_model_vs_cricinfo_internal

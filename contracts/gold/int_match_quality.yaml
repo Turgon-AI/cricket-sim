@@ -38,13 +38,15 @@ schema:
     physicalType: BOOLEAN
     description: >-
       True if on every ball of the match runs_total = runs_batter + runs_extras. Tri-state: NULL would mean not
-      checkable (no balls).
+      checkable (no balls). Guards the parser: it has never failed on Cricsheet data as of the 2026-10-14 snapshot,
+      and the headline publishes how often each check fires.
   - name: extras_add_up
     logicalType: boolean
     physicalType: BOOLEAN
     description: >-
       True if on every ball runs_extras = wides + noballs + byes + legbyes + penalty. Tri-state: NULL = not checkable
-      (no balls).
+      (no balls). Guards the parser: it has never failed on Cricsheet data as of the 2026-10-14 snapshot,
+      and the headline publishes how often each check fires.
   - name: overs_consistent
     logicalType: boolean
     physicalType: BOOLEAN
@@ -58,6 +60,21 @@ schema:
     description: >-
       True if no innings has more dismissals than its limit (10, or 2 in a super over); retired hurt / retired not
       out are not counted. NULL = not checkable.
+  - name: bowler_quota_respected
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: >-
+      Limited-overs matches with no rain rule only: True if no bowler started more than ceil(scheduled overs / 5)
+      overs in an innings (10 in a 50-over match, 4 in a 20-over match; a 7-ball over Cricsheet lists as miscounted
+      is still one over). Super overs are not counted. NULL = not checkable (Tests, a rain rule, no balls). Has not
+      failed on any Cricsheet match as of the 2026-10-14 snapshot; the headline publishes how often it fires.
+  - name: batters_within_limit
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: >-
+      True if no innings has more than 12 distinct batters: eleven plus at most one concussion replacement (ICC
+      playing conditions since August 2019). NULL = not checkable (no balls). Has not failed on any Cricsheet
+      match as of the 2026-10-14 snapshot (nine innings have exactly 12); the headline publishes how often it fires.
   - name: target_matches
     logicalType: boolean
     physicalType: BOOLEAN
@@ -94,6 +111,13 @@ schema:
     physicalType: BOOLEAN
     description: True if Cricsheet recorded at least one innings for the match.
     required: true
+  - name: cricsheet_missing_fields_noted
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: >-
+      True if Cricsheet's own file notes a missing field for the match (a fielding powerplay, the player of the
+      match, reviews). Informational: it is not a defect in the ball stream and never fails passes_quality.
+    required: true
   - name: passes_quality
     logicalType: boolean
     physicalType: BOOLEAN
@@ -106,8 +130,9 @@ schema:
     description: passes_quality is exactly 'no check is false and not awarded'
     type: sql
     query: SELECT count(*) FROM ${table} WHERE passes_quality <> (coalesce(NOT (runs_add_up IS FALSE OR extras_add_up
-      IS FALSE OR overs_consistent IS FALSE OR wickets_within_limit IS FALSE OR target_matches IS FALSE OR result_consistent
-      IS FALSE OR result_in_ball_stream IS FALSE), true) AND NOT is_awarded)
+      IS FALSE OR overs_consistent IS FALSE OR wickets_within_limit IS FALSE OR bowler_quota_respected IS FALSE
+      OR batters_within_limit IS FALSE OR target_matches IS FALSE OR result_consistent IS FALSE
+      OR result_in_ball_stream IS FALSE), true) AND NOT is_awarded)
     mustBe: 0
 customProperties:
 - property: layer

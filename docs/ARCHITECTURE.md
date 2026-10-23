@@ -57,8 +57,9 @@ Per-ball columns carry a timing class in their contract. In `fact_delivery`:
 
 `tests/test_leakage.py` checks the labels on the committed fixture. It cuts each fixture match off at hundreds
 of points, as if it were live, and recomputes: no tested `pre_ball` value may change, and every `hindsight`
-column must actually change somewhere. This is a regression check on fixture data, not a proof over all
-production rows. The walk-forward fit split is separately checked to contain only seasons before its test season.
+column must actually change somewhere. `scripts/preball_invariance.py` does the same on production rows (200
+random in-scope matches, 20 cuts each) and runs inside `scripts/full_check.sh`. The walk-forward fit split is
+separately checked to contain only seasons before its test season.
 
 ## Test fixture and CI
 
