@@ -14,6 +14,26 @@ Decided 2026-10-15, before any model is built, so the test can't be bent to fit 
    - Cricsheet-only player and venue averages (no tracking);
    - Cricinfo's own published win probability, wherever it exists.
 
+## What was actually run (recorded 2026-10-23, after model run `11d528f2bf4769a4`)
+
+The plan above is left as written on 2026-10-15. This section records where the build kept to it and where it
+did not, so nobody has to read the code to find out.
+
+| planned | status | where |
+|---|---|---|
+| walk-forward, train only on earlier seasons | done, with a run-time guard per fold | `models/train.py`, `report_model_folds` |
+| ball-level log loss and Brier over eight outcome classes | done | `report_model_scores` |
+| match-level Brier at fixed checkpoints | done, at the first ball, the first ball of the chase and 30 balls left in the chase (the plan said start, halfway, final 5 overs) | `report_model_checkpoints` |
+| calibration by era | done; by format is moot, the models are ODI-only | `report_model_calibration` |
+| baseline: format and phase averages | done, as the base rate and the by-innings-phase-wickets class frequencies for ball outcomes, and a logistic regression on the raw match state for win probability | `report_model_scores`, models `base_rate`, `phase_average`, `state_logistic` |
+| baseline: Cricsheet-only player and venue averages | **not built.** The published models use no player or venue input by design, so this baseline would compare different inputs, not a weaker model on the same ones. It stays planned for the day a player-aware model is added (`fact_player_match_form` already holds the as-of features it would need). | — |
+| baseline: Cricinfo's published win probability | done, internally only. Cricinfo's number is the previous ball's published value, so it is pre-ball. Its perspective is undocumented and is inferred per innings by picking the orientation with the lower Brier against the result, a one-bit choice made on the scored balls and in Cricinfo's favour. On the 41,619 first-innings and 35,664 chase balls where both exist, the Brier scores are 0.189 vs 0.210 (innings 1, model better) and 0.119 vs 0.118 (innings 2, Cricinfo better). The table is Cricinfo-derived and never exported. | `report_model_vs_cricinfo_internal` |
+
+Two things the plan did not foresee are also in force: rain-affected matches, no-results and innings of unknown
+length get no prediction at all (the plan only excluded them from training and scoring), and the model family was
+chosen on the same walk-forward folds that are reported, so there is no locked holdout yet (see the status note
+at the top of docs/MODEL_CARD.md).
+
 ## Data rules that make this test honest
 
 - **Pre-ball inputs only:** columns with timing class `pre_ball` (in `fact_delivery`, and every column of `fact_player_match_form`), plus Cricinfo's `cricinfo_ball_pre` for internal work. Cricinfo's line, length, shot and control labels are recorded after the outcome. They are never decision-model inputs. They are outcome-model inputs only after correction against Hawk-Eye.

@@ -145,6 +145,12 @@ read as a real difference.
 
 The model is best in every era.
 
+**Cricinfo's published win probability (internal, same balls):** on the clean held-out balls where Cricinfo's
+pre-ball number exists, Brier 0.189 against Cricinfo's 0.210 in the first innings (41,619 balls) and 0.119 against
+0.118 in the chase (35,664 balls). Cricinfo's model sees team news and conditions that this one does not, its
+perspective is inferred from the data in its favour, and the table (`report_model_vs_cricinfo_internal`) is
+Cricinfo-derived, so it is never exported. docs/VALIDATION.md records how the comparison is made.
+
 **Other models (the comparison sets differ, so read these as context, not a ranking):**
 - **The open chase model of akshatsharma-02/odi-cricket-analytics** reports Brier 0.132 on chases after August
   2022. This model scores 0.131 on chases from 2021.
