@@ -26,7 +26,11 @@ seasons before Y (scoring drifts by era). Outcomes vary ball to ball, so there i
 beats the phase-average baseline.
 
 Baselines fitted on the same rows: the base rate; a logistic regression on the raw match state (in the spirit of
-Asif & McHale 2016); for the ball outcome, class frequencies by innings x phase x wickets.
+Asif & McHale 2016); for the ball outcome, class frequencies by innings x phase x wickets, and the Cricsheet-only
+player and venue averages of docs/VALIDATION.md: the phase frequencies scaled by how often the striker, the
+bowler and the venue produced each outcome in the training seasons relative to what the phase frequencies
+expected of them, each ratio shrunk towards 1 by PLAYER_VENUE_PSEUDO_BALLS balls of "as expected"
+(player_venue_average).
 """
 
 import numpy as np
@@ -58,6 +62,8 @@ OUTCOME_FEATURES = ["innings", "innings_runs_before", "innings_wickets_before", 
                     "elo_diff", "year"]
 RESOURCE_INPUTS = ["scheduled_balls_remaining_before", "innings_wickets_before"]
 PHASE_INPUTS = ["innings", "over", "innings_wickets_before"]
+PLAYER_VENUE_ENTITIES = ["batter_id", "bowler_id", "venue_id"]
+PLAYER_VENUE_PSEUDO_BALLS = 200  # fixed before the baseline was scored, never tuned on the folds
 # The features add_resource_features computes, and what each is computed from (the resource table and par are
 # fitted per fold on earlier seasons). dataset.check_inputs_are_pre_ball follows these back to model_rows.
 RESOURCE_FEATURES = {"expected_remaining_runs": RESOURCE_INPUTS,
@@ -73,7 +79,8 @@ def fitted_inputs() -> dict[str, list[str]]:
     return {"resource_table": RESOURCE_INPUTS,
             **{f"win_probability_innings_{i}": WP_SPLINES[i] + WP_LINEAR for i in (1, 2)},
             **{f"state_logistic_innings_{i}": STATE_LOGIT[i] for i in (1, 2)},
-            "ball_outcome": OUTCOME_FEATURES, "phase_baseline": PHASE_INPUTS}
+            "ball_outcome": OUTCOME_FEATURES, "phase_baseline": PHASE_INPUTS,
+            "player_venue_baseline": PHASE_INPUTS + PLAYER_VENUE_ENTITIES}
 
 
 class Resources:
@@ -258,7 +265,36 @@ def fit_outcome(train: pd.DataFrame, test: pd.DataFrame) -> dict[str, np.ndarray
     phase = freq.reindex(_phase(test)).to_numpy(copy=True)
     phase[np.isnan(phase).any(axis=1)] = overall
     mean_runs = train.groupby("outcome_class")["runs_total"].mean().reindex(CLASSES).fillna(0).to_numpy()
-    return {"model": proba, "phase_average": phase, "base_rate": np.tile(overall, (len(test), 1)), "class_mean_runs": mean_runs}
+    phase_train = freq.reindex(_phase(train)).to_numpy(copy=True)
+    phase_train[np.isnan(phase_train).any(axis=1)] = overall
+    return {"model": proba, "phase_average": phase, "base_rate": np.tile(overall, (len(test), 1)),
+            "player_venue_average": player_venue_average(train, test, phase_train, phase, overall),
+            "class_mean_runs": mean_runs}
+
+
+def player_venue_average(train: pd.DataFrame, test: pd.DataFrame, phase_train: np.ndarray, phase_test: np.ndarray,
+                         overall: np.ndarray, pseudo_balls: int = PLAYER_VENUE_PSEUDO_BALLS) -> np.ndarray:
+    """The Cricsheet-only player and venue baseline (docs/VALIDATION.md): the phase average, scaled per class by
+    the striker's, the bowler's and the venue's observed-over-expected ratio in the training seasons.
+
+    For an entity e (a batter, a bowler or a venue) and a class c, observed is the count of c on e's training
+    balls and expected is the sum of the phase-average probability of c on those same balls, so an opener who
+    faces mostly powerplay balls is compared with powerplay expectations, not with the overall rate. The ratio is
+    shrunk towards 1 with `pseudo_balls` balls of "as expected" (ratio = (observed + k p_c) / (expected + k p_c),
+    p_c the overall class rate), so a debutant or a new ground gets exactly the phase average. The three ratios
+    multiply the phase average and the result is renormalised to sum to 1. Nothing here is fitted: it is counting
+    on training balls only, so it uses no information from the scored season."""
+    y = np.eye(len(CLASSES))[train["outcome_class"].map(CLASSES.index).to_numpy()]
+    out = phase_test.copy()
+    prior = pseudo_balls * overall
+    for entity in PLAYER_VENUE_ENTITIES:
+        key = train[entity].to_numpy()
+        observed = pd.DataFrame(y, index=key).groupby(level=0).sum()
+        expected = pd.DataFrame(phase_train, index=key).groupby(level=0).sum()
+        ratio = (observed + prior) / (expected + prior)
+        rows = ratio.reindex(test[entity].to_numpy())  # unknown entity (NaN): ratio 1, the phase average
+        out *= np.nan_to_num(rows.to_numpy(), nan=1.0)
+    return out / out.sum(axis=1, keepdims=True)
 
 
 def _phase(df: pd.DataFrame) -> pd.Series:
@@ -337,6 +373,7 @@ def walk_forward(rows: pd.DataFrame, first_season: int = FIRST_TEST_SEASON,
             pred[f"p_{cls}"] = oc["model"][:, k]
             pred[f"phase_p_{cls}"] = oc["phase_average"][:, k]
             pred[f"base_p_{cls}"] = oc["base_rate"][:, k]
+            pred[f"pv_p_{cls}"] = oc["player_venue_average"][:, k]
         pred["expected_runs"] = oc["model"] @ oc["class_mean_runs"]
         out.append(pred)
         folds.append(fold)

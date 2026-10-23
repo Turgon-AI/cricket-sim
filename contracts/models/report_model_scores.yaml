@@ -38,7 +38,9 @@ schema:
     logicalType: string
     physicalType: VARCHAR
     description: model = the published model; state_logistic = logistic regression on the raw match state; base_rate
-      = constant training rate; phase_average = outcome frequencies by innings, phase and wickets.
+      = constant training rate; phase_average = outcome frequencies by innings, phase and wickets;
+      player_venue_average = the phase frequencies scaled by the striker's, bowler's and venue's shrunk
+      observed-over-expected ratios from the training seasons (Cricsheet ids only, no tracking).
     primaryKey: true
     primaryKeyPosition: 3
     required: true

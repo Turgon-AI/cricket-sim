@@ -1,7 +1,7 @@
 # Model card: ODI ball-by-ball win probability and expected runs
 
 > **Status (2026-10-21):** Every number below was regenerated from the current code (build `38eb3e0f0d008218`,
-> model run `11d528f2bf4769a4`).
+> model run `3ff5af32a03d292d`).
 > **What the code guarantees:**
 > - Venue home status uses only matches on earlier dates (`dataset.home_teams_as_of`).
 > - Win probabilities, expected runs and outcome probabilities are withheld on unevaluated rows: none of the
@@ -23,7 +23,7 @@
 > with few wickets down. Read the scores as walk-forward estimates, not holdout results.
 
 Structured after *Model Cards for Model Reporting* (Mitchell et al., 2019). Numbers are from model run
-`11d528f2bf4769a4` (model fingerprint), built on data build `38eb3e0f0d008218`. They are in
+`3ff5af32a03d292d` (model fingerprint), built on data build `38eb3e0f0d008218`. They are in
 `data/models/report_model_*.parquet`, which also ships with the dataset.
 
 ## Model details
@@ -98,7 +98,11 @@ Proper scoring rules, as fixed in advance in docs/VALIDATION.md:
 Ties score as 0.5. Every model is compared with baselines fitted on the same rows:
 - the base rate;
 - a logistic regression on the raw match state (in the spirit of Asif & McHale, 2016);
-- for ball outcomes, class frequencies by innings, phase and wickets.
+- for ball outcomes, class frequencies by innings, phase and wickets;
+- for ball outcomes, the Cricsheet-only player and venue averages of docs/VALIDATION.md: those phase
+  frequencies scaled by how often the striker, the bowler and the venue produced each outcome in the training
+  seasons relative to what the phase frequencies expected of them, each ratio shrunk towards 1 with 200 balls of
+  "as expected" (fixed in advance, not tuned). A debutant or a new ground gets the phase average.
 
 ## Evaluation data
 
@@ -140,10 +144,14 @@ read as a real difference.
 | model | log loss | Brier |
 |---|---|---|
 | **this model** | **1.2996** | **0.6297** |
+| player and venue averages | 1.3078 | 0.6356 |
 | phase average | 1.3125 | 0.6374 |
 | base rate | 1.3438 | 0.6548 |
 
-The model is best in every era.
+The model is best in every era. Knowing who is batting, who is bowling and where helps the averages baseline
+less than knowing the match state helps the model: it beats the phase average in 2008-14 and 2015-20, and from
+2021 it is better on log loss (1.308 against 1.309) but marginally worse on Brier (0.6338 against 0.6335). The
+published model takes no player or venue input, so this is the gap a player-aware model would have to close.
 
 **Cricinfo's published win probability (internal, same balls):** on the clean held-out balls where Cricinfo's
 pre-ball number exists, Brier 0.189 against Cricinfo's 0.210 in the first innings (41,619 balls) and 0.119 against
@@ -198,4 +206,4 @@ The full tables are in `report_model_calibration`.
   - as-of player features;
   - T20 versions.
 
-<!-- cricket-sim card stamp: build_fingerprint=38eb3e0f0d008218 model_fingerprint=11d528f2bf4769a4 innings_1_brier=0.1892 innings_2_brier=0.1197 -->
+<!-- cricket-sim card stamp: build_fingerprint=38eb3e0f0d008218 model_fingerprint=3ff5af32a03d292d innings_1_brier=0.1892 innings_2_brier=0.1197 -->

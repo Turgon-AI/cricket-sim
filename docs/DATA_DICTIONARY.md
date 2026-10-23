@@ -1827,7 +1827,7 @@ Log loss and Brier score of the win-probability models (per innings) and the bal
 |---|---|---|
 | `target` **key** | VARCHAR | win_probability or ball_outcome. |
 | `slice` **key** | VARCHAR | innings_1 or innings_2 for win probability; all_classes for the ball outcome. |
-| `model` **key** | VARCHAR | model = the published model; state_logistic = logistic regression on the raw match state; base_rate = constant training rate; phase_average = outcome frequencies by innings, phase and wickets. |
+| `model` **key** | VARCHAR | model = the published model; state_logistic = logistic regression on the raw match state; base_rate = constant training rate; phase_average = outcome frequencies by innings, phase and wickets; player_venue_average = the phase frequencies scaled by the striker's, bowler's and venue's shrunk observed-over-expected ratios from the training seasons (Cricsheet ids only, no tracking). |
 | `scope` **key** | VARCHAR | all, a season (e.g. 2019), or an era (2008-2014, 2015-2020, 2021-). |
 | `balls` | BIGINT | Held-out balls scored. (balls) |
 | `matches` | BIGINT | Distinct matches among them. (matches) |

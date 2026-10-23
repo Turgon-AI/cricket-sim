@@ -10,7 +10,7 @@ from .dataset import CLASSES
 
 EPS = 1e-12
 WP_MODELS = {"model": "wp_model", "state_logistic": "wp_state_logistic", "base_rate": "wp_base_rate"}
-OUTCOME_MODELS = {"model": "p_", "phase_average": "phase_p_", "base_rate": "base_p_"}
+OUTCOME_MODELS = {"model": "p_", "phase_average": "phase_p_", "player_venue_average": "pv_p_", "base_rate": "base_p_"}
 ERAS = [(0, 2014, "2008-2014"), (2015, 2020, "2015-2020"), (2021, 9999, "2021-")]
 
 

@@ -28,7 +28,7 @@ STATE_COLUMNS = ["innings_runs_before", "innings_wickets_before", "legal_balls_b
 # What DERIVED may read besides pre_ball fact_delivery columns (alias f): facts fixed before the first ball.
 # m = dim_match, eb / ew = pre-match Elo (elo.py, earlier dates only), hm = home_teams_as_of (earlier dates only),
 # unqualified bowling_team = the other side of dim_match (model_rows' own column).
-PRE_MATCH_SOURCES = {"m": {"start_date", "toss_winner", "team1", "team2"}, "eb": {"elo_before"},
+PRE_MATCH_SOURCES = {"m": {"start_date", "toss_winner", "team1", "team2", "venue_id"}, "eb": {"elo_before"},
                      "ew": {"elo_before"}, "hm": {"home_team"}, "": {"bowling_team"}}
 PRE_BALL_KEYS = {"innings"}  # a key column without a timing class that is known before the ball
 DERIVED = {
@@ -38,6 +38,7 @@ DERIVED = {
     "batting_at_home": "CASE WHEN hm.home_team = f.batting_team THEN 1 WHEN hm.home_team = bowling_team THEN -1 ELSE 0 END",
     "batting_won_toss": "CASE WHEN m.toss_winner = f.batting_team THEN 1 ELSE 0 END",
     "year": "year(m.start_date)",
+    "venue_id": "m.venue_id",  # fixed before the first ball; only the player/venue baseline reads it
 }
 FEATURES = {
     1: ["innings_runs_before", "innings_wickets_before", "legal_balls_before", "scheduled_balls_remaining_before",

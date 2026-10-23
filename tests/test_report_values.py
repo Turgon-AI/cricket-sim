@@ -13,6 +13,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from cricket_sim.models import report
+
 from cricket_sim.models import dataset, report, train
 
 
@@ -69,7 +71,7 @@ def _scored_frame() -> pd.DataFrame:
     df["delivery_number"] = [1, 1, 1, 1]
     df["wp_state_logistic"] = 0.5
     df["wp_base_rate"] = 0.5
-    for prefix in ("p_", "phase_p_", "base_p_"):
+    for prefix in report.OUTCOME_MODELS.values():   # every outcome model and baseline the scorer expects
         for c in dataset.CLASSES:
             df[f"{prefix}{c}"] = CLASS_P[c]
     return df
