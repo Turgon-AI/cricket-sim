@@ -7,8 +7,9 @@ status: active
 domain: cricket
 dataProduct: cricket-sim
 description:
-  purpose: Holds Cricinfo's win-probability and predicted-score model outputs as they stood BEFORE each ball, so
-    a model can use the match situation without seeing the ball's own outcome.
+  purpose: Holds Cricinfo's win-probability and predicted-score model outputs as they stood BEFORE each ball, as a
+    benchmark to score our own pre-ball models against on the same balls. Its timing class is benchmark_model,
+    never a feature; the limitations say why.
   limitations: 'Sparse per-ball layer: a row exists only for balls where the source has a value, so a missing row
     means ''not recorded'', never ''zero'' or ''no''. Each value is the previous ball''s post-ball model output
     within the same innings (a lag), so it is NULL on the first ball of every innings even though the previous innings''
@@ -66,7 +67,7 @@ schema:
       previous ball of the same innings. NULL on the first ball of an innings.
     customProperties:
     - property: timingClass
-      value: pre_ball_model
+      value: benchmark_model
     - property: unit
       value: '%'
     quality:
@@ -82,7 +83,7 @@ schema:
       NULL on the first ball of an innings.
     customProperties:
     - property: timingClass
-      value: pre_ball_model
+      value: benchmark_model
     - property: unit
       value: runs
     quality:
@@ -107,4 +108,4 @@ customProperties:
   - balls
   - stg_ari_tracking
 - property: timingClass
-  value: pre_ball_model
+  value: benchmark_model

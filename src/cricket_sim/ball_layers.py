@@ -2,7 +2,10 @@
 
 Timing classes (each per-ball table holds exactly one, and one licence family):
   pre_ball        known before the ball is bowled, from Cricsheet only (match state)
-  pre_ball_model  Cricinfo's model outputs from the PREVIOUS ball (non-commercial licence)
+  benchmark_model Cricinfo's model outputs from the PREVIOUS ball (non-commercial licence). Pre-ball in
+                  timing, but recomputed after the fact by a model fitted on later seasons, so as a feature
+                  in a time-sliced backtest it leaks later knowledge. A benchmark to score against, never
+                  an input.
   delivery        physically measured delivery (Hawk-Eye speed, bounce point, stumps)
   observer_label  Cricinfo's human labels (line, length, shot, control). Written after seeing the
                   outcome: measured against Hawk-Eye they lean towards the result, and control nearly
@@ -17,7 +20,8 @@ Timing classes (each per-ball table holds exactly one, and one licence family):
                   rows, never as a feature. tests/test_leakage.py proves every pre_ball column is
                   unchanged when a match is cut off at any ball, and that only hindsight columns move.
 
-A decision model may use pre_ball (and pre_ball_model). An outcome model may add delivery.
+A decision model may use pre_ball only; benchmark_model is for comparison, never a feature. An outcome model
+may add delivery.
 `LAYERS` is the registry, generated from the contracts (customProperties.timingClass); the build fails if a
 table's columns drift from it.
 

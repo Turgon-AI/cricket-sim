@@ -301,7 +301,7 @@ Cricinfo's model outputs (win probability and predicted score) known before each
 
 - **One row is:** One row per ball (match_id, innings, delivery_number) that has a pre-ball model value, 1,026,807 rows.
 - **Key:** `match_id`, `innings`, `delivery_number`
-- **Kind:** event · **Sources:** ari · **Built from:** `balls`, `stg_ari_tracking` · **Timing class:** `pre_ball_model`
+- **Kind:** event · **Sources:** ari · **Built from:** `balls`, `stg_ari_tracking` · **Timing class:** `benchmark_model`
 
 - **Limitations:** Sparse per-ball layer: a row exists only for balls where the source has a value, so a missing row means 'not recorded', never 'zero' or 'no'. Each value is the previous ball's post-ball model output within the same innings (a lag), so it is NULL on the first ball of every innings even though the previous innings' final value was known; rows are kept only where at least one value exists. Coverage is limited to matches Cricinfo's model scored: 4,239 matches (4,069 T20 matches from 2008 and 170 ODIs), no Tests, innings 1 and 2 only. The model output was recomputed after the fact by a model fitted on later seasons, so using it as a feature in a time-sliced backtest leaks later knowledge: treat it as a benchmark only. The perspective of the win probability (batting side or fielding side) has not been independently verified. Derived from Cricinfo data via Ari Adaikalam's dataset: non-commercial licence, never exported.
 
