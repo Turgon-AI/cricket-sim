@@ -909,7 +909,7 @@ Everything derived. int_ = building blocks over all matches; dim_/fact_/map_/rep
 | [`int_match_weather_daily`](#int_match_weather_daily) | One row per match and match day (match_id, match_day_number), 32,324 rows. | match_id, match_day_number |
 | [`int_player_match_stats`](#int_player_match_stats) | One row per (match, player) for every player listed in a Cricsheet playing XI. | match_id, player_id |
 | [`map_match_ids`](#map_match_ids) | One row per linked in-scope international (each Cricsheet match appears at most once). | match_id |
-| [`map_venue_alias`](#map_venue_alias) | One row per distinct (venue, city) pair in Cricsheet; city can be NULL. | — |
+| [`map_venue_alias`](#map_venue_alias) | One row per distinct (venue, city) pair in Cricsheet whose venue_id is in dim_venue; city can be NULL. | — |
 | [`report_coverage_by_segment_year`](#report_coverage_by_segment_year) | One row per segment and calendar year of match start. | segment, year |
 | [`report_cricinfo_alignment`](#report_cricinfo_alignment) | One row per match that has Cricinfo tracking. | match_id |
 | [`report_cricsheet_known_missing`](#report_cricsheet_known_missing) | One row per entry on Cricsheet's missing list in scope. | — |
@@ -1463,19 +1463,19 @@ One row per in-scope international linked to the Wikipedia reference list: Crics
 
 ### map_venue_alias
 
-Every distinct (venue, city) string pair in Cricsheet with the canonical venue_id it maps to and how often it occurs.
+Every distinct (venue, city) string pair Cricsheet uses for a ground that an in-scope match was played at, with the canonical venue_id it maps to and how often it occurs across all of Cricsheet.
 
-- **One row is:** One row per distinct (venue, city) pair in Cricsheet; city can be NULL.
+- **One row is:** One row per distinct (venue, city) pair in Cricsheet whose venue_id is in dim_venue; city can be NULL.
 - **Key:** none
-- **Kind:** map · **Sources:** cricsheet, derived · **Built from:** `venue_aliases`
+- **Kind:** map · **Sources:** cricsheet, derived · **Built from:** `venue_aliases`, `match_venues`
 
-- **Limitations:** Covers every Cricsheet match of every format and gender, not only the scope, so many venue_ids here (grounds used only outside scope) have no row in dim_venue. Spellings are mapped by a normalised-name rule plus manual merges and splits (config/venue_overrides.yml); a rare wrong merge or split is possible.
+- **Limitations:** Covers the grounds of in-scope matches only (every venue_id here has a row in dim_venue), but each spelling's n_matches counts every Cricsheet match of every format and gender that uses it, and a spelling used only outside scope is absent. Spellings are mapped by a normalised-name rule plus manual merges and splits (config/venue_overrides.yml); a rare wrong merge or split is possible.
 
 | column | type | description |
 |---|---|---|
 | `venue` required | VARCHAR | Venue name exactly as Cricsheet spells it (leading spaces and typos preserved). |
 | `city` | VARCHAR | City exactly as Cricsheet gives it alongside that venue string; NULL when Cricsheet gives none. |
-| `venue_id` required | VARCHAR | Canonical venue identifier this spelling maps to (see dim_venue.venue_id). |
+| `venue_id` required | VARCHAR | Canonical venue identifier this spelling maps to; every value is a dim_venue.venue_id. |
 | `n_matches` required | BIGINT | Number of Cricsheet matches (all, not only in scope) that use this exact (venue, city) pair. (matches) |
 
 ### report_coverage_by_segment_year

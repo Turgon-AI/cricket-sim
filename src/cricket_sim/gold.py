@@ -331,7 +331,12 @@ def build_gold(con) -> dict:
           "match_id, match_day_number, utc_datetime")
 
     # ---- maps ------------------------------------------------------------------------------------
-    write("map_venue_alias", "SELECT * FROM venue_aliases", "venue, city")
+    # Only the spellings of grounds that in-scope matches were played at, so every venue_id here resolves in
+    # dim_venue (the contract declares that foreign key). Scoped through match_venues (Cricsheet-derived, open)
+    # rather than dim_venue, whose geocodes would pull the crosswalk under ODbL.
+    write("map_venue_alias", """
+        SELECT a.* FROM venue_aliases a
+        WHERE a.venue_id IN (SELECT v.venue_id FROM match_venues v JOIN scope USING (match_id))""", "venue, city")
 
     # ---- reports ---------------------------------------------------------------------------------
     write("report_match_quality", """

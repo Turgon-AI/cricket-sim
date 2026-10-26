@@ -174,6 +174,7 @@ flowchart LR
   report_international_coverage --> map_match_ids
   dim_match --> map_match_ids
   venue_aliases --> map_venue_alias
+  match_venues --> map_venue_alias
   dim_match --> report_coverage_by_segment_year
   balls --> report_coverage_by_segment_year
   hawkeye_ball_delivery --> report_coverage_by_segment_year

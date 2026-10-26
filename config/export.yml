@@ -43,7 +43,7 @@ files:
   - file: map_venue_alias
     table: map_venue_alias
     licence: ODC-BY-1.0
-    description: Every Cricsheet venue/city spelling mapped to a canonical venue id.
+    description: Every Cricsheet venue/city spelling of an in-scope ground mapped to its canonical venue id (dim_venue).
   - file: map_match_ids
     table: map_match_ids
     licence: CC-BY-SA-4.0

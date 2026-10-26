@@ -7,19 +7,21 @@ status: active
 domain: cricket
 dataProduct: cricket-sim
 description:
-  purpose: Crosswalk from every (venue, city) spelling Cricsheet uses to the canonical venue_id, so matches at the
-    same ground can be grouped and other datasets keyed on Cricsheet's venue strings can be joined.
-  limitations: Covers every Cricsheet match of every format and gender, not only the scope, so many venue_ids here
-    (grounds used only outside scope) have no row in dim_venue. Spellings are mapped by a normalised-name rule plus
-    manual merges and splits (config/venue_overrides.yml); a rare wrong merge or split is possible.
+  purpose: Crosswalk from every (venue, city) spelling Cricsheet uses for an in-scope ground to the canonical venue_id,
+    so matches at the same ground can be grouped and other datasets keyed on Cricsheet's venue strings can be joined.
+  limitations: Covers the grounds of in-scope matches only (every venue_id here has a row in dim_venue), but each
+    spelling's n_matches counts every Cricsheet match of every format and gender that uses it, and a spelling used
+    only outside scope is absent. Spellings are mapped by a normalised-name rule plus manual merges and splits
+    (config/venue_overrides.yml); a rare wrong merge or split is possible.
 schema:
 - name: map_venue_alias
   physicalName: data/gold/map_venue_alias.parquet
   physicalType: table
   logicalType: object
-  description: Every distinct (venue, city) string pair in Cricsheet with the canonical venue_id it maps to and
-    how often it occurs.
-  dataGranularityDescription: One row per distinct (venue, city) pair in Cricsheet; city can be NULL.
+  description: Every distinct (venue, city) string pair Cricsheet uses for a ground that an in-scope match was played
+    at, with the canonical venue_id it maps to and how often it occurs across all of Cricsheet.
+  dataGranularityDescription: One row per distinct (venue, city) pair in Cricsheet whose venue_id is in dim_venue;
+    city can be NULL.
   properties:
   - name: venue
     logicalType: string
@@ -33,8 +35,10 @@ schema:
   - name: venue_id
     logicalType: string
     physicalType: VARCHAR
-    description: Canonical venue identifier this spelling maps to (see dim_venue.venue_id).
+    description: Canonical venue identifier this spelling maps to; every value is a dim_venue.venue_id.
     required: true
+    relationships:
+    - to: dim_venue.venue_id
   - name: n_matches
     logicalType: integer
     physicalType: BIGINT
@@ -66,3 +70,4 @@ customProperties:
 - property: upstream
   value:
   - venue_aliases
+  - match_venues
