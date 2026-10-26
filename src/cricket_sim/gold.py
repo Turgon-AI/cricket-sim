@@ -198,7 +198,14 @@ SELECT *,
 FROM checks
 """
 # The tri-state checks, in table order. The headline publishes how often each one passed, failed or was not
-# checkable on the matches in scope, so a check that can never fail is visible as such.
+# checkable on the matches in scope, so a check that can never fail is visible as such. Four of them cannot fail
+# in a completed build, because a contract rule upstream stops the build on the same predicate first:
+# runs_add_up and extras_add_up (silver balls.yaml: total_is_bat_plus_extras, extras_add_up),
+# wickets_within_limit (gold fact_innings.yaml: dismissals_within_limit, in scope) and target_matches
+# (fact_innings.yaml: set_target_equals_stated and nominal_target_equals_target, in scope). Their columns stay
+# here so a reader can see per match what was checked; their zero failures are not evidence of anything the
+# contracts do not already enforce. The dataset card says so.
+ENFORCED_UPSTREAM = ["runs_add_up", "extras_add_up", "wickets_within_limit", "target_matches"]
 QUALITY_CHECKS = ["runs_add_up", "extras_add_up", "overs_consistent", "wickets_within_limit",
                   "bowler_quota_respected", "batters_within_limit", "target_matches", "result_consistent",
                   "result_in_ball_stream"]

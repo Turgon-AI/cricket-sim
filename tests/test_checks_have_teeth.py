@@ -218,13 +218,15 @@ def test_the_registry_check_wants_exactly_one_row_per_ball_in_a_dense_layer(tiny
 
 # ---- the leak check: a chase that carries on after exactly reaching its target ----------------------------------
 
-def _leak_connection(tiny_build, replace: str | None):
-    """The fixture's real layers; `replace` is a SELECT * REPLACE (...) body applied to int_ball_state_pre."""
+def _leak_connection(tiny_build, replace: str | None, replace_innings: str | None = None):
+    """The fixture's real layers; `replace` is a SELECT * REPLACE (...) body applied to int_ball_state_pre, and
+    `replace_innings` one applied to the raw silver innings table (the stated target before any relabelling)."""
     con = duckdb.connect()
-    for name, folder in (("balls", "silver"), ("cricinfo_ball_pre", "silver"), ("cricinfo_ball_post", "silver"),
-                         ("int_ball_state_pre", "gold")):
+    replacements = {"int_ball_state_pre": replace, "innings": replace_innings}
+    for name, folder in (("balls", "silver"), ("innings", "silver"), ("matches", "silver"), ("cricinfo_ball_pre", "silver"),
+                         ("cricinfo_ball_post", "silver"), ("int_ball_state_pre", "gold")):
         path = f"{tiny_build}/{folder}/{name}.parquet"
-        body = f"SELECT * REPLACE ({replace}) FROM read_parquet('{path}')" if replace and name == "int_ball_state_pre" \
+        body = f"SELECT * REPLACE ({replacements[name]}) FROM read_parquet('{path}')" if replacements.get(name) \
             else f"SELECT * FROM read_parquet('{path}')"
         con.execute(f"CREATE VIEW {name} AS {body}")
     return con
@@ -240,12 +242,20 @@ PLANTED = {
 }
 
 
+# The raw stated target of that chase is cut to 1 run: every later ball then shows the batting side past the
+# target Cricsheet states, while the published state still says 'set' with the real target. Only a check that reads
+# the stated target before the relabelling can see this; the published columns are consistent with themselves.
+STATED_TARGET_CUT = "CASE WHEN (match_id, innings) = ('433606', 2) THEN 1 ELSE target_runs END AS target_runs"
+
+
 def assert_leak_check_flags_a_finished_chase(mod, tiny_build):
     clean = mod.check_no_leak(_leak_connection(tiny_build, None))
     assert clean["chases_exceeding_known_target_or_horizon"] == 0 and clean["state_continuity_breaks"] == 0
     for replace in PLANTED.values():
         with pytest.raises(SystemExit, match=r"leak check failed: 1 chases continue after reaching a 'known' target"):
             mod.check_no_leak(_leak_connection(tiny_build, replace))
+    with pytest.raises(SystemExit, match=r"leak check failed: 1 chases continue after reaching a 'known' target"):
+        mod.check_no_leak(_leak_connection(tiny_build, None, replace_innings=STATED_TARGET_CUT))
 
 
 def test_leak_check_flags_a_chase_that_goes_on_after_reaching_its_target_or_its_balls(tiny_build):
@@ -256,10 +266,23 @@ def test_leak_check_flags_a_chase_that_goes_on_after_reaching_its_target_or_its_
     assert_leak_check_flags_a_finished_chase(ball_layers, tiny_build)
 
 
+def test_the_stated_target_case_is_invisible_to_the_published_state_alone(tiny_build):
+    """The cut stated target leaves every published column consistent: the old check on int_ball_state_pre alone
+    (target_status = 'set' and the published target reached) sees nothing, so the raw clause is not redundant."""
+    con = _leak_connection(tiny_build, None, replace_innings=STATED_TARGET_CUT)
+    assert con.execute("SELECT count(*) FROM int_ball_state_pre WHERE target_status = 'set' "
+                       "AND (runs_required_before <= 0 OR balls_remaining_before <= 0)").fetchone() == (0,)
+    assert con.execute("SELECT target_runs FROM innings WHERE (match_id, innings) = ('433606', 2)").fetchone() == (1,)
+
+
 @pytest.mark.parametrize("old, new", [
     ("(runs_required_before <= 0 OR balls_remaining_before <= 0)", "(runs_required_before < 0 OR balls_remaining_before <= 0)"),
     ("(runs_required_before <= 0 OR balls_remaining_before <= 0)", "(runs_required_before <= 0 OR balls_remaining_before < 0)"),
-], ids=["target_reached_allowed", "last_ball_allowed"])
+    # the raw clause dropped: a chase past its stated target may keep its published target
+    ("(s.target_runs IS NOT NULL OR s.innings_balls_limit IS NOT NULL)", "false"),
+    # the raw clause judged on the published target instead of the stated one
+    ("WHERE s.innings_runs_before >= t.target OR", "WHERE s.innings_runs_before >= s.target_runs OR"),
+], ids=["target_reached_allowed", "last_ball_allowed", "stated_target_ignored", "stated_target_replaced_by_published"])
 def test_the_leak_test_fails_when_the_chase_check_is_weakened(tiny_build, old, new):
     weak = weakened(ball_layers, old, new)
     with pytest.raises(pytest.fail.Exception, match="DID NOT RAISE"):

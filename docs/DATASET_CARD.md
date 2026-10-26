@@ -97,19 +97,26 @@ over that Cricsheet lists as miscounted, which the ball limit now allows for.
 
 A pass rate means little unless the checks can fail, so `headline.json` publishes how often each one passed, failed
 or was not checkable on the matches in scope (a check is not checkable where its precondition is absent: no
-scheduled overs, a rain rule, no winner). Two checks have never failed on Cricsheet data; they guard the parser.
+scheduled overs, a rain rule, no winner). Four of the nine cannot fail in a completed build: a data contract rule
+upstream tests the same predicate and stops the build first, so their zero failures below are a consequence of
+the contracts, not evidence from this table. Five checks are live here and can fail; two of them have.
 
-| check | passed | failed | not checkable |
-|---|---|---|---|
-| `runs_add_up` (runs = batter + extras on every ball) | 5,871 | 0 | 0 |
-| `extras_add_up` (extras = wides + no-balls + byes + leg byes + penalty) | 5,871 | 0 | 0 |
-| `overs_consistent` (six legal balls an over unless listed as miscounted) | 5,870 | 1 | 0 |
-| `wickets_within_limit` (at most 10 dismissals, 2 in a super over) | 5,871 | 0 | 0 |
-| `bowler_quota_respected` (no bowler starts more than a fifth of the scheduled overs) | 4,681 | 0 | 1,190 |
-| `batters_within_limit` (at most 12 batters an innings: eleven plus a concussion replacement) | 5,871 | 0 | 0 |
-| `target_matches` (unrevised target = first-innings total + 1) | 4,437 | 0 | 1,434 |
-| `result_consistent` (the stated margin follows from the totals) | 5,038 | 0 | 833 |
-| `result_in_ball_stream` (the winner follows from the balls alone) | 5,037 | 1 | 833 |
+| check | passed | failed | not checkable | can it fail in a completed build? |
+|---|---|---|---|---|
+| `runs_add_up` (runs = batter + extras on every ball) | 5,871 | 0 | 0 | no: enforced upstream by the silver `balls` contract rule `total_is_bat_plus_extras` |
+| `extras_add_up` (extras = wides + no-balls + byes + leg byes + penalty) | 5,871 | 0 | 0 | no: enforced upstream by the silver `balls` contract rule `extras_add_up` |
+| `overs_consistent` (six legal balls an over unless listed as miscounted) | 5,870 | 1 | 0 | yes |
+| `wickets_within_limit` (at most 10 dismissals, 2 in a super over) | 5,871 | 0 | 0 | no: enforced upstream by the gold `fact_innings` contract rule `dismissals_within_limit` |
+| `bowler_quota_respected` (no bowler starts more than a fifth of the scheduled overs) | 4,681 | 0 | 1,190 | yes |
+| `batters_within_limit` (at most 12 batters an innings: eleven plus a concussion replacement) | 5,871 | 0 | 0 | yes |
+| `target_matches` (unrevised target = first-innings total + 1) | 4,437 | 0 | 1,434 | no: enforced upstream by the `fact_innings` contract rules `set_target_equals_stated` and `nominal_target_equals_target` |
+| `result_consistent` (the stated margin follows from the totals) | 5,038 | 0 | 833 | yes |
+| `result_in_ball_stream` (the winner follows from the balls alone) | 5,037 | 1 | 833 | yes |
+
+The build's own leak check on chases (no chase may show a target or ball limit the batting side then exceeded) is
+judged from the target Cricsheet states, before the pipeline relabels a contradicted chase `inconsistent_with_balls`;
+across all matches three chases passed their stated target before their last ball, and all three are published
+without a target.
 
 One match was awarded (always a failure), and 178 carry Cricsheet's own note that a field is missing (a fielding
 powerplay, the player of the match, reviews); that note is recorded in `cricsheet_missing_fields_noted` and never

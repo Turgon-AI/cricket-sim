@@ -278,7 +278,11 @@ def check_no_leak(con) -> dict:
     1. Win probability: the wicket shows in post - pre on its own ball, not in how pre moved onto it.
     2. Match state: on every ball, next.before = this.before + this ball (so `before` never includes it).
     3. Horizon: no chase may show a target or ball limit that the batting side then exceeds
-       (that would mean a target fixed after the fact).
+       (that would mean a target fixed after the fact). Judged from the raw data, before the relabelling in
+       INNINGS_SQL: a chase whose stated target (or first-innings total + 1 when Cricsheet gives none) or ball
+       allocation the batting side passed before its last ball must be published with no target and no limit,
+       and no chase published as 'set' may run past its published target or limit. The published state alone
+       cannot show the first kind, because INNINGS_SQL relabels those chases 'inconsistent_with_balls'.
     """
     pre_move, wicket_effect, normal_move = con.execute("""
         WITH x AS (
@@ -308,12 +312,42 @@ def check_no_leak(con) -> dict:
     if breaks:
         raise SystemExit(f"leak check failed: {breaks} balls where the next pre-ball state is not this state + this ball")
 
-    exceeded, examples = con.execute("""
-        SELECT count(DISTINCT (match_id, innings)), list(DISTINCT match_id)[:5] FROM int_ball_state_pre
-        WHERE target_status = 'set' AND (runs_required_before <= 0 OR balls_remaining_before <= 0)""").fetchone()
+    exceeded, examples, passed_stated = con.execute("""
+        WITH first_innings AS (
+            SELECT i.match_id, coalesce(sum(b.runs_total), 0) + coalesce(any_value(i.penalty_runs_pre), 0)
+                + coalesce(any_value(i.penalty_runs_post), 0) AS total
+            FROM innings i LEFT JOIN balls b USING (match_id, innings)
+            WHERE i.innings = 1 GROUP BY i.match_id
+        ), extra_balls AS (
+            SELECT mi.match_id, mi.innings,
+                sum(CAST(json_extract_string(mi.miscounted_overs, '$."' || k || '"."balls"') AS INTEGER) - mm.balls_per_over) AS balls
+            FROM innings mi JOIN matches mm USING (match_id), unnest(json_keys(mi.miscounted_overs)) AS u(k)
+            WHERE mi.miscounted_overs IS NOT NULL AND CAST(k AS INTEGER) < mm.scheduled_overs GROUP BY ALL
+        ), stated AS (
+            -- the chase as Cricsheet states it, before any relabelling: an unrevised limited-overs second innings,
+            -- its target (first-innings total + 1 when none is given) and its ball allocation (miscounted overs included)
+            SELECT i.match_id, i.innings, coalesce(i.target_runs, f.total + 1) AS target,
+                m.scheduled_overs * m.balls_per_over + coalesce(x.balls, 0) AS allowed_balls
+            FROM innings i JOIN matches m USING (match_id)
+            LEFT JOIN first_innings f USING (match_id) LEFT JOIN extra_balls x USING (match_id, innings)
+            WHERE i.innings = 2 AND NOT i.is_super_over AND m.scheduled_overs IS NOT NULL AND m.method IS NULL
+              AND (i.target_balls IS NULL OR i.target_balls = m.scheduled_overs * m.balls_per_over)
+        ), passed AS (
+            -- chases that reached that target, or used up that allocation, before a ball they then bowled
+            SELECT DISTINCT s.match_id, s.innings
+            FROM stated t JOIN int_ball_state_pre s USING (match_id, innings)
+            WHERE s.innings_runs_before >= t.target OR s.legal_balls_before >= t.allowed_balls
+        )
+        SELECT count(DISTINCT (s.match_id, s.innings)), list(DISTINCT s.match_id)[:5],
+            (SELECT count(*) FROM passed)
+        FROM int_ball_state_pre s LEFT JOIN passed p USING (match_id, innings)
+        WHERE (s.target_status = 'set' AND (runs_required_before <= 0 OR balls_remaining_before <= 0))
+           OR (p.match_id IS NOT NULL AND (s.target_runs IS NOT NULL OR s.innings_balls_limit IS NOT NULL))""").fetchone()
     if exceeded:
         raise SystemExit(f"leak check failed: {exceeded} chases continue after reaching a 'known' target or "
                          f"ball limit, e.g. {examples}")
+    print(f"  leak check: {passed_stated} chases passed their stated target or ball allocation before their last ball; "
+          "all published without a target or limit")
 
     return {"pre_ball_win_prob_move_onto_wicket_ball": pre_move, "pre_ball_move_onto_other_balls": normal_move,
             "win_prob_change_caused_by_wicket": wicket_effect, "state_continuity_breaks": breaks,
