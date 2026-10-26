@@ -201,4 +201,5 @@ customProperties:
 - property: upstream
   value:
   - fact_delivery
+  - fact_innings
   - dim_match

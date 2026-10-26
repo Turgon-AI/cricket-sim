@@ -155,6 +155,7 @@ flowchart LR
   dim_match --> fact_player_match_form
   balls --> int_ball_state_pre
   int_innings_state --> int_ball_state_pre
+  matches --> int_ball_state_pre
   innings --> int_innings_state
   matches --> int_innings_state
   balls --> int_innings_state
@@ -198,6 +199,7 @@ flowchart LR
   int_player_match_stats --> report_player_careers
   dim_player --> report_player_careers
   fact_delivery --> model_ball_outcome
+  fact_innings --> model_ball_outcome
   dim_match --> model_ball_outcome
   fact_delivery --> model_ball_win_probability
   fact_innings --> model_ball_win_probability

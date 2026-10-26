@@ -1261,7 +1261,7 @@ Pre-ball match state for every Cricsheet delivery: score, wickets and legal ball
 
 - **One row is:** One row per delivery in Cricsheet (wides and no-balls included), keyed by (match_id, innings, delivery_number).
 - **Key:** `match_id`, `innings`, `delivery_number`
-- **Kind:** derived · **Sources:** cricsheet, derived · **Built from:** `balls`, `int_innings_state` · **Timing class:** `pre_ball`
+- **Kind:** derived · **Sources:** cricsheet, derived · **Built from:** `balls`, `int_innings_state`, `matches` · **Timing class:** `pre_ball`
 
 - **Limitations:** Covers every Cricsheet ball of every match (no scope applied). The _before columns exclude the ball itself; the build proves that on every ball the next ball's state equals this state plus this ball. Rain-revised chases (target_status 'revised_timing_unknown') and innings of unknown length ('reduced_timing_unknown') carry NULL target and/or ball limit because Cricsheet does not record when revisions happened; exclude them from decision-model training rather than imputing. Four out-of-scope balls (first innings containing an over the umpire miscounted as 7 balls) show balls_remaining_before = -1. Intermediate table: not exported (fact_delivery carries the same columns in scope).
 
@@ -1694,7 +1694,7 @@ For every ODI delivery modelled: the probability of each of eight outcomes and t
 
 - **One row is:** One row per delivery of innings 1 and 2 of an ODI from 2008 onwards.
 - **Key:** `match_id`, `innings`, `delivery_number`
-- **Kind:** model · **Sources:** cricsheet, derived · **Built from:** `fact_delivery`, `dim_match`
+- **Kind:** model · **Sources:** cricsheet, derived · **Built from:** `fact_delivery`, `fact_innings`, `dim_match`
 
 - **Limitations:** Describes an average batter facing an average bowler in that match state and season: it knows nothing about the actual players, pitch or conditions, by design. Outcome classes use total runs off the delivery (a five is counted with fours, sevens with sixes). Extras = wides and no-balls. Numeric outputs are NULL for excluded matches, including unknown target/horizon event times; evaluated and exclusion_reason explain eligibility.
 

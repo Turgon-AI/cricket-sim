@@ -340,5 +340,6 @@ customProperties:
   value:
   - balls
   - int_innings_state
+  - matches
 - property: timingClass
   value: pre_ball
