@@ -100,3 +100,35 @@ people:
 - key_opta_2:VARCHAR
 - key_pulse:VARCHAR
 - key_pulse_2:VARCHAR
+# Cricsheet match JSON (all_json.zip), keyed by meta.data_version: for each object the parser reads (meta, info,
+# one innings, one delivery), the keys it must carry and the keys it may carry, as observed across the whole
+# locked snapshot. cricsheet_parse.py checks every file against the pin of its own data_version before silver
+# is written. A key outside the pin (a release that adds, moves or renames a field), a required key missing, or
+# a data_version with no pin refuses the build; review the Cricsheet release notes, then update this deliberately.
+cricsheet_json:
+  '1.2.0':
+    meta:
+      required: [created, data_version, revision]
+      optional: []
+    info:
+      required: [balls_per_over, dates, gender, match_type, outcome, players, registry, season, team_type, teams, toss, venue]
+      optional: [bowl_out, city, event, match_type_number, missing, officials, overs, player_of_match, supersubs]
+    innings:
+      required: [team]
+      optional: [absent_hurt, declared, forfeited, miscounted_overs, overs, penalty_runs, powerplays, super_over, target]
+    delivery:
+      required: [batter, bowler, non_striker, runs]
+      optional: [actual_delivery, extras, over, replacements, review, wickets]
+  '1.3.0':
+    meta:
+      required: [created, data_version, revision]
+      optional: []
+    info:
+      required: [balls_per_over, dates, gender, match_type, outcome, players, registry, season, team_type, teams, toss, venue]
+      optional: [city, event, match_type_number, missing, officials, overs, player_of_match]
+    innings:
+      required: [team]
+      optional: [absent_hurt, declared, miscounted_overs, overs, powerplays, target]
+    delivery:
+      required: [batter, bowler, non_striker, runs]
+      optional: [actual_delivery, extras, replacements, review, wickets]

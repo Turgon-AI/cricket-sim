@@ -2,11 +2,14 @@ import json
 import zipfile
 
 import pyarrow.parquet as pq
+import pytest
 
-from cricket_sim.cricsheet_parse import parse_zip
+from cricket_sim.cricsheet_parse import check_shape, load_json_pins, parse_zip
+
+from conftest import FIXTURE
 
 MATCH = {
-    "meta": {"data_version": "1.1.0", "created": "2026-01-01", "revision": 1},
+    "meta": {"data_version": "1.2.0", "created": "2026-01-01", "revision": 1},
     "info": {
         "dates": ["2026-01-02"], "match_type": "T20", "gender": "male", "team_type": "international",
         "teams": ["A", "B"], "toss": {"winner": "A", "decision": "bat"}, "outcome": {"winner": "A", "by": {"runs": 5}},
@@ -137,3 +140,71 @@ def test_every_kind_of_retirement_is_flagged_and_is_not_a_dismissal(tmp_path):
     assert kinds == {"retired not out": True, "retired hurt": True, "retired out": False}
     balls = pq.read_table(parts["balls"][0]).to_pylist()
     assert [(b["wicket_count"], b["dismissal_count"]) for b in balls] == [(1, 1), (1, 0), (1, 0)]
+
+
+# ---------------------------------------------------------------- the key-set pin per data_version
+
+def _zip_with(tmp_path, doc: dict):
+    zpath = tmp_path / "all.zip"
+    with zipfile.ZipFile(zpath, "w") as zf:
+        zf.writestr("42.json", json.dumps(doc))
+    return zpath
+
+
+def test_pins_cover_the_fixture_snapshot_and_every_pinned_version_has_the_four_objects():
+    pins = load_json_pins()
+    assert {"1.2.0", "1.3.0"} <= set(pins)
+    for version, objects in pins.items():
+        assert set(objects) == {"meta", "info", "innings", "delivery"}, version
+        for required, allowed in objects.values():
+            assert required <= allowed
+        assert "data_version" in objects["meta"][0] and {"batter", "bowler", "runs"} <= objects["delivery"][0]
+    with zipfile.ZipFile(FIXTURE / "bronze" / "cricsheet" / "2026-10-14" / "all_json.zip") as zf:
+        docs = [json.loads(zf.read(n)) for n in zf.namelist() if n.endswith(".json")]
+    assert len(docs) == 10
+    for doc in docs:
+        check_shape("fixture", doc, pins)
+
+
+def test_unpinned_data_version_refuses_the_build(tmp_path):
+    import copy
+    m = copy.deepcopy(MATCH)
+    m["meta"]["data_version"] = "9.9.9"
+    with pytest.raises(SystemExit, match=r"42.json: Cricsheet data_version 9.9.9 has no key-set pin"):
+        parse_zip(_zip_with(tmp_path, m), tmp_path / "out")
+    assert not (tmp_path / "out").exists() or not list((tmp_path / "out").iterdir())
+
+
+@pytest.mark.parametrize("mutate, message", [
+    (lambda m: m["info"].__setitem__("pitch_report", "dry"), r"info object .* unexpected \['pitch_report'\]"),
+    (lambda m: m["innings"][0].__setitem__("powerplay", []), r"innings object .* unexpected \['powerplay'\]"),
+    (lambda m: m["innings"][0]["overs"][0]["deliveries"][1].__setitem__("ball_speed_kph", 140),
+     r"delivery object .* unexpected \['ball_speed_kph'\]"),
+    (lambda m: m["meta"].__setitem__("schema", 2), r"meta object .* unexpected \['schema'\]"),
+    (lambda m: m["info"].pop("balls_per_over"), r"info object .*missing \['balls_per_over'\]"),
+    (lambda m: m["info"].pop("registry"), r"info object .*missing \['registry'\]"),
+    (lambda m: m["innings"][0]["overs"][0]["deliveries"][2].pop("non_striker"), r"delivery object .*missing \['non_striker'\]"),
+    # a rename shows up as one key missing and one unexpected on the same object
+    (lambda m: m["info"].__setitem__("match_format", m["info"].pop("match_type")),
+     r"info object .*missing \['match_type'\], unexpected \['match_format'\]"),
+], ids=["info_extra", "innings_extra", "delivery_extra", "meta_extra", "info_missing", "registry_missing",
+        "delivery_missing", "renamed"])
+def test_a_mutated_file_refuses_the_build_with_the_object_and_keys_named(tmp_path, mutate, message):
+    import copy
+    m = copy.deepcopy(MATCH)
+    mutate(m)
+    with pytest.raises(SystemExit, match="42.json: a Cricsheet " + message) as err:
+        parse_zip(_zip_with(tmp_path, m), tmp_path / "out")
+    assert "config/input_schemas.yml" in str(err.value)
+
+
+def test_the_check_runs_on_every_file_not_only_the_first(tmp_path):
+    import copy
+    bad = copy.deepcopy(MATCH)
+    bad["innings"][0]["overs"][0]["deliveries"][0]["hawkeye"] = {}
+    zpath = tmp_path / "all.zip"
+    with zipfile.ZipFile(zpath, "w") as zf:
+        zf.writestr("1.json", json.dumps(MATCH))
+        zf.writestr("2.json", json.dumps(bad))
+    with pytest.raises(SystemExit, match=r"2.json: a Cricsheet delivery object"):
+        parse_zip(zpath, tmp_path / "out")

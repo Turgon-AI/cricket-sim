@@ -16,7 +16,7 @@ upstream ─ingest─▶ BRONZE ─build─▶ STAGING ─▶ SILVER ─▶ GOLD
 | Layer | Where | What | Rules |
 |---|---|---|---|
 | Bronze | `data/bronze/<source>/<snapshot_id>/` + `_snapshot.json` | Upstream files exactly as fetched (CSVs zstd-compressed, losslessly) | Never edited. Each snapshot is checksummed. New upstream data means a new snapshot, never an overwrite. |
-| Staging | `data/staging/stg_*.parquet` | Third-party CSVs (Ari's Cricinfo tracking, Hawk-Eye), one table per file, renamed to snake_case and typed | No joins, no logic, no row filtering. Raw columns are checked against `config/input_schemas.yml` before anything is written. All restricted, never exported. Cricsheet JSON skips staging: `cricsheet_parse.py` is its typed staging step. |
+| Staging | `data/staging/stg_*.parquet` | Third-party CSVs (Ari's Cricinfo tracking, Hawk-Eye), one table per file, renamed to snake_case and typed | No joins, no logic, no row filtering. Raw columns are checked against `config/input_schemas.yml` before anything is written. All restricted, never exported. Cricsheet JSON skips staging: `cricsheet_parse.py` is its typed staging step, and it checks every file's key set against the pin for its `data_version` in the same file before parsing it. |
 | Silver | `data/silver/*.parquet` | Conformed facts as recorded: Cricsheet tables (matches, innings, balls, wickets, ...), reference lists, the Hawk-Eye link, sparse third-party per-ball layers split by timing class, venue/weather/player context | Keeps **all** matches; scope is never read here. Unknown means NULL, never zero. Each per-ball table holds one timing class and one source family. Nothing we *derive* lives here (no totals, no summaries, no windows). |
 | Gold | `data/gold/*.parquet`, `headline.json`, `run.json` | `int_*`: our derivations over all matches (pre-ball match state, innings state, quality checks, per-player match stats, daily play-window weather). `dim_*` / `fact_*` / `map_*` / `report_*`: in-scope products, including point-in-time player features | Scope (`config/scope.yml`) is applied here only. Only `dim_`/`fact_`/`map_`/`report_` tables can be exported. |
 | Models | `data/models/*.parquet`, `run.json` | `cricket model`: walk-forward ODI win probability, ball outcomes, Elo, evaluation reports | Reads gold only. See docs/MODEL_CARD.md. |
@@ -108,7 +108,8 @@ The same locked snapshots and the same `uv.lock` give the same `build_fingerprin
   - It refuses dirty code unless you pass `--allow-dirty`, which is recorded.
   - If it fails, the previous staging, silver and gold are restored, and the failed outputs are kept in
     `data/<layer>.failed/` for inspection.
-  - Upstream schemas are pinned in `config/input_schemas.yml`.
+  - Upstream schemas are pinned in `config/input_schemas.yml`: the columns of every third-party CSV and the
+    key set of every Cricsheet JSON object, per `data_version`.
   - It fails if any table breaks its contract, a per-ball layer gains an unclassified column or a ball Cricsheet does not have, the pre-ball state loses its one-row-per-ball shape, the leak check fails, or the crosswalk is not one-to-one.
   - Venue sanity checks (country box, elevation, sea, timezone) fail it too.
 - **Export:** licences come from lineage (`lineage.py`), never from intent. A table built from Cricinfo or Hawk-Eye data cannot be exported, and a file's declared licence must match its strictest source.

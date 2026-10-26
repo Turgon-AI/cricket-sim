@@ -34,7 +34,7 @@ def _rule_hits(table: str, name: str, columns: str, rows: str) -> int:
 def _match_json(match_type="T20", overs=20, target_overs="20"):
     ball = {"batter": "a1", "bowler": "b1", "non_striker": "a2", "runs": {"batter": 1, "extras": 0, "total": 1}}
     return {
-        "meta": {"data_version": "1.1.0", "created": "2026-01-01", "revision": 1},
+        "meta": {"data_version": "1.2.0", "created": "2026-01-01", "revision": 1},
         "info": {"dates": ["2026-01-02"], "match_type": match_type, "gender": "male", "team_type": "international",
                  "teams": ["A", "B"], "toss": {"winner": "A", "decision": "bat"},
                  "outcome": {"winner": "A", "by": {"runs": 5}}, "overs": overs, "balls_per_over": 6,

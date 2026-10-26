@@ -2,6 +2,12 @@
 
 Keys follow Ari Adaikalam's convention so tracking joins on (match_id, innings, delivery_number):
 delivery_number counts every delivery in the innings (wides and no-balls included) from 1.
+
+Shape gate: the parser reads most fields with .get() and a default, so a Cricsheet release that renamed or
+moved a key would quietly give NULLs or format defaults and a new fingerprint. Every file is therefore checked
+against the key set pinned for its meta.data_version in config/input_schemas.yml (cricsheet_json) before it is
+parsed, the way staging pins the third-party CSV columns; an unpinned version, an unexpected key or a missing
+required key refuses the build.
 """
 
 import json
@@ -12,7 +18,10 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from .paths import load_yaml
+
 BATCH_MATCHES = 1500
+PINNED_OBJECTS = ("meta", "info", "innings", "delivery")
 
 BALL_SCHEMA = pa.schema([
     ("match_id", pa.string()), ("innings", pa.int16()), ("batting_team", pa.string()),
@@ -232,6 +241,47 @@ def _parse_match(match_id: str, doc: dict, out: dict) -> None:
                     })
 
 
+def load_json_pins() -> dict:
+    """{data_version: {object: (required keys, allowed keys)}} from config/input_schemas.yml."""
+    pins = {}
+    for version, objects in load_yaml("input_schemas.yml")["cricsheet_json"].items():
+        pins[str(version)] = {}
+        for name in PINNED_OBJECTS:
+            spec = objects[name]
+            required = frozenset(spec["required"])
+            pins[str(version)][name] = (required, required | frozenset(spec.get("optional") or []))
+    return pins
+
+
+def _pinned_objects(doc: dict) -> dict:
+    innings = doc.get("innings") or []
+    return {"meta": [doc.get("meta") or {}], "info": [doc.get("info") or {}], "innings": innings,
+            "delivery": [d for inn in innings for over in inn.get("overs") or [] for d in over.get("deliveries") or []]}
+
+
+def check_shape(name: str, doc: dict, pins: dict, accepted: set | None = None) -> None:
+    """Refuse a match file whose meta, info, innings or delivery objects carry a key outside the pin for the file's
+    data_version, or lack a required one. `accepted` caches key tuples already judged, shared across files."""
+    version = str((doc.get("meta") or {}).get("data_version"))
+    if version not in pins:
+        raise SystemExit(f"{name}: Cricsheet data_version {version} has no key-set pin in config/input_schemas.yml "
+                         f"(pinned: {', '.join(sorted(pins))}). Review the Cricsheet release, then pin its keys deliberately")
+    accepted = set() if accepted is None else accepted
+    for level, objects in _pinned_objects(doc).items():
+        required, allowed = pins[version][level]
+        for obj in objects:
+            shape = (version, level, tuple(obj))
+            if shape in accepted:
+                continue
+            keys = set(obj)
+            missing, extra = sorted(required - keys), sorted(keys - allowed)
+            if missing or extra:
+                raise SystemExit(f"{name}: a Cricsheet {level} object does not match the key set pinned for data_version "
+                                 f"{version} (missing {missing}, unexpected {extra}). Review the Cricsheet release, "
+                                 "then update config/input_schemas.yml deliberately")
+            accepted.add(shape)
+
+
 def iter_match_info(zip_path: Path):
     """Yield (match_id, info dict) straight from the bronze zip, sorted by file name.
 
@@ -254,11 +304,14 @@ def parse_zip(zip_path: Path, staging: Path) -> dict[str, list[Path]]:
                 pq.write_table(pa.Table.from_pylist(rows, schema=SCHEMAS[table]), path)
                 parts[table].append(path)
 
+    pins, accepted = load_json_pins(), set()
     with zipfile.ZipFile(zip_path) as zf:
         names = sorted(n for n in zf.namelist() if n.endswith(".json"))
         out = {t: [] for t in SCHEMAS}
         for k, name in enumerate(names, start=1):
-            _parse_match(Path(name).stem, json.loads(zf.read(name)), out)
+            doc = json.loads(zf.read(name))
+            check_shape(name, doc, pins, accepted)
+            _parse_match(Path(name).stem, doc, out)
             if k % BATCH_MATCHES == 0:
                 flush(out, k // BATCH_MATCHES)
                 out = {t: [] for t in SCHEMAS}
