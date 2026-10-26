@@ -16,10 +16,32 @@ import fcntl
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
 import uuid
+
+# A journal is <uuid4 hex>.json and nothing else. Anything else under .transactions/ (an editor backup, a notes
+# file, a .tmp left by a crash mid-save) is reported once and left alone: it is never parsed, so it can neither
+# stop a writer nor undo a publication.
+JOURNAL_NAME = re.compile(r'^[0-9a-f]{32}\.json$')
+_warned: set[Path] = set()
+
+
+def _journal_paths(data: Path) -> list[Path]:
+    """Every journal file under .transactions/, by name; strays are warned about (once) and skipped."""
+    folder = data / '.transactions'
+    if not folder.is_dir():
+        return []
+    journals = []
+    for path in sorted(folder.iterdir()):
+        if JOURNAL_NAME.match(path.name) and path.is_file():
+            journals.append(path)
+        elif path not in _warned:
+            _warned.add(path)
+            print(f'warning: {path} is not a publication journal (<32 hex uuid>.json); ignoring it', file=sys.stderr)
+    return journals
 
 
 def _save(path: Path, value: dict) -> None:
@@ -61,13 +83,13 @@ def _rollback(data: Path, record: dict) -> None:
 
 def pending_publications(data: Path) -> list[dict]:
     """Journals still `prepared`: a publish that was killed, or one that is moving directories right now."""
-    records = [json.loads(path.read_text()) for path in sorted((data/'.transactions').glob('*.json'))]
+    records = [json.loads(path.read_text()) for path in _journal_paths(data)]
     return [record for record in records if record['state'] == 'prepared']
 
 
 def recover(data: Path) -> None:
     """Idempotently undo every publication without a durable committed marker."""
-    for path in sorted((data/'.transactions').glob('*.json')):
+    for path in _journal_paths(data):
         record = json.loads(path.read_text())
         if record['state'] == 'prepared':
             _rollback(data, record)
@@ -136,12 +158,14 @@ def publish(data: Path, stage: Path, names: list[str], prepare=None) -> None:
             os.replace(generated, live)
         record['state'] = 'committed'
         _save(journal, record)
-        _prune_kind(data, _kind(record), keep=1)
     except BaseException:
         _rollback(data, record)
         record['state'] = 'rolled_back'
         _save(journal, record)
         raise
+    # Only once the commit is durable. Pruning old generations is housekeeping: if it fails (a permissions error on
+    # an old backup, say), the error surfaces, but the generation that was just published stays published.
+    _prune_kind(data, _kind(record), keep=1)
 
 
 def _kind(record: dict) -> str:
@@ -151,7 +175,7 @@ def _kind(record: dict) -> str:
 
 def _journals(data: Path) -> list[dict]:
     """Every journal, oldest first (by its own write time)."""
-    paths = sorted((data/'.transactions').glob('*.json'), key=lambda p: (p.stat().st_mtime, p.name))
+    paths = sorted(_journal_paths(data), key=lambda p: (p.stat().st_mtime, p.name))
     return [{**json.loads(p.read_text()), '_path': p} for p in paths]
 
 

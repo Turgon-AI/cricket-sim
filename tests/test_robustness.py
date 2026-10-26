@@ -242,10 +242,18 @@ def test_wikidata_page_with_fewer_rows_than_its_manifest_is_refused(tmp_path):
 
 # ---------------------------------------------------------------- Readers refuse a half-published tree
 
+def _ident(tag: str) -> str:
+    """A journal id is a uuid4 hex (32 hex digits); a short tag repeated gives a readable, valid one."""
+    return (tag * 32)[:32]
+
+
+KILLED = _ident("deadbeef")
+
+
 def _prepared_journal(data: Path, destinations=("staging", "silver", "gold", "warehouse.duckdb")) -> None:
-    record = {"id": "deadbeef", "state": "prepared", "stage": ".pending/build-x", "backup": ".history/deadbeef",
+    record = {"id": KILLED, "state": "prepared", "stage": ".pending/build-x", "backup": f".history/{KILLED}",
               "destinations": list(destinations), "existed": {n: True for n in destinations}}
-    transaction._save(data / ".transactions" / "deadbeef.json", record)
+    transaction._save(data / ".transactions" / f"{KILLED}.json", record)
 
 
 def test_contracts_refuse_a_tree_with_a_prepared_journal(tiny_build, tmp_path):
@@ -278,14 +286,15 @@ def test_contracts_check_an_empty_models_directory_instead_of_skipping_it(tiny_b
 def test_pending_publications_lists_only_prepared_journals(tmp_path):
     assert transaction.pending_publications(tmp_path) == []
     _prepared_journal(tmp_path)
-    assert [r["id"] for r in transaction.pending_publications(tmp_path)] == ["deadbeef"]
+    assert [r["id"] for r in transaction.pending_publications(tmp_path)] == [KILLED]
     transaction.recover(tmp_path)
     assert transaction.pending_publications(tmp_path) == []
 
 
 # ---------------------------------------------------------------- Retained generations are pruned
 
-def _finished_journal(data: Path, kind: str, ident: str, mtime: float) -> None:
+def _finished_journal(data: Path, kind: str, tag: str, mtime: float) -> None:
+    ident = _ident(tag)
     stage, backup = data / ".pending" / f"{kind}-{ident}", data / ".history" / ident
     for folder in (stage / "gold", backup / "gold"):
         folder.mkdir(parents=True)
@@ -311,16 +320,47 @@ def test_publish_keeps_one_previous_generation_per_kind(tmp_path):
         transaction.publish(tmp_path, stage, ["gold"])
     journals = {p.stem: json.loads(p.read_text())["state"] for p in (tmp_path / ".transactions").glob("*.json")}
     # the new build's own backup holds the generation it replaced, so keep=1 means exactly one undo
-    assert sorted(journals.items()) == sorted({"m1": "committed", journals_new(journals): "committed"}.items())
+    assert sorted(journals.items()) == sorted({_ident("m1"): "committed", journals_new(journals): "committed"}.items())
     for old in ("b1", "b2", "b3"):
-        assert not (tmp_path / ".history" / old).exists() and not (tmp_path / ".pending" / f"build-{old}").exists()
-    assert (tmp_path / ".history" / "m1").exists() and (tmp_path / ".pending" / "model-m1").exists()
+        assert not (tmp_path / ".history" / _ident(old)).exists()
+        assert not (tmp_path / ".pending" / f"build-{_ident(old)}").exists()
+    assert (tmp_path / ".history" / _ident("m1")).exists() and (tmp_path / ".pending" / f"model-{_ident('m1')}").exists()
     assert (tmp_path / ".pending" / "build-failed").exists()         # failed stages wait for `cricket prune`
-    assert "deadbeef" not in journals                                 # rolled back, so nothing worth keeping
+    assert KILLED not in journals                                     # rolled back, so nothing worth keeping
 
 
 def journals_new(journals: dict) -> str:
-    return next(k for k in journals if k not in {"m1", "b1", "b2", "b3", "deadbeef"})
+    return next(k for k in journals if k not in {_ident(t) for t in ("m1", "b1", "b2", "b3", "deadbeef")})
+
+
+def test_publish_commits_despite_a_stray_file_in_transactions_and_leaves_it_alone(tmp_path, capsys):
+    """A file that is not a journal (an editor backup, notes, a non-JSON '.json') used to be parsed by the
+    auto-prune inside the publish try block: it raised after the commit, the new generation was rolled back and
+    quarantined, and every later writer failed on the same file. It is now reported and left alone."""
+    folder = tmp_path / ".transactions"
+    folder.mkdir()
+    strays = {folder / "notes.json": "not json at all {", folder / f"{KILLED}.json~": "editor backup",
+              folder / ".DS_Store": "\x00"}
+    for path, text in strays.items():
+        path.write_text(text)
+    _finished_journal(tmp_path, "build", "b1", 1_700_000_000)       # an old generation for the prune to consider
+    stage = tmp_path / ".pending" / f"build-{_ident('b2')}"
+    (stage / "gold").mkdir(parents=True)
+    (stage / "gold" / "t.parquet").write_bytes(b"new")
+    (tmp_path / "gold").mkdir()
+    (tmp_path / "gold" / "t.parquet").write_bytes(b"old")
+    with transaction.writer_lock(tmp_path):
+        transaction.publish(tmp_path, stage, ["gold"])
+    assert (tmp_path / "gold" / "t.parquet").read_bytes() == b"new"              # committed, not rolled back
+    assert not (tmp_path / ".aborted").exists()
+    states = {p.name: json.loads(p.read_text())["state"] for p in folder.glob("*.json") if transaction.JOURNAL_NAME.match(p.name)}
+    assert sorted(states.values()) == ["committed"]                               # b1 pruned, the new one kept
+    for path, text in strays.items():
+        assert path.read_text() == text, path                                     # untouched
+    err = capsys.readouterr().err
+    assert "notes.json" in err and "not a publication journal" in err
+    assert transaction.pending_publications(tmp_path) == []                       # readers skip them too
+    assert err.count("notes.json") == 1                                           # warned once, not per call
 
 
 def test_prune_command_frees_old_generations_failed_stages_and_quarantines(tmp_path):
@@ -330,15 +370,15 @@ def test_prune_command_frees_old_generations_failed_stages_and_quarantines(tmp_p
     (tmp_path / ".pending" / "model-failed" / "big").write_bytes(b"y" * 5000)
     (tmp_path / ".aborted" / "x").mkdir(parents=True)
     _prepared_journal(tmp_path)
-    (tmp_path / ".history" / "deadbeef").mkdir(parents=True)
+    (tmp_path / ".history" / KILLED).mkdir(parents=True)
     dry = transaction.prune(tmp_path, keep=1, dry_run=True)
-    assert (tmp_path / ".history" / "b1").exists()                   # a dry run removes nothing
-    assert {Path(p).name for p in dry} >= {"b1", "build-b1", "model-failed", ".aborted"}
+    assert (tmp_path / ".history" / _ident("b1")).exists()           # a dry run removes nothing
+    assert {Path(p).name for p in dry} >= {_ident("b1"), f"build-{_ident('b1')}", "model-failed", ".aborted"}
     assert sum(dry.values()) >= 2000 + 5000
     freed = transaction.prune(tmp_path, keep=1)
     assert freed == dry
-    assert not (tmp_path / ".history" / "b1").exists() and (tmp_path / ".history" / "b2").exists()
-    assert (tmp_path / ".history" / "e1").exists()
+    assert not (tmp_path / ".history" / _ident("b1")).exists() and (tmp_path / ".history" / _ident("b2")).exists()
+    assert (tmp_path / ".history" / _ident("e1")).exists()
     assert not (tmp_path / ".pending" / "model-failed").exists() and not (tmp_path / ".aborted").exists()
     assert transaction.prune(tmp_path, keep=0) and not any((tmp_path / ".history").iterdir())
     result = cli(tmp_path, FIXTURE, "prune", "--dry-run")
