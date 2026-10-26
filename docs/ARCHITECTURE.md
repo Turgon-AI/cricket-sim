@@ -3,11 +3,11 @@
 Medallion on DuckDB + Parquet. Runs on one machine with no services. Every table has a data contract.
 
 ```
-upstream ─ingest─▶ BRONZE ─build─▶ STAGING ─▶ SILVER ─▶ GOLD ─export─▶ data/export/<fingerprint>/
-           (immutable     (typed       (conformed   (int_ building blocks;     (gold dim_/fact_/map_/report_
-            snapshots)     3rd-party    facts, all   dim_/fact_/map_/report_    only, licence-checked,
-                           CSVs)        matches)     products, in scope)        Croissant metadata)
-              │
+upstream ─ingest─▶ BRONZE ─build─▶ STAGING ─▶ SILVER ─▶ GOLD ─model─▶ MODELS ─export─▶ data/export/<fingerprint>/
+           (immutable     (typed       (conformed   (int_ building      (model_ and     (gold dim_/fact_/map_/report_
+            snapshots)     3rd-party    facts, all   blocks; dim_/fact_/  report_model_   and models model_ tables,
+                           CSVs)        matches)     map_/report_ marts,  outputs)        licence-checked, Croissant
+              │                                      in scope)                            metadata)
               └─backup (rclone)─▶ off-machine copy          contracts/<layer>/<table>.yaml checks every table
 ```
 
@@ -17,9 +17,9 @@ upstream ─ingest─▶ BRONZE ─build─▶ STAGING ─▶ SILVER ─▶ GOLD
 |---|---|---|---|
 | Bronze | `data/bronze/<source>/<snapshot_id>/` + `_snapshot.json` | Upstream files exactly as fetched (CSVs zstd-compressed, losslessly) | Never edited. Each snapshot is checksummed. New upstream data means a new snapshot, never an overwrite. |
 | Staging | `data/staging/stg_*.parquet` | Third-party CSVs (Ari's Cricinfo tracking, Hawk-Eye), one table per file, renamed to snake_case and typed | No joins, no logic, no row filtering. Raw columns are checked against `config/input_schemas.yml` before anything is written. All restricted, never exported. Cricsheet JSON skips staging: `cricsheet_parse.py` is its typed staging step, and it checks every file's key set against the pin for its `data_version` in the same file before parsing it. |
-| Silver | `data/silver/*.parquet` | Conformed facts as recorded: Cricsheet tables (matches, innings, balls, wickets, ...), reference lists, the Hawk-Eye link, sparse third-party per-ball layers split by timing class, venue/weather/player context | Keeps **all** matches; scope is never read here. Unknown means NULL, never zero. Each per-ball table holds one timing class and one source family. Nothing we *derive* lives here (no totals, no summaries, no windows). |
-| Gold | `data/gold/*.parquet`, `headline.json`, `run.json` | `int_*`: our derivations over all matches (pre-ball match state, innings state, quality checks, per-player match stats, daily play-window weather). `dim_*` / `fact_*` / `map_*` / `report_*`: in-scope products, including point-in-time player features | Scope (`config/scope.yml`) is applied here only. Only `dim_`/`fact_`/`map_`/`report_` tables can be exported. |
-| Models | `data/models/*.parquet`, `run.json` | `cricket model`: walk-forward ODI win probability, ball outcomes, Elo, evaluation reports | Reads gold only. See docs/MODEL_CARD.md. |
+| Silver | `data/silver/*.parquet` | Conformed facts as recorded: Cricsheet tables (matches, innings, balls, wickets, ...), reference lists, the Hawk-Eye link, sparse third-party per-ball layers split by timing class, venue/weather/player context | Keeps **all** matches; scope is never read here. Unknown means NULL, never zero. Each per-ball table holds one timing class and one source family. The only derived values here are whole-snapshot conformance facts used to canonicalise and link: `venues` and `venue_versions` carry `n_matches`, `first_match_date`, `last_match_date` and `home_team`, `venue_aliases` carries `n_matches`, and `hawkeye_match_link` carries `confidence`. No match totals, no per-ball state, no play windows: those are gold. |
+| Gold | `data/gold/*.parquet`, `headline.json`, `run.json` | `int_*`: our derivations over all matches (pre-ball match state, innings state, quality checks, per-player match stats, daily play-window weather). `dim_*` / `fact_*` / `map_*` / `report_*`: in-scope products, including point-in-time player features | Scope (`config/scope.yml`) is applied here only. Of gold, only `dim_`/`fact_`/`map_`/`report_` tables can be exported; `int_` tables never are. |
+| Models | `data/models/*.parquet`, `run.json` | `cricket model`: walk-forward ODI win probability, ball outcomes, Elo, evaluation reports | Model inputs come from gold only. One silver table, `cricinfo_ball_pre`, is read for `report_model_vs_cricinfo_internal`, a benchmark report that lineage refuses to export. The `model_` tables are exported with the gold marts, licence-checked the same way. See docs/MODEL_CARD.md. |
 
 ### Naming
 
@@ -37,7 +37,7 @@ One rule per kind of table, so a name says where the data came from and whether 
 Restriction is never a suffix: `cricinfo_` and `hawkeye_` tables are restricted because their sources are, and
 `lineage.py` enforces that from each contract's `sources`.
 
-`data/warehouse.duckdb` holds a view per table (names are unique across layers), for ad-hoc queries.
+`data/warehouse.duckdb` holds a view per staging, silver and gold table (names are unique across layers), for ad-hoc queries. The models layer is not in it; read `data/models/*.parquet` directly.
 
 ## Data contracts
 
@@ -86,7 +86,7 @@ without it refuses, by design.
 
 The same locked snapshots and the same `uv.lock` give the same `build_fingerprint` in `data/gold/run.json`.
 
-1. **Pinned snapshots:** builds read only `config/snapshots.lock.yml`, which is committed. Changing it is deliberate: `cricket lock <source> <id>`.
+1. **Pinned snapshots:** builds read only `config/snapshots.lock.yml`, which is committed. For `cricsheet`, `cricsheet_missing`, `ari`, `hawkeye` and `wiki_fixtures` a new snapshot never moves the lock on its own: `cricket lock <source> <id>` does. The `venues_geo`, `weather` and `wikidata_players` ingesters lock the snapshot they just wrote on every run, so after running them the lock file has changed and needs reviewing before it is committed.
 2. **Pinned software:** `uv.lock` pins every package, and Python is pinned to 3.12.
 3. **Determinism:** inputs are sorted, outputs are written with `ORDER BY`, and nothing uses wall-clock time or randomness.
 4. **Proof:** every table gets a fingerprint (row count plus an order-independent content hash). Run `cricket build` twice and compare.
@@ -94,7 +94,7 @@ The same locked snapshots and the same `uv.lock` give the same `build_fingerprin
 ## Built to absorb changing requirements
 
 - **New source:** add an entry to `config/sources.yml`, an ingester, a staging table if it is a CSV, silver SQL, and a contract per new table. Nothing else changes.
-- **Wider scope** (women, BBL, ...): edit `config/scope.yml` and rebuild. Silver already holds everything.
+- **Wider scope** (women, BBL, ...): silver already holds every Cricsheet match, so no Cricsheet re-ingest. But `config/scope.yml` is not the only place scope lives: the gold contracts pin the current scope as enums (`dim_match.yaml` allows only `gender: male` and the four segments; `report_international_coverage.yaml` and `report_cricsheet_known_missing.yaml` repeat the segments and the 2001 start date), `gold.py` hard-codes the gender, the international segment list and one team name in the coverage reports, and `config/context_sources.yml` has its own `plan_selection` of matches for geocoding and weather. A wider scope needs those edited too, and a new `venues_geo` and `weather` ingest before the added matches get weather.
 - **Different backup target:** point `config/remote.yml` at any rclone remote, such as S3, Backblaze or Dropbox.
 - **Exporting:** `redistributable` in `sources.yml` marks what may leave the machine. Only redistributable sources and our own derived context go into the export.
 
@@ -106,8 +106,10 @@ The same locked snapshots and the same `uv.lock` give the same `build_fingerprin
   - Ingest writes atomically and records failures. A snapshot with gaps is never sealed silently.
 - **Build:**
   - It refuses dirty code unless you pass `--allow-dirty`, which is recorded.
-  - If it fails, the previous staging, silver and gold are restored, and the failed outputs are kept in
-    `data/<layer>.failed/` for inspection.
+  - It generates into a stage under `data/.pending/` and publishes with a journal; if generation fails, the
+    live staging, silver and gold are untouched and the failed stage stays in `data/.pending/` until
+    `cricket prune`. If the publish itself is interrupted, the next writer command rolls it back and the
+    half-published generation goes to `data/.aborted/`.
   - Upstream schemas are pinned in `config/input_schemas.yml`: the columns of every third-party CSV and the
     key set of every Cricsheet JSON object, per `data_version`.
   - It fails if any table breaks its contract, a per-ball layer gains an unclassified column or a ball Cricsheet does not have, the pre-ball state loses its one-row-per-ball shape, the leak check fails, or the crosswalk is not one-to-one.
