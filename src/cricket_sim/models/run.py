@@ -87,7 +87,7 @@ def _run(first_season: int, min_train_matches: int, allow_dirty: bool,
          holdout_from_season: int = train.HOLDOUT_FROM_SEASON) -> None:
     code = _git_state()
     if code["dirty"] and not allow_dirty:
-        raise SystemExit("working tree has uncommitted changes; commit first or pass --allow-dirty")
+        raise SystemExit("working tree has uncommitted changes (or git could not report its state); commit first or pass --allow-dirty")
     build_run = json.loads((GOLD / "run.json").read_text())
     from ..integrity import verify_artifacts
     verify_artifacts(GOLD.parent, build_run, ("staging", "silver", "gold"))

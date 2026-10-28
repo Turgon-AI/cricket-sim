@@ -105,7 +105,8 @@ The same locked snapshots and the same `uv.lock` give the same `build_fingerprin
   - `config/snapshots.pins.yml` pins each locked manifest's hash.
   - Ingest writes atomically and records failures. A snapshot with gaps is never sealed silently.
 - **Build:**
-  - It refuses dirty code unless you pass `--allow-dirty`, which is recorded.
+  - It refuses dirty code unless you pass `--allow-dirty`, which is recorded. If git is missing or fails, the
+    tree counts as dirty, so a build never records itself as clean when it cannot prove it.
   - It generates into a stage under `data/.pending/` and publishes with a journal; if generation fails, the
     live staging, silver and gold are untouched and the failed stage stays in `data/.pending/` until
     `cricket prune`. If the publish itself is interrupted, the next writer command rolls it back and the

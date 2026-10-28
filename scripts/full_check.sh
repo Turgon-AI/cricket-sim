@@ -13,6 +13,7 @@
 # Steps: verify, build, pre-ball invariance on production rows, model, contracts, export, then the full-data-only
 # checks below.
 # A dirty git tree is allowed (--allow-dirty is added, and recorded in run.json): this is a check, not a release.
+# If git cannot report the tree's state, it is treated as dirty.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -25,7 +26,7 @@ unset CRICKET_SIM_SNAPSHOTS
 export CRICKET_SIM_DATA="$DATA"
 
 ALLOW_DIRTY=""
-if [ -n "$(git status --porcelain 2>/dev/null)" ]; then ALLOW_DIRTY="--allow-dirty"; fi
+if ! STATUS="$(git status --porcelain 2>/dev/null)" || [ -n "$STATUS" ]; then ALLOW_DIRTY="--allow-dirty"; fi
 echo "full_check: data root $DATA ${ALLOW_DIRTY:+(dirty tree: $ALLOW_DIRTY)}"
 
 step() {  # step <name> <command...>: run it, show the time, stop at the first failure

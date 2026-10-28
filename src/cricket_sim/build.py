@@ -91,12 +91,19 @@ def fingerprint(con, path: Path) -> dict:
 
 
 def _git_state() -> dict:
+    """The commit and whether the tree is dirty. If git is missing or fails (a container, a copied tree), the
+    state is unknown, so it is recorded as dirty: a build must never claim to be clean when it cannot prove it."""
     def git(*args):
-        return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        try:
+            result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
+        except OSError:
+            return None
+        return result.stdout.strip() if result.returncode == 0 else None
 
     from .integrity import source_provenance
 
-    return {"commit": git("rev-parse", "HEAD") or None, "dirty": bool(git("status", "--porcelain")),
+    commit, status = git("rev-parse", "HEAD"), git("status", "--porcelain")
+    return {"commit": commit or None, "dirty": commit is None or status is None or bool(status),
             **source_provenance(ROOT)}
 
 
@@ -138,8 +145,9 @@ def _build(allow_dirty: bool = False) -> None:
         folder.mkdir(parents=True, exist_ok=True)
     code = _git_state()
     if code["dirty"] and not allow_dirty:
-        raise SystemExit("working tree has uncommitted changes, so this build could not be reproduced from any "
-                         "commit. Commit first, or pass --allow-dirty (recorded in run.json).")
+        raise SystemExit("working tree has uncommitted changes (or git could not report its state), so this build "
+                         "could not be reproduced from any commit. Commit first, or pass --allow-dirty (recorded in "
+                         "run.json).")
     validate_scope(load_yaml("scope.yml"))  # refuse a bad scope before any slow step
     lock = bronze.read_lock()
     missing = [s for s in REQUIRED_SOURCES if s not in lock]

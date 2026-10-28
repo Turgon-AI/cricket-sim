@@ -130,7 +130,8 @@ It runs `verify`, `build`, the production pre-ball invariance check, `model`, `c
 data, then checks the full-data-only cases:
 retirements, awarded matches never passing quality, the scope recomputed from silver (T20Is need two full-member
 teams), the headline and coverage numbers against the tables, and model scores that are too good to be true. It
-stops at the first failing step and exits non-zero. It adds `--allow-dirty` when the git tree has changes.
+stops at the first failing step and exits non-zero. It adds `--allow-dirty` when the git tree has changes, or
+when git cannot report the tree's state.
 If an export of the same data already exists, it is moved to `DATA_DIR/export-replaced/` first, never deleted.
 
 ## Credits

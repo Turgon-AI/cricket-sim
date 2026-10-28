@@ -261,7 +261,7 @@ def _write_export(allow_dirty: bool, out) -> None:
 
     title = load_yaml("export.yml")["title"]
     lines = [f"# {title}", "",
-             f"Built from pipeline fingerprint `{run['build_fingerprint'][:16]}` (commit `{run['code']['commit'][:10]}`).",
+             f"Built from pipeline fingerprint `{run['build_fingerprint'][:16]}` (commit `{(run['code']['commit'] or 'unknown')[:10]}`).",
              "Each file carries its own licence; see LICENSES.md. Machine-readable metadata: croissant.json.", ""]
     for f, rows, _ in dictionary:
         c = contracts.get(f["table"])
