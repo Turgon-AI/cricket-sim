@@ -10,8 +10,9 @@
 # The sample variables CRICKET_SIM_DATA and CRICKET_SIM_SNAPSHOTS are ignored: this is always the full data and
 # the repo's own config/ snapshot lock. No network is used.
 #
-# Steps: verify, build, pre-ball invariance on production rows, model, contracts, export, then the full-data-only
-# checks below.
+# Steps: verify, build, pre-ball invariance on production rows, model, contracts, the full-data-only checks below,
+# then it records the pass in gold/full_check.json (tied to this build and model) and exports. `cricket export`
+# refuses a release without that record, so every released export has passed this script.
 # A dirty git tree is allowed (--allow-dirty is added, and recorded in run.json): this is a check, not a release.
 # If git cannot report the tree's state, it is treated as dirty.
 set -euo pipefail
@@ -46,21 +47,6 @@ step "build"     uv run cricket build $ALLOW_DIRTY
 step "pre-ball invariance (production rows)" uv run python scripts/preball_invariance.py --matches 200 --cuts 20
 step "model"     uv run cricket model $ALLOW_DIRTY
 step "contracts" uv run cricket contracts
-
-# An export folder is named from the data fingerprint. An identical re-export replaces it in place. If one with
-# that name exists and differs (for example it was made from another commit), `cricket export` refuses to replace
-# it; only then is it moved aside (never deleted) and the export run again.
-move_old_export() {
-  local name
-  name="$(uv run python -I -c "import json; print(json.load(open('$DATA/gold/run.json'))['build_fingerprint'][:12])")"
-  if [ -d "$DATA/export/$name" ]; then
-    mkdir -p "$DATA/export-replaced"
-    mv "$DATA/export/$name" "$DATA/export-replaced/$name.$(date +%Y%m%d-%H%M%S)"
-    echo "moved the previous export of this data aside to $DATA/export-replaced/"
-  fi
-}
-do_export() { uv run cricket export $ALLOW_DIRTY || { move_old_export; uv run cricket export $ALLOW_DIRTY; }; }
-step "export"    do_export
 
 full_data_checks() {
   uv run python -I - "$DATA" <<'PY'
@@ -164,6 +150,22 @@ print("\nall full-data checks passed")
 PY
 }
 step "full-data-only checks" full_data_checks
+step "record the pass" uv run python -c "from cricket_sim.integrity import record_full_check; from cricket_sim.paths import DATA; record_full_check(DATA)"
+
+# An export folder is named from the data fingerprint. An identical re-export replaces it in place. If one with
+# that name exists and differs (for example it was made from another commit), `cricket export` refuses to replace
+# it; only then is it moved aside (never deleted) and the export run again.
+move_old_export() {
+  local name
+  name="$(uv run python -I -c "import json; print(json.load(open('$DATA/gold/run.json'))['build_fingerprint'][:12])")"
+  if [ -d "$DATA/export/$name" ]; then
+    mkdir -p "$DATA/export-replaced"
+    mv "$DATA/export/$name" "$DATA/export-replaced/$name.$(date +%Y%m%d-%H%M%S)"
+    echo "moved the previous export of this data aside to $DATA/export-replaced/"
+  fi
+}
+do_export() { uv run cricket export $ALLOW_DIRTY || { move_old_export; uv run cricket export $ALLOW_DIRTY; }; }
+step "export"    do_export
 
 echo
 echo "full_check: all steps passed on $DATA"

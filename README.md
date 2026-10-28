@@ -126,11 +126,14 @@ full bronze data, before a release and after any change to `gold.py`, `cricsheet
 scripts/full_check.sh [DATA_DIR]    # default: $CRICKET_SIM_FULL_DATA, else ./data (about 20 minutes)
 ```
 
-It runs `verify`, `build`, the production pre-ball invariance check, `model`, `contracts` and `export` on that
-data, then checks the full-data-only cases:
+It runs `verify`, `build`, the production pre-ball invariance check, `model` and `contracts` on that data, then
+checks the full-data-only cases:
 retirements, awarded matches never passing quality, the scope recomputed from silver (T20Is need two full-member
-teams), the headline and coverage numbers against the tables, and model scores that are too good to be true. It
-stops at the first failing step and exits non-zero. It adds `--allow-dirty` when the git tree has changes, or
+teams), the headline and coverage numbers against the tables, and model scores that are too good to be true.
+When all of that passes it writes `gold/full_check.json` (the build and model fingerprints, commit and source hash
+it vouches for) and then exports. `cricket export` refuses a release without a record that matches the current
+build and model, so every released export has passed this script; the next build drops the record.
+It stops at the first failing step and exits non-zero. It adds `--allow-dirty` when the git tree has changes, or
 when git cannot report the tree's state.
 If an export of the same data already exists, it is moved to `DATA_DIR/export-replaced/` first, never deleted.
 

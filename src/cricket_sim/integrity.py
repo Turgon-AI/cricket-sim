@@ -43,6 +43,49 @@ def verify_artifacts(data: Path, run: dict, layers: tuple[str, ...]) -> None:
         con.close()
 
 
+FULL_CHECK = "gold/full_check.json"
+
+
+def full_check_stamp(gold_run: dict, model_run: dict) -> dict:
+    """What a passed full-data check vouches for: this exact build, model and source."""
+    return {"build_fingerprint": gold_run["build_fingerprint"], "model_fingerprint": model_run["model_fingerprint"],
+            "commit": gold_run["code"]["commit"], "dirty": gold_run["code"]["dirty"],
+            "source_sha256": gold_run["code"]["source_sha256"]}
+
+
+def record_full_check(data: Path) -> None:
+    """Called by scripts/full_check.sh after every check passed: write gold/full_check.json for the live build.
+
+    It sits in gold/, so the next build (which publishes a fresh gold/) drops it, and export refuses until the
+    full check is run again."""
+    import os
+    from datetime import datetime, timezone
+    from .transaction import writer_lock
+
+    with writer_lock(data):
+        gold_run = json.loads((data / "gold/run.json").read_text())
+        model_run = json.loads((data / "models/run.json").read_text())
+        record = {"passed": True, **full_check_stamp(gold_run, model_run),
+                  "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+        tmp = data / (FULL_CHECK + ".tmp")
+        tmp.write_text(json.dumps(record, indent=2) + "\n")
+        os.replace(tmp, data / FULL_CHECK)
+    print(f"recorded the passed full check for build {record['build_fingerprint'][:16]} in {data / FULL_CHECK}")
+
+
+def verify_full_check(data: Path, gold_run: dict, model_run: dict, allow_dirty: bool) -> None:
+    """A release export needs proof that scripts/full_check.sh passed on exactly this build and model.
+    CI only builds the 10-match sample, so without this nothing shows the real data was checked."""
+    path = data / FULL_CHECK
+    record = json.loads(path.read_text()) if path.exists() else None
+    if record and record.get("passed") and all(record.get(k) == v
+                                               for k, v in full_check_stamp(gold_run, model_run).items()):
+        return
+    if not allow_dirty:
+        raise SystemExit(f"no passed full-data check recorded for this build and model ({FULL_CHECK}); "
+                         "run scripts/full_check.sh, which exports at its end")
+
+
 def verify_release_inputs(data: Path, gold_run: dict, allow_dirty: bool) -> dict:
     """Verify both generations before any export files are staged."""
     path = data / "models/run.json"
@@ -63,4 +106,5 @@ def verify_release_inputs(data: Path, gold_run: dict, allow_dirty: bool) -> dict
         raise SystemExit("gold run fingerprint does not match recorded artifacts")
     if hashlib.sha256(json.dumps(model_run["tables"], sort_keys=True).encode()).hexdigest() != model_run.get("model_fingerprint"):
         raise SystemExit("model run fingerprint does not match recorded artifacts")
+    verify_full_check(data, gold_run, model_run, allow_dirty)
     return model_run

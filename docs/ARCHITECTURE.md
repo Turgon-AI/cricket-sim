@@ -115,7 +115,7 @@ The same locked snapshots and the same `uv.lock` give the same `build_fingerprin
     key set of every Cricsheet JSON object, per `data_version`.
   - It fails if any table breaks its contract, a per-ball layer gains an unclassified column or a ball Cricsheet does not have, the pre-ball state loses its one-row-per-ball shape, the leak check fails, or the crosswalk is not one-to-one.
   - Venue sanity checks (country box, elevation, sea, timezone) fail it too.
-- **Export:** licences come from lineage (`lineage.py`), never from intent. A table built from Cricinfo or Hawk-Eye data cannot be exported, and a file's declared licence must match its strictest source.
+- **Export:** a release needs `gold/full_check.json`, written by `scripts/full_check.sh` only after every full-data check passed on this exact build and model (`--allow-dirty` skips it, for tests). Licences come from lineage (`lineage.py`), never from intent. A table built from Cricinfo or Hawk-Eye data cannot be exported, and a file's declared licence must match its strictest source.
 - **Validation:** see `docs/VALIDATION.md`.
 
 ## Commands

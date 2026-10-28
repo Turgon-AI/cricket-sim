@@ -162,6 +162,10 @@ def test_a_dirty_run_is_refused_unless_dirty_is_allowed_and_a_clean_run_passes(t
         integrity.verify_release_inputs(data, gold_run, allow_dirty=False)
     assert integrity.verify_release_inputs(data, gold_run, allow_dirty=True)["model_fingerprint"]
     gold_run = _set_dirty(data, gold_run, False)
+    with pytest.raises(SystemExit, match="no passed full-data check"):     # clean, but full_check.sh never passed
+        integrity.verify_release_inputs(data, gold_run, allow_dirty=False)
+    (data / "gold" / "run.json").write_text(json.dumps(gold_run))     # the record is taken from the runs on disk
+    integrity.record_full_check(data)
     assert integrity.verify_release_inputs(data, gold_run, allow_dirty=False)["model_fingerprint"]
 
 
