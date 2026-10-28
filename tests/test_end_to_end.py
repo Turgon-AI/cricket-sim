@@ -134,7 +134,7 @@ def test_export_is_gold_only_licensed_and_described(tiny_build):
     manifest = json.loads((out / "manifest.json").read_text())
     tables = {m["file"].rsplit(".", 1)[0] for m in manifest}
     assert tables == {"fact_delivery", "fact_innings", "fact_dismissal", "fact_match_weather_hourly", "dim_match",
-                      "dim_player", "dim_venue", "map_venue_alias", "map_match_ids", "report_match_quality",
+                      "dim_player", "dim_venue", "dim_venue_version", "map_venue_alias", "map_match_ids", "report_match_quality",
                       "report_international_coverage", "model_ball_win_probability", "model_ball_outcome",
                       "model_team_elo", "report_model_scores", "report_model_calibration", "report_model_checkpoints",
                       "report_model_folds", "report_model_paired", "fact_player_match_form", "report_player_careers"}

@@ -256,7 +256,7 @@ def build_gold(con) -> dict:
     write("dim_match", """
         SELECT m.match_id, s.segment, m.match_type, m.match_type_number, m.gender, m.team_type,
             m.event_name, m.event_match_number, m.event_stage, m.season, m.season_year,
-            m.start_date, m.end_date, m.n_dates, v.venue_id, m.venue AS venue_name, m.city,
+            m.start_date, m.end_date, m.n_dates, v.venue_id, v.venue_version, m.venue AS venue_name, m.city,
             m.team1, m.team2, m.toss_winner, m.toss_decision,
             m.result, m.winner, m.win_by_runs, m.win_by_wickets, m.win_by_innings, m.method,
             m.winner_after_tiebreak, m.tiebreak_method,
@@ -277,6 +277,12 @@ def build_gold(con) -> dict:
 
     write("dim_venue", """
         SELECT v.* FROM venues v WHERE v.venue_id IN (SELECT venue_id FROM dim_match)""", "venue_id")
+
+    # every version of an in-scope ground, so a match can be joined to the venue as it was on its start date
+    # (dim_match.venue_version) and a pre-match feature can take the version known before it (inputs_as_of < date)
+    write("dim_venue_version", """
+        SELECT v.* FROM venue_versions v WHERE v.venue_id IN (SELECT venue_id FROM dim_match)""",
+          "venue_id, venue_version")
 
     # ---- facts -----------------------------------------------------------------------------------
     write("fact_innings", """

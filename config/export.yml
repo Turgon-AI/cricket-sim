@@ -23,7 +23,7 @@ files:
   - file: dim_match
     table: dim_match
     licence: ODC-BY-1.0
-    description: One row per match. Teams, toss, result, officials, canonical venue id and whether the match passes every quality check.
+    description: One row per match. Teams, toss, result, officials, canonical venue id, the venue version valid that day and whether the match passes every quality check.
   - file: dim_player
     table: dim_player
     licence: ODC-BY-1.0
@@ -32,6 +32,10 @@ files:
     table: dim_venue
     licence: ODbL-1.0
     description: One row per canonical venue used in scope, with coordinates, elevation, timezone and geocode confidence.
+  - file: dim_venue_version
+    table: dim_venue_version
+    licence: ODbL-1.0
+    description: Every dated version of every in-scope ground (valid_from to valid_to) with its home team and point as recorded then. dim_match.venue_version picks the one a match was played under.
   - file: fact_player_match_form
     table: fact_player_match_form
     licence: ODC-BY-1.0

@@ -3,7 +3,8 @@
 > **Status (2026-10-23):** Every number below was regenerated from the current code (build `f62d060c7964faee`,
 > model run `0f4e92549d533de9`).
 > **What the code guarantees:**
-> - Venue home status uses only matches on earlier dates (`dataset.home_teams_as_of`).
+> - Venue home status is the home team of the latest `dim_venue_version` whose inputs end before the match date
+>   (`dataset.home_teams_as_of`), so it uses only matches on earlier dates.
 > - Win probabilities, expected runs and outcome probabilities are withheld on unevaluated rows: none of the
 >   127,515 such rows in this run has a number.
 > - Each fold checks at run time that its training rows are clean, come from earlier seasons and share no match

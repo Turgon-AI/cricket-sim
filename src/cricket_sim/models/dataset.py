@@ -11,14 +11,11 @@ are withheld on those rows. Internal predictions are never evidence of event-tim
 """
 
 import re
-from collections import Counter, defaultdict
-from itertools import groupby
 
 import duckdb
 
 from .. import contracts
 from ..paths import GOLD
-from ..venues.checks import home_team as infer_home_team, load_reference
 from .elo import pre_match_ratings
 
 # Every input must be a pre_ball column of fact_delivery, or a derived/pre-match feature listed here
@@ -26,7 +23,8 @@ from .elo import pre_match_ratings
 STATE_COLUMNS = ["innings_runs_before", "innings_wickets_before", "legal_balls_before",
                  "scheduled_balls_remaining_before", "nominal_target_runs", "nominal_runs_required_before"]
 # What DERIVED may read besides pre_ball fact_delivery columns (alias f): facts fixed before the first ball.
-# m = dim_match, eb / ew = pre-match Elo (elo.py, earlier dates only), hm = home_teams_as_of (earlier dates only),
+# m = dim_match, eb / ew = pre-match Elo (elo.py, earlier dates only), hm = home_teams_as_of (dim_venue_version
+# with inputs before the match date),
 # unqualified bowling_team = the other side of dim_match (model_rows' own column).
 PRE_MATCH_SOURCES = {"m": {"start_date", "toss_winner", "team1", "team2", "venue_id"}, "eb": {"elo_before"},
                      "ew": {"elo_before"}, "hm": {"home_team"}, "": {"bowling_team"}}
@@ -87,32 +85,24 @@ def check_inputs_are_pre_ball(fitted: dict[str, list[str]] | None = None,
         raise SystemExit(f"model inputs must be known before the ball (pre_ball); these are not: {bad}")
 
 
-def home_teams_as_of(matches: list[tuple]) -> dict[str, str | None]:
-    """Infer each match's venue home team from earlier men's international matches at that venue only.
+# The venue's home team as known before the match: the latest dim_venue_version whose inputs end before the match
+# date. A version valid ON the date also counts that date's matches (a double-header would see itself), and under
+# venue_context: snapshot the one version's inputs end at the venue's last match, so it is never used before then.
+HOME_ASOF_SQL = """
+    SELECT m.match_id, v.home_team FROM dim_match m
+    LEFT JOIN dim_venue_version v ON v.venue_id = m.venue_id AND v.inputs_as_of < m.start_date
+    QUALIFY row_number() OVER (PARTITION BY m.match_id ORDER BY v.venue_version DESC NULLS LAST) = 1"""
 
-    Input tuples are (match_id, start_date, venue_id, team_type, team1, team2). Matches on the same date
-    receive the same pre-date home label, so a double-header cannot use the first match's result or presence.
-    """
-    counts, totals, out = defaultdict(Counter), Counter(), {}
-    reference = load_reference()
-    ordered = sorted(matches, key=lambda r: (r[1], r[0]))
-    for day, group in groupby(ordered, key=lambda r: r[1]):
-        todays = list(group)
-        for match_id, _, venue_id, _, _, _ in todays:
-            out[match_id] = infer_home_team(counts[venue_id], totals[venue_id], reference)
-        for _, _, venue_id, team_type, team1, team2 in todays:
-            if team_type != "international":
-                continue
-            for team in {team1, team2} - {None}:
-                counts[venue_id][team] += 1
-            totals[venue_id] += 1
-    return out
+
+def home_teams_as_of(con: duckdb.DuckDBPyConnection) -> dict[str, str | None]:
+    """match_id -> the venue's home team known before the match (None: neutral, or not known yet)."""
+    return dict(con.execute(HOME_ASOF_SQL).fetchall())
 
 
 def load(con: duckdb.DuckDBPyConnection, gold=GOLD) -> None:
     """Create the TEMP table `model_rows` (and `elo`) in con."""
     check_inputs_are_pre_ball()
-    for t in ("fact_delivery", "fact_innings", "dim_match", "dim_venue"):
+    for t in ("fact_delivery", "fact_innings", "dim_match", "dim_venue_version"):
         con.execute(f"CREATE OR REPLACE VIEW {t} AS SELECT * FROM read_parquet('{gold / t}.parquet')")
     matches = con.execute("""SELECT match_id, start_date, team1, team2, winner, result FROM dim_match
                              WHERE segment = 'ODI'""").fetchall()
@@ -120,9 +110,7 @@ def load(con: duckdb.DuckDBPyConnection, gold=GOLD) -> None:
     rows = pre_match_ratings(matches)
     if rows:
         con.executemany("INSERT INTO elo VALUES (?, ?, ?, ?)", rows)
-    home_rows = con.execute("""SELECT match_id, start_date, venue_id, team_type, team1, team2
-                               FROM dim_match ORDER BY start_date, match_id""").fetchall()
-    home = home_teams_as_of(home_rows)
+    home = home_teams_as_of(con)
     con.execute("CREATE OR REPLACE TEMP TABLE home_asof (match_id VARCHAR, home_team VARCHAR)")
     con.executemany("INSERT INTO home_asof VALUES (?, ?)", sorted(home.items()))
     derived = ",\n            ".join(f"{sql} AS {name}" for name, sql in DERIVED.items())

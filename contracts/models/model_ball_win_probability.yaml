@@ -207,4 +207,4 @@ customProperties:
   - fact_delivery
   - fact_innings
   - dim_match
-  - dim_venue
+  - dim_venue_version

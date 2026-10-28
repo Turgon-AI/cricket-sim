@@ -53,6 +53,7 @@ flowchart LR
     dim_match[dim_match]
     dim_player[dim_player]
     dim_venue[dim_venue]
+    dim_venue_version[dim_venue_version]
     fact_delivery[fact_delivery]
     fact_dismissal[fact_dismissal]
     fact_innings[fact_innings]
@@ -139,6 +140,8 @@ flowchart LR
   matches --> dim_player
   venues --> dim_venue
   dim_match --> dim_venue
+  venue_versions --> dim_venue_version
+  dim_match --> dim_venue_version
   balls --> fact_delivery
   matches --> fact_delivery
   int_ball_state_pre --> fact_delivery
@@ -204,7 +207,7 @@ flowchart LR
   fact_delivery --> model_ball_win_probability
   fact_innings --> model_ball_win_probability
   dim_match --> model_ball_win_probability
-  dim_venue --> model_ball_win_probability
+  dim_venue_version --> model_ball_win_probability
   dim_match --> model_team_elo
   model_ball_win_probability --> report_model_calibration
   model_ball_outcome --> report_model_calibration

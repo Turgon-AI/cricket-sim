@@ -14,7 +14,6 @@ import duckdb
 import pytest
 
 from cricket_sim import gold
-from cricket_sim.models import dataset
 from cricket_sim.venues import checks
 from cricket_sim.venues.canonical import era_for
 
@@ -54,15 +53,6 @@ def test_home_team_needs_at_least_half_of_the_matches_and_a_clear_lead():
     assert checks.home_team({"A": 1, "B": 1, "C": 1, "D": 1}, 4, REF) is None   # a quarter
     assert checks.home_team({"A": 2, "B": 2}, 4, REF) is None            # half each: a tie, no home side
     assert checks.home_team({"A": 3, "B": 2}, 5, REF) == "A"             # 60%
-
-
-def test_home_teams_as_of_a_date_use_three_earlier_matches_exactly():
-    def match(i, day):
-        return (f"m{i}", day, "ground", "international", "A", f"X{i}")
-    out = dataset.home_teams_as_of([match(1, "2020-01-01"), match(2, "2020-01-02"), match(3, "2020-01-03"),
-                                    match(4, "2020-01-04"), match(5, "2020-01-05")])
-    # m3 has 2 earlier matches, m4 has 3, m5 has 4: the home side appears at the third earlier match, not the fourth
-    assert out == {"m1": None, "m2": None, "m3": None, "m4": "A", "m5": "A"}
 
 
 # ---- scope: a match ON from_date is in scope (>=), the day before is not ---------------------------------------

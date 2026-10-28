@@ -156,6 +156,14 @@ schema:
     required: true
     relationships:
     - to: dim_venue.venue_id
+  - name: venue_version
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Version of the venue valid on the match's start date; (venue_id, venue_version) joins to
+      dim_venue_version, which gives the ground and its home team as recorded then (dim_venue is the latest version).
+      That version also counts this date's matches, so a pre-match feature should take the latest version with
+      inputs_as_of before start_date instead.
+    required: true
   - name: venue_name
     logicalType: string
     physicalType: VARCHAR
@@ -328,6 +336,13 @@ schema:
     description: Cricsheet's revision number of the match file (1 = original; higher = corrected since).
     required: true
   quality:
+  - name: venue_version_exists
+    description: every (venue_id, venue_version) is a row of dim_venue_version valid on the match's start date
+    type: sql
+    query: SELECT count(*) FROM ${table} m LEFT JOIN ${table:dim_venue_version} v USING (venue_id, venue_version) WHERE
+      v.venue_id IS NULL OR (v.venue_version > 1 AND m.start_date < v.valid_from) OR m.start_date > coalesce(v.valid_to,
+      m.start_date)
+    mustBe: 0
   - name: row_count_floor_full_data
     description: on the complete snapshots, at least about 95% of the 5,871 rows of the 2026-10-27 real
       build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)

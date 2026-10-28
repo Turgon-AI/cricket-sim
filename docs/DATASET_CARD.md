@@ -20,7 +20,7 @@ dataset also adds venue, weather, player context and per-match quality checks.
 
 **What does an instance represent?** The central table, `fact_delivery`, has one row per delivery bowled
 (wides and no-balls included). Around it: one row per match (`dim_match`), innings (`fact_innings`), dismissal
-(`fact_dismissal`), player (`dim_player`), venue (`dim_venue`) and venue-hour of weather
+(`fact_dismissal`), player (`dim_player`), venue (`dim_venue`, and `dim_venue_version` for each dated version) and venue-hour of weather
 (`fact_match_weather_hourly`), plus identifier crosswalks (`map_*`) and quality/coverage reports (`report_*`).
 `fact_player_match_form` gives each player's record before every match: career to date and the last 365
 days, batting and bowling, death overs, days since the last match and age. It is built from strictly earlier
@@ -163,9 +163,12 @@ only matches up to that match's date. A venue gets a new version whenever one of
 layer holds 590 venues in 1,296 as-of versions (305 venues have more than one), and each match takes the version
 valid on its start date. Weather is placed at that version's point. The contracts on `venue_versions` and
 `match_venues` check this on every build, and a test rebuilds the context with every later match removed and
-requires every earlier row to stay the same. `dim_venue` is different: it holds the 182 grounds of in-scope
-matches at their latest version, with `n_matches` and dates over all matches, so it is for browsing and is not a
-point-in-time feature table. The re-downloaded `venues_geo` and `weather` snapshots (locked 2026-10-21) hold every
+requires every earlier row to stay the same. Gold publishes those versions for the 182 in-scope grounds as
+`dim_venue_version`, and `dim_match.venue_version` names the one each match was played under, so Pakistan's home
+matches in the UAE keep Pakistan as the home side. A version valid on a date also counts that date's matches, so a
+pre-match feature takes the latest version with `inputs_as_of` before the match date. `dim_venue` is different: it
+holds the 182 grounds at their latest version, with `n_matches` and dates over all matches, so it is for browsing
+and is not a point-in-time feature table. The re-downloaded `venues_geo` and `weather` snapshots (locked 2026-10-21) hold every
 version's request; a build with a missing request stops.
 
 **Pre-ball match state:** each value is computed from earlier balls only. Two independent checks enforce this:
@@ -190,8 +193,9 @@ every build for types, keys, foreign keys and quality rules.
 - **Model inputs:** use only `pre_ball` columns. `hindsight` columns (`target_status`,
   `innings_length_status`, `innings_balls_limit`, `balls_remaining_before`, `target_runs`,
   `runs_required_before`, `batters_absent`) are for choosing which rows to train on.
-- **Venue features:** use the as-of venue context (the weather in `fact_match_weather_hourly` is placed that
-  way). `dim_venue` is a latest-version view and is not a feature source.
+- **Venue features:** use `dim_venue_version`, taking the latest version with `inputs_as_of` before the match
+  date (the weather in `fact_match_weather_hourly` is placed by venue version too). `dim_venue` is a
+  latest-version view and is not a feature source.
 - **Player features:** use `fact_player_match_form`, which is point-in-time. `report_player_careers` spans the
   whole snapshot, so it is not a feature source.
 - **Generalising:** results from men's elite cricket do not transfer to women's or associate cricket.
@@ -211,7 +215,7 @@ Parquet only.
 **Licences:** each file carries its own licence (LICENSES.md, croissant.json):
 - **ODC-BY 1.0:** Cricsheet-derived tables.
 - **CC BY 4.0:** weather.
-- **ODbL 1.0:** `dim_venue`, because of OpenStreetMap geocodes.
+- **ODbL 1.0:** `dim_venue` and `dim_venue_version`, because of OpenStreetMap geocodes.
 - **CC BY-SA 4.0:** `map_match_ids` and `report_international_coverage`, because of Wikipedia. These two files
   must stay share-alike.
 

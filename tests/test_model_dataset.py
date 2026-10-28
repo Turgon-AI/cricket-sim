@@ -81,7 +81,7 @@ def test_batting_at_home_sign(tiny_build, monkeypatch):
     assert con.execute("SELECT count(*) FILTER (batting_at_home <> 0) FROM model_rows").fetchone()[0] == 0
     # ... so plant a home side for one match (the SQL that turns it into +1 / -1 is what is checked)
     real = dataset.home_teams_as_of
-    monkeypatch.setattr(dataset, "home_teams_as_of", lambda rows: {**real(rows), "1144528": "India"})
+    monkeypatch.setattr(dataset, "home_teams_as_of", lambda con: {**real(con), "1144528": "India"})
     con = duckdb.connect()
     dataset.load(con, gold=tiny_build / "gold")
     got = dict(con.execute("""SELECT batting_team, min(batting_at_home) * 10 + max(batting_at_home) FROM model_rows
@@ -106,7 +106,7 @@ def test_a_match_failing_quality_is_not_clean(tiny_build, tmp_path):
     gold = tmp_path / "gold"
     gold.mkdir()
     con = duckdb.connect()
-    for t in ("fact_delivery", "fact_innings", "dim_venue"):
+    for t in ("fact_delivery", "fact_innings", "dim_venue_version"):
         (gold / f"{t}.parquet").symlink_to(tiny_build / "gold" / f"{t}.parquet")
     con.execute(f"""COPY (SELECT * REPLACE (CASE WHEN match_id = '1144528' THEN false ELSE passes_quality END
                                            AS passes_quality)
@@ -120,30 +120,30 @@ def test_a_match_failing_quality_is_not_clean(tiny_build, tmp_path):
 
 # ---------------------------------------------------------------- home team as of each date
 
-def _m(mid, day, venue="v", team_type="international", t1="A", t2=None):
-    return (mid, day, venue, team_type, t1, t2 or "X" + mid)
+def _home(matches, versions):
+    """matches: (match_id, start_date, venue_id); versions: (venue_id, venue_version, inputs_as_of, home_team)."""
+    con = duckdb.connect()
+    con.execute("CREATE TABLE dim_match (match_id VARCHAR, start_date DATE, venue_id VARCHAR)")
+    con.execute("CREATE TABLE dim_venue_version (venue_id VARCHAR, venue_version SMALLINT, inputs_as_of DATE, "
+                "home_team VARCHAR)")
+    con.executemany("INSERT INTO dim_match VALUES (?, ?, ?)", matches)
+    con.executemany("INSERT INTO dim_venue_version VALUES (?, ?, ?, ?)", versions)
+    return dataset.home_teams_as_of(con)
 
 
-def test_home_team_needs_three_earlier_internationals():
-    out = dataset.home_teams_as_of([_m("m1", "2020-01-01"), _m("m2", "2020-01-02"), _m("m3", "2020-01-03"),
-                                    _m("m4", "2020-01-04"), _m("other", "2020-01-04", venue="w")])
-    assert out == {"m1": None, "m2": None, "m3": None, "m4": "A", "other": None}
+def test_home_team_comes_from_the_latest_version_known_before_the_match():
+    versions = [("v", 1, "2020-01-01", None), ("v", 2, "2020-01-03", "A"), ("v", 3, "2020-01-06", "B")]
+    out = _home([("m1", "2020-01-01", "v"), ("m3", "2020-01-03", "v"), ("m4", "2020-01-04", "v"),
+                 ("m6", "2020-01-06", "v"), ("m7", "2020-01-07", "v"), ("other", "2020-01-07", "w")], versions)
+    # a version whose inputs include the match's own date is not known before it (m3 sees version 1, m6 version 2)
+    assert out == {"m1": None, "m3": None, "m4": "A", "m6": "A", "m7": "B", "other": None}
 
 
-def test_home_team_ignores_same_day_matches_and_club_matches():
-    out = dataset.home_teams_as_of([
-        _m("m1", "2020-01-01"), _m("m2", "2020-01-02"),
-        _m("m3a", "2020-01-03"), _m("m3b", "2020-01-03"),       # a double-header: neither sees the other
-        _m("club", "2020-01-04", team_type="club"),               # club cricket does not make a home side
-        _m("m5", "2020-01-05")])
-    assert out["m3a"] is None and out["m3b"] is None
-    assert out["club"] == "A" and out["m5"] == "A"
-
-
-def test_home_team_is_none_when_two_sides_share_the_ground():
-    out = dataset.home_teams_as_of([_m("m1", "2020-01-01", t2="B"), _m("m2", "2020-01-02", t2="B"),
-                                    _m("m3", "2020-01-03", t2="B"), _m("m4", "2020-01-04", t2="B")])
-    assert out["m4"] is None
+def test_a_snapshot_wide_version_is_never_used_before_its_last_match():
+    # venue_context: snapshot gives one version whose inputs run to the venue's last match: hindsight for all before
+    out = _home([("m1", "2020-01-01", "v"), ("m9", "2020-01-09", "v"), ("m10", "2020-01-10", "v")],
+                [("v", 1, "2020-01-09", "A")])
+    assert out == {"m1": None, "m9": None, "m10": "A"}
 
 
 # ---------------------------------------------------------------- fitting helpers fed by the table

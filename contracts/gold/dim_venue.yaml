@@ -61,7 +61,9 @@ schema:
     physicalType: VARCHAR
     description: >-
       Team that plays in at least half of the ground's international matches (at least 3 internationals, men's and
-      women's). NULL at neutral or rarely used grounds.
+      women's), over every match in the snapshot: the LATEST value. It can differ from the home team when a match was
+      played (Pakistan in the UAE, 2009 to 2021); use dim_venue_version through dim_match.venue_version for that.
+      NULL at neutral or rarely used grounds.
   - name: lat
     logicalType: number
     physicalType: DOUBLE
