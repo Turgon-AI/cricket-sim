@@ -98,6 +98,14 @@ schema:
     description: 'Fixed text ''internal-only: windows from Cricinfo-derived ball timestamps (Ari) are not redistributable''
       on ball_timestamps rows; NULL on default_estimate rows.'
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 25,712 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 24000
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: window_ends_after_start
     type: sql
     description: Window end is after window start.

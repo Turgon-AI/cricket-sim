@@ -303,6 +303,14 @@ schema:
     - property: unit
       value: batters
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 11,689,170 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 11000000
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: target_present_iff_known
     description: target_runs is filled exactly when target_status says the target is known
     type: sql

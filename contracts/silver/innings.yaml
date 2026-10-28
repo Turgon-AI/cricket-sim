@@ -112,6 +112,14 @@ schema:
     description: Names of players who did not bat or field in the innings because absent hurt, joined by '|'. NULL
       when none.
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 51,196 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 48000
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: row_count_floor
     metric: rowCount
     mustBeGreaterOrEqualTo: 14

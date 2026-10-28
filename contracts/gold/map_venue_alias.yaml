@@ -53,6 +53,14 @@ schema:
       query: SELECT count(*) FROM ${table} WHERE ${column} < 1
       mustBe: 0
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 466 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 440
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: one_row_per_spelling
     description: each (venue, city) pair appears once, so it maps to one venue_id
     type: sql

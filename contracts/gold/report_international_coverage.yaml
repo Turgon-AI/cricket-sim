@@ -163,6 +163,14 @@ schema:
     description: Wikipedia revision id of that page, the pinned version (oldid in the page URL). Together with page_title
       it identifies the exact source page revision.
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 5,684 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 5300
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: row_count_floor
     metric: rowCount
     mustBeGreaterOrEqualTo: 4000

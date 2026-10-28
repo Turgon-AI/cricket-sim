@@ -119,13 +119,33 @@ def _outputs() -> list[Path]:
     return sorted(p for folder in (STAGING, SILVER, GOLD) for p in folder.glob("*.parquet"))
 
 
-def build(allow_dirty: bool = False) -> None:
+SHRINK_LIMIT = 0.01  # a table may lose at most 1% of its rows from one build to the next without --allow-shrink
+
+
+def shrink_check(tables: dict, previous: dict | None, allow_shrink: bool) -> dict:
+    """Compare row counts with the build being replaced. Contract floors catch a gross loss; this catches a
+    snapshot or step that quietly dropped rows. A deliberate drop (narrower scope, a dedup fix) needs --allow-shrink."""
+    if previous is None:
+        return {"previous_build": None, "allowed": allow_shrink, "shrunk": {}}
+    shrunk = {name: {"previous": previous["tables"][name]["rows"], "now": t["rows"]} for name, t in tables.items()
+              if name in previous["tables"] and t["rows"] < previous["tables"][name]["rows"] * (1 - SHRINK_LIMIT)}
+    if shrunk and not allow_shrink:
+        lines = [f"{name}: {v['previous']:,} -> {v['now']:,} rows" for name, v in sorted(shrunk.items())]
+        raise SystemExit(f"{len(shrunk)} table(s) lost more than {SHRINK_LIMIT:.0%} of their rows since build "
+                         f"{previous['build_fingerprint'][:16]}:\n  " + "\n  ".join(lines) +
+                         "\nIf this is intended (scope or a fix), rebuild with --allow-shrink (recorded in run.json).")
+    return {"previous_build": previous["build_fingerprint"], "allowed": allow_shrink, "shrunk": shrunk}
+
+
+def build(allow_dirty: bool = False, allow_shrink: bool = False) -> None:
     from .transaction import new_stage, publish, run_worker, writer_lock
 
     with writer_lock(DATA):
         stage = new_stage(DATA, "build")
         (stage / "bronze").symlink_to(DATA / "bronze", target_is_directory=True)
-        run_worker(stage, "build", {"allow_dirty": allow_dirty})
+        previous = DATA / "gold" / "run.json"
+        run_worker(stage, "build", {"allow_dirty": allow_dirty, "allow_shrink": allow_shrink,
+                                    "previous_run": str(previous) if previous.exists() else None})
 
         def warehouse(name):
             if name != "warehouse.duckdb":
@@ -140,7 +160,7 @@ def build(allow_dirty: bool = False) -> None:
         publish(DATA, stage, ["staging", "silver", "gold", "warehouse.duckdb"], prepare=warehouse)
 
 
-def _build(allow_dirty: bool = False) -> None:
+def _build(allow_dirty: bool = False, allow_shrink: bool = False, previous_run: str | None = None) -> None:
     for folder in (STAGING, SILVER, GOLD):
         folder.mkdir(parents=True, exist_ok=True)
     code = _git_state()
@@ -180,7 +200,8 @@ def _build(allow_dirty: bool = False) -> None:
     }
     outputs = {"tables": tables,
                "headline_sha256": hashlib.sha256((GOLD / "headline.json").read_bytes()).hexdigest()}
-    run = {**inputs, "code": code, **outputs,
+    previous = json.loads(Path(previous_run).read_text()) if previous_run else None
+    run = {**inputs, "code": code, **outputs, "shrink_check": shrink_check(tables, previous, allow_shrink),
            "build_fingerprint": hashlib.sha256(json.dumps(outputs, sort_keys=True).encode()).hexdigest()}
     (GOLD / "run.json").write_text(json.dumps(run, indent=2) + "\n")
     con.close()

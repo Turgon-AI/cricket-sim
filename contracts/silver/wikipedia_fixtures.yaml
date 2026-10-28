@@ -153,6 +153,14 @@ schema:
     physicalType: VARCHAR
     description: Which of 'cricinfo_match_id', 'start_date', 'teams' disagreed. NULL if no conflict.
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 6,258 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 5900
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: row_count_floor
     metric: rowCount
     mustBeGreaterOrEqualTo: 4000

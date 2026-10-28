@@ -51,6 +51,14 @@ schema:
       query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 1 AND 100000
       mustBe: 0
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 984 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 930
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - type: sql
     name: venue_city_pairs_unique
     description: Each (venue, city) spelling appears once; a missing city counts as its own value.

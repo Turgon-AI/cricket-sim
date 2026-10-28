@@ -68,6 +68,14 @@ schema:
     physicalType: BOOLEAN
     description: True when a match has 3+ review events and more of them match the next ball than the same ball.
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 9,510 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 9000
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: every_row_lands_on_a_ball
     type: sql
     query: SELECT coalesce(sum(unmatched_rows), 0) FROM ${table}

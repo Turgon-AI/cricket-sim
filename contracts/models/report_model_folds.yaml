@@ -94,6 +94,14 @@ schema:
     - property: unit
       value: grid steps
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 19 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 18
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: win_probability_is_monotone_on_the_state_grid
     type: sql
     description: Every fold's win-probability models move the right way on the whole state grid.

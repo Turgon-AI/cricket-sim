@@ -72,6 +72,15 @@ schema:
     logicalType: string
     physicalType: VARCHAR
     description: ESPNcricinfo id from Ari's player table; agrees with cricinfo_id wherever both exist.
+  quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 9,374 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 8900
+    customProperties:
+    - property: fullDataOnly
+      value: true
 customProperties:
 - property: layer
   value: silver

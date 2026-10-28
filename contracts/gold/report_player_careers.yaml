@@ -100,6 +100,14 @@ schema:
     - property: unit
       value: wickets
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 5,774 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 5400
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: first_not_after_last
     type: sql
     query: SELECT count(*) FROM ${table} WHERE first_match_date > last_match_date

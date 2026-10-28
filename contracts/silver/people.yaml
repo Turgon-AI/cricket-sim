@@ -149,6 +149,14 @@ schema:
     description: Second icc pulselive id, as text, from the Cricsheet register. NULL when Cricsheet has no mapping
       for this person. A person can hold more than one id for a site (the _2/_3 columns).
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 18,651 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 17000
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: row_count_floor
     metric: rowCount
     mustBeGreaterOrEqualTo: 90

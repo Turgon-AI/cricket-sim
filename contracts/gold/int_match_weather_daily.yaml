@@ -277,6 +277,14 @@ schema:
     - property: unit
       value: hours
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 32,324 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 30000
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: weather_available_iff_hours
     type: sql
     description: weather_available is TRUE exactly when window_hours_expected is present.

@@ -184,9 +184,11 @@ FLOORED = {
 }
 
 
-def _row_floor(c) -> int | None:
+def _row_floor(c, full_data: bool = False) -> int | None:
+    """The sample-sized row floor, or with full_data the real-data one (fullDataOnly, skipped for the fixture)."""
     for rule in c.obj.get("quality") or []:
-        if rule.get("metric") == "rowCount" and "mustBeGreaterOrEqualTo" in rule:
+        if (rule.get("metric") == "rowCount" and "mustBeGreaterOrEqualTo" in rule
+                and bool(contracts._custom(rule.get("customProperties")).get("fullDataOnly")) == full_data):
             return rule["mustBeGreaterOrEqualTo"]
     return None
 
@@ -211,8 +213,8 @@ def test_row_count_floors_hold_on_the_full_data_when_present():
         pytest.skip("no full build under data/")
     rows = {k.split("/")[1]: v["rows"] for k, v in json.loads(run.read_text())["tables"].items()}
     for c in contracts.load_all().values():
-        if c.layer != "models" and _row_floor(c) is not None:
-            assert rows[c.table] >= _row_floor(c), c.table
+        if c.layer != "models":
+            assert rows[c.table] >= _row_floor(c, full_data=True), c.table
 
 
 def test_contracts_fail_when_a_source_fed_silver_table_is_empty(tiny_build, tmp_path):

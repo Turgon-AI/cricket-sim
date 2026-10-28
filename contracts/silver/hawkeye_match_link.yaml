@@ -118,6 +118,14 @@ schema:
       query: SELECT count(*) FROM ${table} WHERE ${column} NOT BETWEEN 0 AND 1
       mustBe: 0
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 1,767 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 1600
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: matched_iff_has_match_id
     type: sql
     description: match_id is NULL exactly when the method is 'unmatched'.

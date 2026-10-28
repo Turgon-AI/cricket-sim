@@ -115,6 +115,14 @@ schema:
       it identifies the exact source page revision.
     required: true
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 4,597 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 4300
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: numbers_agree_consistent
     description: numbers_agree is exactly cricsheet_number = reference_number
     type: sql

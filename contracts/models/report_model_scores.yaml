@@ -111,6 +111,14 @@ schema:
     - property: unit
       value: score
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 240 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 220
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: interval_contains_point
     description: every interval brackets its point estimate
     type: sql

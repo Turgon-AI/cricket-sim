@@ -142,6 +142,14 @@ schema:
     - property: timingClass
       value: predicted_delivery
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 1,634,290 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 1500000
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: length_fields_null_together
     type: sql
     description: Length value, confidence and explicit flag are present or absent together.

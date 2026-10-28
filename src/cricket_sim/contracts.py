@@ -12,6 +12,8 @@ Project conventions inside the standard (ODCS `customProperties`):
                 sources (upstream source ids, see lineage.SOURCE_LICENCE), upstream (tables it reads),
                 timingClass (per-ball layers only)
   column level  timingClass (per-ball tables), unit, extraSources (column adds a source beyond its table's)
+  quality rule  fullDataOnly: true for a rule that holds only on the complete snapshots (the real-data row
+                floors); it is skipped when the snapshots are a SUBSET fixture, such as the 10-match CI sample
 
 Checks run on every build (any failure stops the build):
   - every built table has a contract and every contract has a table
@@ -30,7 +32,7 @@ from pathlib import Path
 
 import yaml
 
-from .paths import DATA, GOLD, MODELS, ROOT, SILVER, STAGING
+from .paths import DATA, GOLD, MODELS, ROOT, SILVER, STAGING, SUBSET
 from .transaction import pending_publications
 
 CONTRACTS = ROOT / "contracts"
@@ -39,6 +41,7 @@ LAYERS = {"staging": STAGING, "silver": SILVER, "gold": GOLD, "models": MODELS}
 BUILD_LAYERS = ("staging", "silver", "gold")  # `cricket build`; `cricket model` writes the models layer
 TABLE_PROPERTIES = {"layer", "kind", "sources", "upstream", "timingClass"}
 COLUMN_PROPERTIES = {"timingClass", "unit", "extraSources"}
+RULE_PROPERTIES = {"fullDataOnly"}
 KINDS = {"staging", "entity", "event", "reference", "derived", "dim", "fact", "map", "report", "model"}
 OPERATORS = {
     "mustBe": lambda v, x: v == x, "mustNotBe": lambda v, x: v != x,
@@ -148,6 +151,10 @@ def lint() -> list[str]:
                 problems.append(f"{where}: column {col['name']} needs a description")
             if extra:
                 problems.append(f"{where}: column {col['name']} has unknown customProperties {sorted(extra)}")
+        for rule in [*(c.obj.get("quality") or []), *(r for col in c.columns for r in col.get("quality") or [])]:
+            extra = set(_custom(rule.get("customProperties"))) - RULE_PROPERTIES
+            if extra:
+                problems.append(f"{where}: quality rule {rule.get('name')!r} has unknown customProperties {sorted(extra)}")
         if props.get("timingClass"):
             classes = {c.column_props(col).get("timingClass") for col in c.columns if not col.get("primaryKey")}
             # `hindsight` may annotate individual columns of a pre_ball table (see ball_layers.py)
@@ -188,15 +195,15 @@ def _rule_value(con, c: Contract, rule: dict, column: str | None) -> float:
 
 def _check_rules(con, c: Contract, rules, column: str | None) -> tuple[int, list[str]]:
     failures = []
-    for rule in rules or []:
-        if rule.get("type") == "text":
-            continue
+    rules = [r for r in rules or [] if r.get("type") != "text"
+             and not (SUBSET and _custom(r.get("customProperties")).get("fullDataOnly"))]
+    for rule in rules:
         value = _rule_value(con, c, rule, column)
         op = next(k for k in OPERATORS if k in rule)
         if not OPERATORS[op](value, rule[op]):
             label = rule.get("name") or rule.get("metric") or rule.get("description", "sql rule")
             failures.append(f"{c.table}{'.' + column if column else ''}: {label} = {value}, expected {op} {rule[op]}")
-    return len(rules or []), failures
+    return len(rules), failures
 
 
 def enforce(con, layers: tuple = BUILD_LAYERS) -> dict:

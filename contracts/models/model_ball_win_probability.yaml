@@ -134,6 +134,14 @@ schema:
         - chase_target_not_set
       mustBe: 0
   quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least about 95% of the 1,090,430 rows of the 2026-10-27 real
+      build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 1000000
+    customProperties:
+    - property: fullDataOnly
+      value: true
   - name: excluded_rows_have_no_numeric_outputs
     type: sql
     query: >-
