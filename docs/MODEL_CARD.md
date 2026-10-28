@@ -1,7 +1,7 @@
 # Model card: ODI ball-by-ball win probability and expected runs
 
-> **Status (2026-10-23):** Every number below was regenerated from the current code (build `f62d060c7964faee`,
-> model run `0f4e92549d533de9`).
+> **Status (2026-10-28):** Every number below was regenerated from the current code (build `3eda829dd9fad0aa`,
+> model run `86bc48aab1aeec66`), except the recalibration audit in Calibration, which is from the 2026-10-23 run.
 > **What the code guarantees:**
 > - Venue home status is the home team of the latest `dim_venue_version` whose inputs end before the match date
 >   (`dataset.home_teams_as_of`), so it uses only matches on earlier dates.
@@ -24,13 +24,13 @@
 >   0.001, so the fold choice did not flatter the model.
 > **Still open:** the model family was chosen on the same walk-forward folds that are scored here; the holdout
 > above is a check on those folds, not a fresh choice. There is no baseline with the same inputs (the state
-> logistic has no home term), so the first-innings gain of 0.0044 Brier is over a weaker baseline. The recent
+> logistic has no home term), so the first-innings gain of 0.0045 Brier is over a weaker baseline. The recent
 > seasons score worse than the all-years headline (0.195 against 0.189 in the first innings), and 2026 is the
 > worst season in both innings. The boosted expected-runs table is far off in rare late states with few wickets
 > down.
 
 Structured after *Model Cards for Model Reporting* (Mitchell et al., 2019). Numbers are from model run
-`0f4e92549d533de9` (model fingerprint), built on data build `f62d060c7964faee`. They are in
+`86bc48aab1aeec66` (model fingerprint), built on data build `3eda829dd9fad0aa`. They are in
 `data/models/report_model_*.parquet`, which also ships with the dataset.
 
 ## Model details
@@ -122,30 +122,31 @@ the one match that fails quality are not predicted: their rows are in the tables
 
 ## Results
 
-**Brier score, regenerated on 2026-10-23 from the current source** (lower is better; brackets are 95% intervals
+**Brier score, regenerated on 2026-10-28 from the current source** (lower is better; brackets are 95% intervals
 from 1,000 bootstrap resamples of whole matches). The first two columns are the walk-forward folds over all 19
 seasons; the last two are the locked holdout, one fit on every clean season before 2023 scored once on 2023-2026
 (410 matches):
 
 | | innings 1, all years | innings 2, all years | innings 1, holdout 2023-26 | innings 2, holdout 2023-26 |
 |---|---|---|---|---|
-| **this model** | **0.1892** [0.181, 0.198] | **0.1197** [0.112, 0.128] | **0.1955** [0.180, 0.211] | **0.1286** [0.111, 0.145] |
+| **this model** | **0.1892** [0.181, 0.198] | **0.1195** [0.111, 0.128] | **0.1960** [0.180, 0.212] | **0.1285** [0.111, 0.145] |
 | state logistic | 0.1937 [0.186, 0.203] | 0.1213 [0.113, 0.129] | 0.2046 [0.189, 0.221] | 0.1328 [0.116, 0.151] |
 | base rate | 0.2474 [0.246, 0.249] | 0.2469 [0.245, 0.248] | 0.2475 [0.245, 0.250] | 0.2470 [0.244, 0.249] |
 
-Log loss, all years: model 0.5659 and 0.3797, state logistic 0.5764 and 0.3842, base rate 0.6936 and 0.6934
-(innings 1 and 2). The walk-forward folds on 2023-2026 alone score 0.1947 and 0.1279, within 0.001 of the
+Log loss, all years: model 0.5658 and 0.3793, state logistic 0.5764 and 0.3842, base rate 0.6936 and 0.6934
+(innings 1 and 2). The walk-forward folds on 2023-2026 alone score 0.1954 and 0.1279, within 0.001 of the
 holdout.
 
 **Is the edge over the state logistic real?** On the same balls (`report_model_paired`), the model's Brier is
-lower by 0.0044 [0.0025, 0.0065] in the first innings and 0.0016 [0.0007, 0.0026] in the chase, and it has the
-lower Brier in 15 of 19 seasons in both innings (two-sided sign test p = 0.019). So the gain is small but not
+lower by 0.0045 [0.0026, 0.0067] in the first innings and 0.0018 [0.0008, 0.0028] in the chase, and it has the
+lower Brier in 16 of 19 seasons in the first innings and 15 of 19 in the chase (two-sided sign test p = 0.004 and
+0.019). So the gain is small but not
 noise. It is a gain over a baseline without the home input; a same-input baseline is still missing.
 
 **By era:**
 - **Innings 1:** the model has the lowest Brier in every era (0.189, 0.182 and 0.195). The paired gain over the
-  state logistic is clear only from 2021 (0.0085 [0.0047, 0.0122]); in 2008-14 the interval includes zero.
-- **Innings 2:** it is best in 2015-20 (0.107) and 2021- (0.131). In 2008-14 it is slightly worse than the
+  state logistic is clear only from 2021 (0.0085 [0.0044, 0.0122]); in 2008-14 the interval includes zero.
+- **Innings 2:** it is best in 2015-20 (0.107) and 2021- (0.130). In 2008-14 it is slightly worse than the
   state logistic (0.1202 against 0.1195, 3 of 7 seasons; the interval includes zero).
 
 **Match-level Brier, side batting first wins:**
@@ -174,14 +175,14 @@ less than knowing the match state helps the model: it beats the phase average in
 published model takes no player or venue input, so this is the gap a player-aware model would have to close.
 
 **Cricinfo's published win probability (internal, same balls):** on the clean held-out balls where Cricinfo's
-pre-ball number exists, Brier 0.189 against Cricinfo's 0.210 in the first innings (41,619 balls) and 0.119 against
+pre-ball number exists, Brier 0.188 against Cricinfo's 0.210 in the first innings (41,619 balls) and 0.119 against
 0.118 in the chase (35,664 balls). Cricinfo's model sees team news and conditions that this one does not, its
 perspective is inferred from the data in its favour, and the table (`report_model_vs_cricinfo_internal`) is
 Cricinfo-derived, so it is never exported. docs/VALIDATION.md records how the comparison is made.
 
 **Other models (the comparison sets differ, so read these as context, not a ranking):**
 - **The open chase model of akshatsharma-02/odi-cricket-analytics** reports Brier 0.132 on chases after August
-  2022. This model scores 0.131 on chases from 2021.
+  2022. This model scores 0.130 on chases from 2021.
 
 **Model choices previously compared on the reported folds (not an independent holdout):**
 - **Gradient boosting for win probability:** 0.01-0.03 worse Brier. Every ball of a match shares its ratings and
@@ -233,4 +234,4 @@ The full tables are in `report_model_calibration`.
   - as-of player features;
   - T20 versions.
 
-<!-- cricket-sim card stamp: build_fingerprint=f62d060c7964faee model_fingerprint=0f4e92549d533de9 innings_1_brier=0.1892 innings_2_brier=0.1197 -->
+<!-- cricket-sim card stamp: build_fingerprint=3eda829dd9fad0aa model_fingerprint=86bc48aab1aeec66 innings_1_brier=0.1892 innings_2_brier=0.1195 -->
