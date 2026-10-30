@@ -60,7 +60,7 @@ def export_dropping_columns(tmp_path_factory, tiny_build):
     git("init", "-q"), git("add", "-A"), git("commit", "-q", "-m", "scratch", "--no-gpg-sign")
     env = {**os.environ, "CRICKET_SIM_DATA": str(data), "CRICKET_SIM_SNAPSHOTS": str(FIXTURE),
            "PYTHONPATH": str(repo / "src")}
-    done = subprocess.run([sys.executable, "-m", "cricket_sim.cli", "export", "--allow-dirty"], cwd=repo, env=env,
+    done = subprocess.run([sys.executable, "-m", "cricket_sim.cli", "export", "--allow-dirty", "--skip-full-check"], cwd=repo, env=env,
                           capture_output=True, text=True, timeout=900)
     assert done.returncode == 0, done.stdout + done.stderr
     return next((data / "export").iterdir())
@@ -160,13 +160,17 @@ def test_a_dirty_run_is_refused_unless_dirty_is_allowed_and_a_clean_run_passes(t
     gold_run = _set_dirty(data, gold_run, True)
     with pytest.raises(SystemExit, match="refusing to export data or models made from uncommitted code"):
         integrity.verify_release_inputs(data, gold_run, allow_dirty=False)
-    assert integrity.verify_release_inputs(data, gold_run, allow_dirty=True)["model_fingerprint"]
+    with pytest.raises(SystemExit, match="no passed full-data check"):     # --allow-dirty no longer skips the check
+        integrity.verify_release_inputs(data, gold_run, allow_dirty=True)
+    assert integrity.verify_release_inputs(data, gold_run, allow_dirty=True, skip_full_check=True)[1] is None
     gold_run = _set_dirty(data, gold_run, False)
     with pytest.raises(SystemExit, match="no passed full-data check"):     # clean, but full_check.sh never passed
         integrity.verify_release_inputs(data, gold_run, allow_dirty=False)
     (data / "gold" / "run.json").write_text(json.dumps(gold_run))     # the record is taken from the runs on disk
-    integrity.record_full_check(data)
-    assert integrity.verify_release_inputs(data, gold_run, allow_dirty=False)["model_fingerprint"]
+    model_run = json.loads((data / "models" / "run.json").read_text())
+    integrity.record_full_check(data, gold_run["build_fingerprint"], model_run["model_fingerprint"])
+    model_run, record = integrity.verify_release_inputs(data, gold_run, allow_dirty=False)
+    assert model_run["model_fingerprint"] and record["passed"]
 
 
 def test_one_dirty_run_of_the_two_is_enough_to_refuse(tiny_build, tmp_path):

@@ -38,7 +38,7 @@ def test_export_refuses_mutated_inputs_and_preserves_existing_export(tiny_build,
         con.execute(f"COPY changed TO '{path}' (FORMAT parquet, COMPRESSION zstd)")
         con.close()
         message = "artifact fingerprint mismatch"
-    result = run_cli(data, "export", "--allow-dirty")
+    result = run_cli(data, "export", "--allow-dirty", "--skip-full-check")
     assert result.returncode != 0
     assert message in result.stdout + result.stderr
     after = {p.relative_to(data/"export"): hashlib.sha256(p.read_bytes()).hexdigest()

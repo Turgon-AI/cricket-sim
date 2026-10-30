@@ -10,7 +10,7 @@ import subprocess
 
 import pytest
 
-from cricket_sim import build, contracts, integrity
+from cricket_sim import build, contracts, export, integrity
 
 
 # ---- git state ---------------------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ def test_failing_git_is_recorded_as_dirty(monkeypatch):
 
 def _runs(build_fp="b" * 64, model_fp="m" * 64):
     gold = {"build_fingerprint": build_fp, "code": {"commit": "c" * 40, "dirty": False, "source_sha256": "s" * 64}}
-    return gold, {"model_fingerprint": model_fp}
+    return gold, {"model_fingerprint": model_fp, "build_fingerprint": build_fp}
 
 
 def _write_runs(data, gold, model):
@@ -44,16 +44,19 @@ def _write_runs(data, gold, model):
     (data / "models/run.json").write_text(json.dumps(model))
 
 
+def _record(data, gold, model):
+    integrity.record_full_check(data, gold["build_fingerprint"], model["model_fingerprint"])
+
+
 def test_release_export_needs_a_passed_full_check(tmp_path):
     gold, model = _runs()
     _write_runs(tmp_path, gold, model)
     with pytest.raises(SystemExit, match="no passed full-data check"):
-        integrity.verify_full_check(tmp_path, gold, model, allow_dirty=False)
-    integrity.verify_full_check(tmp_path, gold, model, allow_dirty=True)        # tests and dirty exports skip it
+        integrity.verify_full_check(tmp_path, gold, model, skip=False)
+    assert integrity.verify_full_check(tmp_path, gold, model, skip=True) is None   # tests skip it, and say so
 
-    integrity.record_full_check(tmp_path)
-    integrity.verify_full_check(tmp_path, gold, model, allow_dirty=False)
-    record = json.loads((tmp_path / integrity.FULL_CHECK).read_text())
+    _record(tmp_path, gold, model)
+    record = integrity.verify_full_check(tmp_path, gold, model, skip=False)
     assert record["passed"] and record["build_fingerprint"] == gold["build_fingerprint"]
 
 
@@ -61,15 +64,46 @@ def test_release_export_needs_a_passed_full_check(tmp_path):
 def test_a_full_check_of_another_build_does_not_count(tmp_path, stale):
     gold, model = _runs()
     _write_runs(tmp_path, gold, model)
-    integrity.record_full_check(tmp_path)
+    _record(tmp_path, gold, model)
     if stale == "build":
         gold = {**gold, "build_fingerprint": "x" * 64}
     elif stale == "model":
-        model = {"model_fingerprint": "x" * 64}
+        model = {**model, "model_fingerprint": "x" * 64}
     else:
         gold = {**gold, "code": {**gold["code"], "source_sha256": "x" * 64}}
     with pytest.raises(SystemExit, match="no passed full-data check"):
-        integrity.verify_full_check(tmp_path, gold, model, allow_dirty=False)
+        integrity.verify_full_check(tmp_path, gold, model, skip=False)
+
+
+@pytest.mark.parametrize("changed", ["build", "model"])
+def test_nothing_is_recorded_when_the_live_runs_changed_during_the_checks(tmp_path, changed):
+    # another terminal ran `cricket build` or `cricket model` while full_check.sh was checking the earlier one
+    checked_gold, checked_model = _runs()
+    live_gold, live_model = _runs(build_fp="x" * 64) if changed == "build" else _runs(model_fp="x" * 64)
+    _write_runs(tmp_path, live_gold, live_model)
+    with pytest.raises(SystemExit, match="changed while the checks ran"):
+        _record(tmp_path, checked_gold, checked_model)
+    assert not (tmp_path / integrity.FULL_CHECK).exists()
+
+
+def test_a_corrupt_record_counts_as_no_record(tmp_path):
+    gold, model = _runs()
+    _write_runs(tmp_path, gold, model)
+    (tmp_path / integrity.FULL_CHECK).write_text("{not json")
+    with pytest.raises(SystemExit, match="no passed full-data check"):
+        integrity.verify_full_check(tmp_path, gold, model, skip=False)
+    assert integrity.verify_full_check(tmp_path, gold, model, skip=True) is None
+
+
+def test_an_export_without_the_record_says_it_is_not_a_release(tiny_build):
+    readme = next((tiny_build / "export").iterdir()) / "README.md"
+    text = readme.read_text()
+    assert "**WARNING: this export is not a release.**" in text and "--skip-full-check" in text
+    assert not (readme.parent / "full_check.json").exists()
+    gold, model = _runs()
+    gold["code"]["dirty"] = False
+    assert export.not_a_release(gold, {"code": {"dirty": False}}, {"passed": True}) == []
+    assert len(export.not_a_release(gold, {"code": {"dirty": True}}, None)) == 2
 
 
 def test_the_tiny_build_has_no_full_check_record(tiny_build):

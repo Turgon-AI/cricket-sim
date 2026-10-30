@@ -15,7 +15,7 @@ def test_failed_export_keeps_previous_complete_directory(tmp_path, monkeypatch):
     monkeypatch.setattr(export_module, "DATA", data)
     monkeypatch.setattr(export_module, "GOLD", gold)
 
-    def fail(_allow_dirty, stage):
+    def fail(_allow_dirty, stage, _skip_full_check=False):
         stage.mkdir(parents=True)
         (stage / "manifest.json").write_text("partial")
         raise RuntimeError("simulated export failure")

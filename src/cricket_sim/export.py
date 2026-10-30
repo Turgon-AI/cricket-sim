@@ -115,12 +115,12 @@ def wikipedia_sources_md() -> list[str]:
     return lines
 
 
-def export(allow_dirty: bool = False) -> None:
+def export(allow_dirty: bool = False, skip_full_check: bool = False) -> None:
     with writer_lock(DATA):
         run = json.loads((GOLD / "run.json").read_text())
         name = "export/" + run["build_fingerprint"][:12]
         stage = new_stage(DATA, "export")
-        _write_export(allow_dirty, stage/name)
+        _write_export(allow_dirty, stage/name, skip_full_check)
         _refuse_to_replace(DATA/name, stage/name)
         publish(DATA, stage, [name])
 
@@ -229,10 +229,25 @@ def _checked_cards(run: dict, model_run: dict, allow_dirty: bool) -> dict:
     return texts
 
 
-def _write_export(allow_dirty: bool, out) -> None:
+def not_a_release(run: dict, model_run: dict, full_check: dict | None) -> list[str]:
+    """Why this export is not a release (empty when it is one). Shown at the top of its README."""
+    reasons = []
+    if full_check is None:
+        reasons.append("no passed full-data check (scripts/full_check.sh) is recorded for this build and model "
+                       "(exported with --skip-full-check)")
+    if any(r.get("code", {}).get("dirty", True) for r in (run, model_run)):
+        reasons.append("the data or models were made from uncommitted code, or git could not report the tree's state "
+                       "(exported with --allow-dirty)")
+    return reasons
+
+
+def _write_export(allow_dirty: bool, out, skip_full_check: bool = False) -> None:
     files = plan()
     run = json.loads((GOLD / "run.json").read_text())
-    model_run = verify_release_inputs(DATA, run, allow_dirty)
+    model_run, full_check = verify_release_inputs(DATA, run, allow_dirty, skip_full_check)
+    reasons = not_a_release(run, model_run, full_check)
+    for reason in reasons:
+        print(f"WARNING: not a release: {reason}", file=sys.stderr)
     cards = _checked_cards(run, model_run, allow_dirty)
     con = duckdb.connect()
     problems = contracts.lint()
@@ -263,6 +278,11 @@ def _write_export(allow_dirty: bool, out) -> None:
     lines = [f"# {title}", "",
              f"Built from pipeline fingerprint `{run['build_fingerprint'][:16]}` (commit `{(run['code']['commit'] or 'unknown')[:10]}`).",
              "Each file carries its own licence; see LICENSES.md. Machine-readable metadata: croissant.json.", ""]
+    if reasons:
+        lines[2:2] = ["> **WARNING: this export is not a release.**", *(f"> - {r}" for r in reasons), ""]
+    else:
+        lines.insert(-1, f"The full-data check passed on this build and model at {full_check['recorded_at']} "
+                         "(full_check.json).")
     for f, rows, _ in dictionary:
         c = contracts.get(f["table"])
         lines += [f"## {f['file']}  ({rows:,} rows, {f['licence']})", "", c.obj["description"].strip(), "",
@@ -286,6 +306,8 @@ def _write_export(allow_dirty: bool, out) -> None:
     for card, text in cards.items():
         (out / card).write_text(text)
     shutil.copy(ROOT / "NOTICE", out / "NOTICE")
+    if full_check:
+        (out / "full_check.json").write_text(json.dumps(full_check, indent=2) + "\n")
     print(f"exported {len(files)} tables to {out}")
 
 

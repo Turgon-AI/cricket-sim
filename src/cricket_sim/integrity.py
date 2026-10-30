@@ -53,41 +53,64 @@ def full_check_stamp(gold_run: dict, model_run: dict) -> dict:
             "source_sha256": gold_run["code"]["source_sha256"]}
 
 
-def record_full_check(data: Path) -> None:
+def record_full_check(data: Path, build_fingerprint: str, model_fingerprint: str) -> None:
     """Called by scripts/full_check.sh after every check passed: write gold/full_check.json for the live build.
 
-    It sits in gold/, so the next build (which publishes a fresh gold/) drops it, and export refuses until the
-    full check is run again."""
+    The script passes the fingerprints it saw right after its build and model steps. If either changed while the
+    checks ran (another `cricket build` or `cricket model` in another terminal), the checks did not see what is
+    live now, so nothing is recorded. It sits in gold/, so the next build (which publishes a fresh gold/) drops it,
+    and export refuses until the full check is run again."""
     import os
     from datetime import datetime, timezone
     from .transaction import writer_lock
 
-    with writer_lock(data):
+    with writer_lock(data, wait=True):
         gold_run = json.loads((data / "gold/run.json").read_text())
         model_run = json.loads((data / "models/run.json").read_text())
+        live = (gold_run["build_fingerprint"], model_run["model_fingerprint"])
+        if live != (build_fingerprint, model_fingerprint) or model_run.get("build_fingerprint") != live[0]:
+            raise SystemExit(f"the live build or model changed while the checks ran (checked build "
+                             f"{build_fingerprint[:16]}, model {model_fingerprint[:16]}; live build {live[0][:16]}, "
+                             f"model {live[1][:16]}). Nothing recorded; run scripts/full_check.sh again.")
         record = {"passed": True, **full_check_stamp(gold_run, model_run),
                   "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
         tmp = data / (FULL_CHECK + ".tmp")
-        tmp.write_text(json.dumps(record, indent=2) + "\n")
+        with open(tmp, "w") as f:
+            f.write(json.dumps(record, indent=2) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
         os.replace(tmp, data / FULL_CHECK)
     print(f"recorded the passed full check for build {record['build_fingerprint'][:16]} in {data / FULL_CHECK}")
 
 
-def verify_full_check(data: Path, gold_run: dict, model_run: dict, allow_dirty: bool) -> None:
+def read_full_check(data: Path, gold_run: dict, model_run: dict) -> dict | None:
+    """The full-check record if it vouches for exactly this build and model, else None (missing, stale or
+    unreadable)."""
+    try:
+        record = json.loads((data / FULL_CHECK).read_text())
+    except (OSError, ValueError):
+        return None
+    ok = isinstance(record, dict) and record.get("passed") is True and all(
+        record.get(k) == v for k, v in full_check_stamp(gold_run, model_run).items())
+    return record if ok else None
+
+
+def verify_full_check(data: Path, gold_run: dict, model_run: dict, skip: bool) -> dict | None:
     """A release export needs proof that scripts/full_check.sh passed on exactly this build and model.
-    CI only builds the 10-match sample, so without this nothing shows the real data was checked."""
-    path = data / FULL_CHECK
-    record = json.loads(path.read_text()) if path.exists() else None
-    if record and record.get("passed") and all(record.get(k) == v
-                                               for k, v in full_check_stamp(gold_run, model_run).items()):
-        return
-    if not allow_dirty:
-        raise SystemExit(f"no passed full-data check recorded for this build and model ({FULL_CHECK}); "
-                         "run scripts/full_check.sh, which exports at its end")
+    CI only builds the 10-match sample, so without this nothing shows the real data was checked.
+    `skip` (export --skip-full-check, tests only) lets the export through; the export then says it is not a release."""
+    record = read_full_check(data, gold_run, model_run)
+    if record or skip:
+        return record
+    from .paths import SUBSET
+    hint = ("this is the 10-match sample, which is never a release; tests export it with --skip-full-check"
+            if SUBSET else f"run scripts/full_check.sh {data}, then export again")
+    raise SystemExit(f"no passed full-data check recorded for this build and model ({FULL_CHECK}); {hint}")
 
 
-def verify_release_inputs(data: Path, gold_run: dict, allow_dirty: bool) -> dict:
-    """Verify both generations before any export files are staged."""
+def verify_release_inputs(data: Path, gold_run: dict, allow_dirty: bool, skip_full_check: bool = False) -> tuple[dict, dict | None]:
+    """Verify both generations before any export files are staged. Returns the model run and the full-check
+    record (None when --skip-full-check let an unchecked build through)."""
     path = data / "models/run.json"
     if not path.exists():
         raise SystemExit("models/run.json missing; run cricket model before export")
@@ -106,5 +129,4 @@ def verify_release_inputs(data: Path, gold_run: dict, allow_dirty: bool) -> dict
         raise SystemExit("gold run fingerprint does not match recorded artifacts")
     if hashlib.sha256(json.dumps(model_run["tables"], sort_keys=True).encode()).hexdigest() != model_run.get("model_fingerprint"):
         raise SystemExit("model run fingerprint does not match recorded artifacts")
-    verify_full_check(data, gold_run, model_run, allow_dirty)
-    return model_run
+    return model_run, verify_full_check(data, gold_run, model_run, skip_full_check)

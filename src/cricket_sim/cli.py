@@ -19,6 +19,8 @@ def main(argv=None) -> None:
                    help="accept a table losing more than 1%% of its rows since the last build (recorded in run.json)")
     p = sub.add_parser("export", help="write the licence-checked dataset export to data/export/")
     p.add_argument("--allow-dirty", action="store_true", help="export a build made from uncommitted code (tests only)")
+    p.add_argument("--skip-full-check", action="store_true",
+                   help="export without a passed scripts/full_check.sh record (tests only; marked as not a release)")
     p = sub.add_parser("model", help="walk-forward ODI win-probability and ball-outcome models -> data/models/")
     p.add_argument("--allow-dirty", action="store_true", help="run from uncommitted code (recorded in run.json)")
     p.add_argument("--first-season", type=int, default=2008, help="first season to predict (default 2008)")
@@ -55,7 +57,7 @@ def main(argv=None) -> None:
     elif args.cmd == "export":
         from .export import export
 
-        export(allow_dirty=args.allow_dirty)
+        export(allow_dirty=args.allow_dirty, skip_full_check=args.skip_full_check)
     elif args.cmd == "model":
         from .models.run import run
 

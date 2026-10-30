@@ -6,13 +6,15 @@
 #   scripts/full_check.sh [DATA_DIR]
 #
 # DATA_DIR is a data root holding bronze/ (ingested and verified). Default: $CRICKET_SIM_FULL_DATA, else the
-# repo's own data/. It takes about 15 minutes. It stops at the first failing step (exit code non-zero).
+# repo's own data/. It takes about 20 minutes. It stops at the first failing step (exit code non-zero).
 # The sample variables CRICKET_SIM_DATA and CRICKET_SIM_SNAPSHOTS are ignored: this is always the full data and
 # the repo's own config/ snapshot lock. No network is used.
 #
 # Steps: verify, build, pre-ball invariance on production rows, model, contracts, the full-data-only checks below,
-# then it records the pass in gold/full_check.json (tied to this build and model) and exports. `cricket export`
-# refuses a release without that record, so every released export has passed this script.
+# then it records the pass in gold/full_check.json, tied to the build and model it checked. If another command
+# replaced either while the checks ran, nothing is recorded. `cricket export` refuses a release without that record,
+# so every released export has passed this script. It does not export: the cards in docs/ must first be updated
+# for a new build and committed. It ends by saying whether they match and what to run next.
 # A dirty git tree is allowed (--allow-dirty is added, and recorded in run.json): this is a check, not a release.
 # If git cannot report the tree's state, it is treated as dirty.
 set -euo pipefail
@@ -43,9 +45,12 @@ step() {  # step <name> <command...>: run it, show the time, stop at the first f
 
 step "verify"    uv run cricket verify
 step "build"     uv run cricket build $ALLOW_DIRTY
+fingerprint() { uv run python -I -c "import json, sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])" "$DATA/$1" "$2"; }
+CHECKED_BUILD="$(fingerprint gold/run.json build_fingerprint)"
 # pre-ball state on production rows: 200 random matches cut at 20 random points each, re-parsed and recomputed
 step "pre-ball invariance (production rows)" uv run python scripts/preball_invariance.py --matches 200 --cuts 20
 step "model"     uv run cricket model $ALLOW_DIRTY
+CHECKED_MODEL="$(fingerprint models/run.json model_fingerprint)"
 step "contracts" uv run cricket contracts
 
 full_data_checks() {
@@ -150,22 +155,30 @@ print("\nall full-data checks passed")
 PY
 }
 step "full-data-only checks" full_data_checks
-step "record the pass" uv run python -c "from cricket_sim.integrity import record_full_check; from cricket_sim.paths import DATA; record_full_check(DATA)"
+step "record the pass" uv run python -c "import sys; from cricket_sim.integrity import record_full_check; \
+from cricket_sim.paths import DATA; record_full_check(DATA, *sys.argv[1:])" "$CHECKED_BUILD" "$CHECKED_MODEL"
 
-# An export folder is named from the data fingerprint. An identical re-export replaces it in place. If one with
-# that name exists and differs (for example it was made from another commit), `cricket export` refuses to replace
-# it; only then is it moved aside (never deleted) and the export run again.
-move_old_export() {
-  local name
-  name="$(uv run python -I -c "import json; print(json.load(open('$DATA/gold/run.json'))['build_fingerprint'][:12])")"
-  if [ -d "$DATA/export/$name" ]; then
-    mkdir -p "$DATA/export-replaced"
-    mv "$DATA/export/$name" "$DATA/export-replaced/$name.$(date +%Y%m%d-%H%M%S)"
-    echo "moved the previous export of this data aside to $DATA/export-replaced/"
-  fi
+# The cards in docs/ carry the build's numbers, so after a change they are stale until edited and committed.
+# Say which, rather than fail an export here after every check passed.
+cards_report() {
+  uv run python - <<'PY'
+import json
+from cricket_sim import export
+from cricket_sim.paths import GOLD, MODELS, ROOT
+facts = export.card_facts(json.loads((GOLD / "run.json").read_text()), json.loads((MODELS / "run.json").read_text()))
+problems = [p for card in export.CARDS for p in export.card_problems(card, (ROOT / "docs" / card).read_text(), facts[card])]
+if problems:
+    print("the cards in docs/ do not match this build yet:\n  " + "\n  ".join(problems))
+    print("next: `uv run cricket docs` (rewrites the stamp lines), edit the card text to show the new numbers, commit,")
+    print("      then `uv run cricket export`")
+else:
+    print("the cards in docs/ match this build. next: commit if anything changed, then `uv run cricket export`")
+PY
 }
-do_export() { uv run cricket export $ALLOW_DIRTY || { move_old_export; uv run cricket export $ALLOW_DIRTY; }; }
-step "export"    do_export
 
 echo
-echo "full_check: all steps passed on $DATA"
+echo "full_check: all checks passed on $DATA; recorded in $DATA/gold/full_check.json"
+cards_report
+if [ -n "$ALLOW_DIRTY" ]; then
+  echo "note: the git tree was dirty, so this record cannot make a release; commit, then run this script again"
+fi

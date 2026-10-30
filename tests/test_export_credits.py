@@ -201,7 +201,7 @@ def _stub_export(monkeypatch, tmp_path, readme):
     monkeypatch.setattr(export, "DATA", data)
     monkeypatch.setattr(export, "GOLD", gold)
 
-    def write(_allow_dirty, out):
+    def write(_allow_dirty, out, _skip_full_check=False):
         out.mkdir(parents=True)
         (out / "README.md").write_text(readme)
         (out / "fact_x.parquet").write_bytes(b"data")

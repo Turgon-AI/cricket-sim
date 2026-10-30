@@ -108,11 +108,11 @@ def recover(data: Path) -> None:
 
 
 @contextmanager
-def writer_lock(data: Path):
+def writer_lock(data: Path, wait: bool = False):
     data.mkdir(parents=True, exist_ok=True)
     with (data/'.pipeline.lock').open('a+') as handle:
         try:
-            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(handle, fcntl.LOCK_EX if wait else fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as exc:
             raise SystemExit('another pipeline writer is active; retry after it finishes') from exc
         try:

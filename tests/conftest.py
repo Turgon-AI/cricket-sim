@@ -24,7 +24,7 @@ def build_fixture(data: Path) -> dict:
     shutil.copytree(FIXTURE / "bronze", data / "bronze")
     # the fixture's ODIs span 2011-2023, so let the model predict from the second season on with tiny history
     model = ["model", "--allow-dirty", "--first-season", "2000", "--min-train-matches", "1"]
-    for args in (["verify"], ["build", "--allow-dirty"], model, ["export", "--allow-dirty"]):
+    for args in (["verify"], ["build", "--allow-dirty"], model, ["export", "--allow-dirty", "--skip-full-check"]):
         result = run_cli(data, *args)
         assert result.returncode == 0, f"cricket {' '.join(args)} failed:\n{result.stdout}\n{result.stderr}"
     return json.loads((data / "gold" / "run.json").read_text())

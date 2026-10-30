@@ -131,11 +131,19 @@ checks the full-data-only cases:
 retirements, awarded matches never passing quality, the scope recomputed from silver (T20Is need two full-member
 teams), the headline and coverage numbers against the tables, and model scores that are too good to be true.
 When all of that passes it writes `gold/full_check.json` (the build and model fingerprints, commit and source hash
-it vouches for) and then exports. `cricket export` refuses a release without a record that matches the current
-build and model, so every released export has passed this script; the next build drops the record.
+it vouches for). It pins the build and model it checked: if another `cricket build` or `cricket model` replaced
+either while the checks ran, nothing is recorded. `cricket export` refuses a release without a record that matches
+the current build and model, so every released export has passed this script; the next build drops the record.
+The export carries a copy of the record (`full_check.json`), and its README says when the check passed.
 It stops at the first failing step and exits non-zero. It adds `--allow-dirty` when the git tree has changes, or
 when git cannot report the tree's state.
-If an export of the same data already exists, it is moved to `DATA_DIR/export-replaced/` first, never deleted.
+
+The script does not export. A new build changes the numbers in the dataset and model cards, so it ends by saying
+whether `docs/DATASET_CARD.md` and `docs/MODEL_CARD.md` match the build. If not: run `uv run cricket docs` (it
+rewrites their stamp lines), edit the card text to show the new numbers, commit, then `uv run cricket export`.
+
+`cricket export --skip-full-check` exports without the record, for tests. Such an export, and one made with
+`--allow-dirty` from uncommitted code, opens its README with a "not a release" warning saying why.
 
 ## Credits
 
