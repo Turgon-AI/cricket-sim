@@ -137,6 +137,9 @@ the current build and model, so every released export has passed this script; th
 The export carries a copy of the record (`full_check.json`), and its README says when the check passed.
 It stops at the first failing step and exits non-zero. It adds `--allow-dirty` when the git tree has changes, or
 when git cannot report the tree's state.
+Its build step fails if a table lost more than 1% of its rows since the previous build (see
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)). If that drop is intended, rebuild once with
+`uv run cricket build --allow-shrink TABLE` for each such table, then run the script again.
 
 The script does not export. A new build changes the numbers in the dataset and model cards, so it ends by saying
 whether `docs/DATASET_CARD.md` and `docs/MODEL_CARD.md` match the build. If not: run `uv run cricket docs` (it

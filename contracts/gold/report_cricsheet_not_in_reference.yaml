@@ -63,6 +63,8 @@ schema:
     - property: fullDataOnly
       value: true
 customProperties:
+- property: shrinkExpected
+  value: true
 - property: layer
   value: gold
 - property: kind

@@ -92,6 +92,8 @@ schema:
     metric: rowCount
     mustBeGreaterOrEqualTo: 2000
 customProperties:
+- property: shrinkExpected
+  value: true
 - property: layer
   value: silver
 - property: kind

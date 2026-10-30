@@ -56,6 +56,8 @@ schema:
     metric: rowCount
     mustBeGreaterOrEqualTo: 300
 customProperties:
+- property: shrinkExpected
+  value: true
 - property: layer
   value: gold
 - property: kind

@@ -10,7 +10,8 @@ from it: the build's assertions (enforce), the licence lineage (lineage.py), the
 Project conventions inside the standard (ODCS `customProperties`):
   table level   layer, kind (staging / entity / event / reference / derived / dim / fact / map / report),
                 sources (upstream source ids, see lineage.SOURCE_LICENCE), upstream (tables it reads),
-                timingClass (per-ball layers only)
+                timingClass (per-ball layers only), shrinkExpected (true for a gap list that is meant to
+                shrink as sources fill the gaps; the build-to-build shrink check lets it shrink)
   column level  timingClass (per-ball tables), unit, extraSources (column adds a source beyond its table's)
   quality rule  fullDataOnly: true for a rule that holds only on the complete snapshots (the real-data row
                 floors); it is skipped when the snapshots are a SUBSET fixture, such as the 10-match CI sample
@@ -39,7 +40,7 @@ CONTRACTS = ROOT / "contracts"
 SCHEMA_FILE = CONTRACTS / "_schema" / "odcs-json-schema-v3.1.0.json"
 LAYERS = {"staging": STAGING, "silver": SILVER, "gold": GOLD, "models": MODELS}
 BUILD_LAYERS = ("staging", "silver", "gold")  # `cricket build`; `cricket model` writes the models layer
-TABLE_PROPERTIES = {"layer", "kind", "sources", "upstream", "timingClass"}
+TABLE_PROPERTIES = {"layer", "kind", "sources", "upstream", "timingClass", "shrinkExpected"}
 COLUMN_PROPERTIES = {"timingClass", "unit", "extraSources"}
 RULE_PROPERTIES = {"fullDataOnly"}
 KINDS = {"staging", "entity", "event", "reference", "derived", "dim", "fact", "map", "report", "model"}

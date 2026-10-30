@@ -3,7 +3,8 @@
 - a build cannot record itself as clean when git cannot report the tree's state
 - export refuses a release unless scripts/full_check.sh passed on exactly this build and model
 - a table that loses rows fails the build: real-data row floors in the contracts, and a build-to-build
-  comparison that refuses a drop of more than 1% unless --allow-shrink is passed"""
+  comparison that refuses a drop of more than 1% unless that table is named in --allow-shrink or its contract
+  says it is a gap list meant to shrink"""
 
 import json
 import subprocess
@@ -120,16 +121,67 @@ def _tables(**rows):
 def test_shrink_of_more_than_one_percent_fails_the_build():
     previous = {"build_fingerprint": "p" * 64, "tables": _tables(fact_delivery=1000, dim_match=100)}
     with pytest.raises(SystemExit, match=r"gold/fact_delivery: 1,000 -> 980 rows"):
-        build.shrink_check(_tables(fact_delivery=980, dim_match=100), previous, allow_shrink=False)
-    ok = build.shrink_check(_tables(fact_delivery=990, dim_match=120), previous, allow_shrink=False)
-    assert ok == {"previous_build": "p" * 64, "allowed": False, "shrunk": {}}
+        build.shrink_check(_tables(fact_delivery=980, dim_match=100), previous, [], set())
+    ok = build.shrink_check(_tables(fact_delivery=990, dim_match=120), previous, [], set())
+    assert ok == {"previous_build": "p" * 64, "allowed": [], "shrunk": {}}
 
 
-def test_allow_shrink_records_what_shrank():
-    previous = {"build_fingerprint": "p" * 64, "tables": _tables(fact_delivery=1000)}
-    result = build.shrink_check(_tables(fact_delivery=10, new_table=5), previous, allow_shrink=True)
-    assert result["shrunk"] == {"gold/fact_delivery": {"previous": 1000, "now": 10}}
-    assert build.shrink_check(_tables(fact_delivery=10), None, allow_shrink=False)["previous_build"] is None
+def test_a_loss_of_a_few_rows_is_not_flagged():
+    # a 31-row gap list losing 1 row is 3%, but floors, not this check, guard tables that small
+    previous = {"build_fingerprint": "p" * 64, "tables": _tables(report_x=31, report_y=10)}
+    assert build.shrink_check(_tables(report_x=27, report_y=6), previous, [], set())["shrunk"] == {}
+    with pytest.raises(SystemExit, match="report_y: 10 -> 4"):
+        build.shrink_check(_tables(report_x=27, report_y=4), previous, [], set())
+
+
+def test_allow_shrink_is_per_table_and_recorded():
+    previous = {"build_fingerprint": "p" * 64, "tables": _tables(fact_delivery=1000, dim_match=100)}
+    smaller = _tables(fact_delivery=900, dim_match=50)
+    # allowing one table does not let another lose rows
+    with pytest.raises(SystemExit, match=r"(?s)1 table\(s\).*gold/dim_match: 100 -> 50"):
+        build.shrink_check(smaller, previous, ["fact_delivery"], set())
+    result = build.shrink_check(smaller, previous, ["fact_delivery", "gold/dim_match"], set())
+    assert result["allowed"] == ["gold/dim_match", "gold/fact_delivery"]
+    assert result["shrunk"]["gold/fact_delivery"] == {"previous": 1000, "now": 900, "accepted_as": "allowed"}
+    assert build.shrink_check(smaller, previous, ["all"], set())["shrunk"]["gold/dim_match"]["accepted_as"] == "allowed"
+    with pytest.raises(SystemExit, match="names no built table: gold/fact_typo"):
+        build.shrink_check(smaller, previous, ["gold/fact_typo"], set())
+    assert build.shrink_check(smaller, None, [], set())["previous_build"] is None
+
+
+def test_gap_lists_marked_in_their_contract_may_shrink():
+    expected = build.shrink_expected()
+    assert expected == {"silver/cricsheet_missing", "gold/report_cricsheet_known_missing",
+                        "gold/report_cricsheet_not_in_reference"}
+    previous = {"build_fingerprint": "p" * 64, "tables": {"silver/cricsheet_missing": {"rows": 2931},
+                                                           "gold/fact_delivery": {"rows": 1000}}}
+    now = {"silver/cricsheet_missing": {"rows": 2500}, "gold/fact_delivery": {"rows": 1000}}
+    assert build.shrink_check(now, previous, [], expected)["shrunk"]["silver/cricsheet_missing"]["accepted_as"] == "expected"
+
+
+def test_the_build_compares_with_the_build_it_replaces(tiny_build, tmp_path):
+    """End to end: a real fixture build refuses when the live run.json says a table used to be bigger, keeps the
+    live build, and goes through when that table is named in --allow-shrink."""
+    import shutil
+    from conftest import run_cli
+
+    data = tmp_path / "data"
+    shutil.copytree(tiny_build, data, ignore=shutil.ignore_patterns("export"))
+    run_path = data / "gold" / "run.json"
+    inflated = json.loads(run_path.read_text())
+    inflated["tables"]["gold/fact_delivery"]["rows"] *= 2
+    run_path.write_text(json.dumps(inflated))
+
+    refused = run_cli(data, "build", "--allow-dirty")
+    assert refused.returncode != 0 and "gold/fact_delivery" in refused.stderr and "--allow-shrink" in refused.stderr
+    assert json.loads(run_path.read_text()) == inflated                     # the live build is untouched
+
+    assert run_cli(data, "build", "--allow-dirty", "--allow-shrink", "nope").returncode != 0   # checked up front
+    done = run_cli(data, "build", "--allow-dirty", "--allow-shrink", "fact_delivery")
+    assert done.returncode == 0, done.stdout + done.stderr
+    check = json.loads(run_path.read_text())["shrink_check"]
+    assert check["previous_build"] == inflated["build_fingerprint"] and check["allowed"] == ["gold/fact_delivery"]
+    assert check["shrunk"]["gold/fact_delivery"]["accepted_as"] == "allowed"
 
 
 def test_every_contract_has_a_real_data_row_floor():

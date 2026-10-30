@@ -108,6 +108,8 @@ def _git_state() -> dict:
 
 
 REQUIRED_SOURCES = bronze.REQUIRED_SOURCES
+DIRTY_MESSAGE = ("working tree has uncommitted changes (or git could not report its state), so this build could not be "
+                 "reproduced from any commit. Commit first, or pass --allow-dirty (recorded in run.json).")
 
 
 def _config_hashes() -> dict:
@@ -119,32 +121,55 @@ def _outputs() -> list[Path]:
     return sorted(p for folder in (STAGING, SILVER, GOLD) for p in folder.glob("*.parquet"))
 
 
-SHRINK_LIMIT = 0.01  # a table may lose at most 1% of its rows from one build to the next without --allow-shrink
+SHRINK_LIMIT = 0.01   # a table may lose at most 1% of its rows from one build to the next ...
+SHRINK_MIN_ROWS = 5   # ... and a loss of fewer rows than this is never flagged (row floors cover tiny tables)
 
 
-def shrink_check(tables: dict, previous: dict | None, allow_shrink: bool) -> dict:
+def shrink_expected() -> set[str]:
+    """Tables whose contract says they are meant to shrink (gap lists that empty as sources fill the gaps)."""
+    return {f"{c.layer}/{t}" for t, c in contracts.load_all().items() if c.props.get("shrinkExpected")}
+
+
+def shrink_check(tables: dict, previous: dict | None, allow_shrink: list[str], expected: set[str]) -> dict:
     """Compare row counts with the build being replaced. Contract floors catch a gross loss; this catches a
-    snapshot or step that quietly dropped rows. A deliberate drop (narrower scope, a dedup fix) needs --allow-shrink."""
+    snapshot or step that quietly dropped rows. A table marked shrinkExpected in its contract may shrink; any other
+    deliberate drop (narrower scope, a dedup fix) needs --allow-shrink naming that table (or `all`)."""
+    allowed = {a if "/" in a else next((n for n in tables if n.split("/", 1)[1] == a), a) for a in allow_shrink}
+    unknown = sorted(a for a in allowed if a != "all" and a not in tables)
+    if unknown:
+        raise SystemExit(f"--allow-shrink names no built table: {', '.join(unknown)}")
     if previous is None:
-        return {"previous_build": None, "allowed": allow_shrink, "shrunk": {}}
-    shrunk = {name: {"previous": previous["tables"][name]["rows"], "now": t["rows"]} for name, t in tables.items()
-              if name in previous["tables"] and t["rows"] < previous["tables"][name]["rows"] * (1 - SHRINK_LIMIT)}
-    if shrunk and not allow_shrink:
-        lines = [f"{name}: {v['previous']:,} -> {v['now']:,} rows" for name, v in sorted(shrunk.items())]
-        raise SystemExit(f"{len(shrunk)} table(s) lost more than {SHRINK_LIMIT:.0%} of their rows since build "
+        return {"previous_build": None, "allowed": sorted(allowed), "shrunk": {}}
+    shrunk = {}
+    for name, t in tables.items():
+        before = previous["tables"].get(name, {}).get("rows")
+        if before is not None and before - t["rows"] >= SHRINK_MIN_ROWS and t["rows"] < before * (1 - SHRINK_LIMIT):
+            why = "expected" if name in expected else "allowed" if {"all", name} & allowed else None
+            shrunk[name] = {"previous": before, "now": t["rows"], "accepted_as": why}
+    refused = {n: v for n, v in shrunk.items() if v["accepted_as"] is None}
+    if refused:
+        lines = [f"{name}: {v['previous']:,} -> {v['now']:,} rows" for name, v in sorted(refused.items())]
+        raise SystemExit(f"{len(refused)} table(s) lost more than {SHRINK_LIMIT:.0%} of their rows since build "
                          f"{previous['build_fingerprint'][:16]}:\n  " + "\n  ".join(lines) +
-                         "\nIf this is intended (scope or a fix), rebuild with --allow-shrink (recorded in run.json).")
-    return {"previous_build": previous["build_fingerprint"], "allowed": allow_shrink, "shrunk": shrunk}
+                         "\nIf this is intended (scope or a fix), rebuild with --allow-shrink TABLE for each "
+                         "(recorded in run.json).")
+    return {"previous_build": previous["build_fingerprint"], "allowed": sorted(allowed), "shrunk": shrunk}
 
 
-def build(allow_dirty: bool = False, allow_shrink: bool = False) -> None:
+def build(allow_dirty: bool = False, allow_shrink: list[str] = ()) -> None:
     from .transaction import new_stage, publish, run_worker, writer_lock
 
+    # refuse before the slow build, and before a stage exists, so a refusal leaves nothing behind
+    known = {"all", *contracts.load_all(), *(f"{c.layer}/{t}" for t, c in contracts.load_all().items())}
+    if set(allow_shrink) - known:
+        raise SystemExit(f"--allow-shrink names no table with a contract: {', '.join(sorted(set(allow_shrink) - known))}")
+    if _git_state()["dirty"] and not allow_dirty:
+        raise SystemExit(DIRTY_MESSAGE)
     with writer_lock(DATA):
         stage = new_stage(DATA, "build")
         (stage / "bronze").symlink_to(DATA / "bronze", target_is_directory=True)
         previous = DATA / "gold" / "run.json"
-        run_worker(stage, "build", {"allow_dirty": allow_dirty, "allow_shrink": allow_shrink,
+        run_worker(stage, "build", {"allow_dirty": allow_dirty, "allow_shrink": list(allow_shrink),
                                     "previous_run": str(previous) if previous.exists() else None})
 
         def warehouse(name):
@@ -160,14 +185,12 @@ def build(allow_dirty: bool = False, allow_shrink: bool = False) -> None:
         publish(DATA, stage, ["staging", "silver", "gold", "warehouse.duckdb"], prepare=warehouse)
 
 
-def _build(allow_dirty: bool = False, allow_shrink: bool = False, previous_run: str | None = None) -> None:
+def _build(allow_dirty: bool = False, allow_shrink: list[str] = (), previous_run: str | None = None) -> None:
     for folder in (STAGING, SILVER, GOLD):
         folder.mkdir(parents=True, exist_ok=True)
     code = _git_state()
     if code["dirty"] and not allow_dirty:
-        raise SystemExit("working tree has uncommitted changes (or git could not report its state), so this build "
-                         "could not be reproduced from any commit. Commit first, or pass --allow-dirty (recorded in "
-                         "run.json).")
+        raise SystemExit(DIRTY_MESSAGE)
     validate_scope(load_yaml("scope.yml"))  # refuse a bad scope before any slow step
     lock = bronze.read_lock()
     missing = [s for s in REQUIRED_SOURCES if s not in lock]
@@ -201,7 +224,7 @@ def _build(allow_dirty: bool = False, allow_shrink: bool = False, previous_run: 
     outputs = {"tables": tables,
                "headline_sha256": hashlib.sha256((GOLD / "headline.json").read_bytes()).hexdigest()}
     previous = json.loads(Path(previous_run).read_text()) if previous_run else None
-    run = {**inputs, "code": code, **outputs, "shrink_check": shrink_check(tables, previous, allow_shrink),
+    run = {**inputs, "code": code, **outputs, "shrink_check": shrink_check(tables, previous, list(allow_shrink), shrink_expected()),
            "build_fingerprint": hashlib.sha256(json.dumps(outputs, sort_keys=True).encode()).hexdigest()}
     (GOLD / "run.json").write_text(json.dumps(run, indent=2) + "\n")
     con.close()

@@ -15,8 +15,9 @@ def main(argv=None) -> None:
     sub.add_parser("verify", help="checksum every locked snapshot")
     p = sub.add_parser("build", help="rebuild silver and gold from locked snapshots")
     p.add_argument("--allow-dirty", action="store_true", help="build from uncommitted code (recorded in run.json)")
-    p.add_argument("--allow-shrink", action="store_true",
-                   help="accept a table losing more than 1%% of its rows since the last build (recorded in run.json)")
+    p.add_argument("--allow-shrink", action="append", default=[], metavar="TABLE",
+                   help="accept TABLE (e.g. fact_delivery or gold/fact_delivery; `all` for every table) losing more "
+                        "than 1%% of its rows since the last build; repeat for several (recorded in run.json)")
     p = sub.add_parser("export", help="write the licence-checked dataset export to data/export/")
     p.add_argument("--allow-dirty", action="store_true", help="export a build made from uncommitted code (tests only)")
     p.add_argument("--skip-full-check", action="store_true",

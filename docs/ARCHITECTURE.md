@@ -110,7 +110,11 @@ The same locked snapshots and the same `uv.lock` give the same `build_fingerprin
   - Every contract carries a real-data row floor (`fullDataOnly`, 90 to 95% of the 2026-10-27 full build) that
     is skipped only for a `SUBSET` fixture. About half also carry a small floor that the 10-match fixture passes.
   - It compares every table's row count with the build it replaces and fails if any table lost more than 1%
-    of its rows. A deliberate drop (narrower scope, a dedup fix) needs `--allow-shrink`; what shrank is
+    of its rows (and at least 5 rows). The gap lists marked `shrinkExpected` in their contracts
+    (`cricsheet_missing`, `report_cricsheet_known_missing`, `report_cricsheet_not_in_reference`) may shrink,
+    since they empty as the sources fill gaps. Any other deliberate drop (narrower scope, a dedup fix) needs
+    `--allow-shrink TABLE` for each table, so allowing one table never hides a loss in another. Unknown table
+    names and a dirty tree are refused before the build starts. What shrank, and why it was accepted, is
     recorded in `run.json` under `shrink_check`.
   - It generates into a stage under `data/.pending/` and publishes with a journal; if generation fails, the
     live staging, silver and gold are untouched and the failed stage stays in `data/.pending/` until
