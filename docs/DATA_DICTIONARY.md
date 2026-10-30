@@ -1065,7 +1065,7 @@ One row per (venue_id, venue_version) of a ground that hosts at least one in-sco
 - **Key:** `venue_id`, `venue_version`
 - **Kind:** dim · **Sources:** venues_geo, weather, cricsheet, derived · **Built from:** `venue_versions`, `dim_match`
 
-- **Limitations:** This build uses venue_context: asof (182 in-scope grounds, 556 versions): each version is built only from matches up to its valid_from date, counting every Cricsheet match at the ground (both genders, every year), not only the scope. A version valid on a date includes that date's matches, so it is "as recorded", not "known before play". With venue_context: snapshot each ground would have one version built from every match, and inputs_as_of would be its last match date. Counts in the column descriptions come from silver venue_versions over all grounds, a guide only.
+- **Limitations:** This build uses venue_context: asof (182 in-scope grounds, 556 versions): each version is built only from matches up to its valid_from date, counting every Cricsheet match at the ground (both genders, every year), not only the scope. A version valid on a date includes that date's matches, so it is "as recorded", not "known before play". With venue_context: snapshot each ground would have one version built from every match, and inputs_as_of would be its last match date.
 
 | column | type | description |
 |---|---|---|
@@ -1077,21 +1077,21 @@ One row per (venue_id, venue_version) of a ground that hosts at least one in-sco
 | `search_names` required | VARCHAR[] | Core names of the spellings seen up to valid_from (asof) or in the whole snapshot (snapshot): the names the geocoder searches. |
 | `places` required | VARCHAR[] | Cities and venue-string suffixes seen for the venue in this version, used to confirm a Wikidata match. |
 | `name` | VARCHAR | Display name of the ground: the most common Cricsheet spelling among its aliases, or a manual override. |
-| `city` | VARCHAR | Display city: the most common city among its aliases, or a manual override. NULL for 52 venues with no city in Cricsheet. |
+| `city` | VARCHAR | Display city: the most common city among its aliases, or a manual override. NULL when Cricsheet gives no city for the ground. |
 | `country` | VARCHAR | Country the ground is in, confirmed by testing the point against that country's bounding box; derived from a manual override, the home team, or the geocoder's label. NULL when the venue has no coordinates. |
 | `home_team` | VARCHAR | The team that played in at least half of the ground's international matches, given at least 3 internationals and no tie. NULL at neutral or little-used grounds. |
-| `lat` | DOUBLE | Latitude of the ground's point in decimal degrees (WGS84). May be a city centre rather than the ground (see geocode_confidence and weather_location_quality). NULL for the 273 venues that could not be located. (degrees north) |
+| `lat` | DOUBLE | Latitude of the ground's point in decimal degrees (WGS84). May be a city centre rather than the ground (see geocode_confidence and weather_location_quality). NULL when the ground could not be located. (degrees north) |
 | `lon` | DOUBLE | Longitude of the ground's point in decimal degrees (WGS84). NULL when lat is NULL. (degrees east) |
-| `elevation_m` | DOUBLE | Elevation above sea level in metres: a manual value, else Wikidata's declared elevation, else the Open-Meteo 90 m terrain-model value at the point (see elevation_source). NULL when none exist (all unlocated venues and 49 located ones). (m above sea level) |
+| `elevation_m` | DOUBLE | Elevation above sea level in metres: a manual value, else Wikidata's declared elevation, else the Open-Meteo 90 m terrain-model value at the point (see elevation_source). NULL when none exist (every unlocated venue and some located ones). (m above sea level) |
 | `elevation_source` | VARCHAR | Where elevation_m came from: 'manual', 'wikidata' or 'open-meteo 90 m DEM at the point'. NULL when elevation_m is NULL. |
 | `elevation_dem_m` | DOUBLE | Terrain-model elevation returned by the weather service for its request point, kept only when that point is within 100 m of the venue point. NULL otherwise. (m above sea level) |
-| `timezone` | VARCHAR | IANA timezone of the venue (e.g. 'Asia/Dubai'), from an override or the weather service. NULL for the 323 venues outside the weather plan. Ocean 'Etc/' zones are rejected by a check. |
+| `timezone` | VARCHAR | IANA timezone of the venue (e.g. 'Asia/Dubai'), from an override or the weather service. NULL for venues outside the weather plan. Ocean 'Etc/' zones are rejected by a check. |
 | `wikidata_qid` | VARCHAR | Wikidata item id of the ground when the coordinates came from or were matched to Wikidata. NULL otherwise. |
-| `osm_ref` | VARCHAR | OpenStreetMap element (e.g. 'way/224984783') when a pinned OSM element supplied the point. NULL for 564 venues. |
+| `osm_ref` | VARCHAR | OpenStreetMap element (e.g. 'way/224984783') when a pinned OSM element supplied the point. NULL otherwise. |
 | `geocode_source` | VARCHAR | How the point was found: 'wikidata' (matched to a cricket-ground item), 'wikidata_pinned', 'osm_pinned' (a chosen OSM element), 'nominatim' (OSM search for the ground), 'nominatim_city' (OSM search that only found the city) or 'manual'. NULL when not located. |
 | `geocode_confidence` | VARCHAR | Confidence in the point: 'high', 'medium', 'low' (city-level search) or 'manual'. NULL when not located. |
 | `geocode_matched_name` | VARCHAR | Free text naming what the point was matched to and by which rule, e.g. 'Adelaide Oval (exact_name)'. NULL when not located. |
-| `in_geo_plan` | BOOLEAN | TRUE if the venue was in the geocoding and weather request plan (271 venues). Venues outside it can only get coordinates from a bulk Wikidata list and get no weather, timezone or DEM elevation. |
+| `in_geo_plan` | BOOLEAN | TRUE if the venue was in the geocoding and weather request plan. Venues outside it can only get coordinates from a bulk Wikidata list and get no weather, timezone or DEM elevation. |
 | `geocode_gap` | VARCHAR | Reason a pinned OSM or Wikidata lookup failed to fetch. NULL in the current data (no failures). |
 | `country_check` | VARCHAR | Sanity check that the point lies inside the expected country's box: 'pass', 'fail' or 'unknown' (no coordinates or no country evidence). Every located venue currently passes. |
 | `country_evidence` | VARCHAR | Plain-text evidence the country check used (override, home team or geocoder label), or 'no coordinates'. |
@@ -1100,11 +1100,11 @@ One row per (venue_id, venue_version) of a ground that hosts at least one in-sco
 | `timezone_check` | VARCHAR | 'pass' if timezone is a real place zone (not an Etc/ ocean zone), 'fail' if not, 'unknown' if there is no timezone. |
 | `sea_check` | VARCHAR | 'fail' when the terrain model gives exactly 0 m (the point may be in the sea) unless the venue is marked coastal; 'pass' otherwise; 'unknown' without a DEM value. One venue fails and is acknowledged. |
 | `anchor_check` | VARCHAR | 'pass' if the point is within 30 km of the city-level geocode, 'fail' if farther, 'unknown' when no usable city anchor exists. The 7 failures are acknowledged in the overrides. |
-| `acknowledged_checks` | VARCHAR | Comma-separated names of failed checks that were reviewed and accepted in the override file (currently 'sea' or 'anchor'). NULL for 579 venues. |
-| `needs_review` | BOOLEAN | TRUE when any reason for doubt exists: geocode confidence is missing or low, the country, elevation or timezone check is unknown or failed, or an override asks for review. 365 venues are flagged. |
+| `acknowledged_checks` | VARCHAR | Comma-separated names of failed checks that were reviewed and accepted in the override file (currently 'sea' or 'anchor'). NULL when none were. |
+| `needs_review` | BOOLEAN | TRUE when any reason for doubt exists: geocode confidence is missing or low, the country, elevation or timezone check is unknown or failed, or an override asks for review. |
 | `review_reasons` | VARCHAR | Semicolon-separated reasons behind needs_review; NULL when needs_review is FALSE. |
 | `weather_location_quality` | VARCHAR | How much to trust weather taken at this point: 'verified_ground' (trusted point, no review needed), 'unverified_point' (a point exists but needs review) or 'city_centroid' (city centre only). NULL when the venue has no coordinates. |
-| `note` | VARCHAR | Free-text note from the manual override file explaining a correction or a caveat. NULL for 546 venues. |
+| `note` | VARCHAR | Free-text note from the manual override file explaining a correction or a caveat. NULL when there is none. |
 | `n_matches` | BIGINT | Number of Cricsheet matches at the venue whose start date falls in this version (all aliases combined, no scope). (matches) |
 
 ### fact_delivery

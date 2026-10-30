@@ -213,9 +213,12 @@ every build for types, keys, foreign keys and quality rules.
 Parquet only.
 
 **Licences:** each file carries its own licence (LICENSES.md, croissant.json):
-- **ODC-BY 1.0:** Cricsheet-derived tables.
-- **CC BY 4.0:** weather.
-- **ODbL 1.0:** `dim_venue` and `dim_venue_version`, because of OpenStreetMap geocodes.
+- **ODC-BY 1.0:** the tables built from Cricsheet alone (matches, players, deliveries, innings, dismissals,
+  form, the ball-outcome and Elo model outputs, and the quality and career reports).
+- **ODbL 1.0:** everything that uses the OpenStreetMap geocodes, directly or through the venue: `dim_venue`,
+  `dim_venue_version`, `fact_match_weather_hourly` (weather is taken at the geocoded point, so the Open-Meteo
+  CC BY 4.0 data is carried under the stricter licence), `model_ball_win_probability` (it uses the home team) and
+  the `report_model_*` files, which are built partly from it.
 - **CC BY-SA 4.0:** `map_match_ids` and `report_international_coverage`, because of Wikipedia. These two files
   must stay share-alike.
 

@@ -15,8 +15,7 @@ description:
     matches up to its valid_from date, counting every Cricsheet match at the ground (both genders, every year), not
     only the scope. A version valid on a date includes that date''s matches, so it is "as recorded", not "known before
     play". With venue_context: snapshot each ground would have one version built from every match, and inputs_as_of
-    would be its last match date. Counts in the column descriptions come from silver venue_versions over all
-    grounds, a guide only.'
+    would be its last match date.'
 schema:
 - name: dim_venue_version
   physicalName: data/gold/dim_venue_version.parquet
@@ -79,8 +78,8 @@ schema:
   - name: city
     logicalType: string
     physicalType: VARCHAR
-    description: 'Display city: the most common city among its aliases, or a manual override. NULL for 52 venues with no
-      city in Cricsheet.'
+    description: 'Display city: the most common city among its aliases, or a manual override. NULL when Cricsheet gives
+      no city for the ground.'
   - name: country
     logicalType: string
     physicalType: VARCHAR
@@ -95,7 +94,7 @@ schema:
     logicalType: number
     physicalType: DOUBLE
     description: Latitude of the ground's point in decimal degrees (WGS84). May be a city centre rather than the ground
-      (see geocode_confidence and weather_location_quality). NULL for the 273 venues that could not be located.
+      (see geocode_confidence and weather_location_quality). NULL when the ground could not be located.
     customProperties:
     - property: unit
       value: degrees north
@@ -120,8 +119,8 @@ schema:
     logicalType: number
     physicalType: DOUBLE
     description: 'Elevation above sea level in metres: a manual value, else Wikidata''s declared elevation, else the Open-Meteo
-      90 m terrain-model value at the point (see elevation_source). NULL when none exist (all unlocated venues and 49 located
-      ones).'
+      90 m terrain-model value at the point (see elevation_source). NULL when none exist (every unlocated venue and some
+      located ones).'
     customProperties:
     - property: unit
       value: m above sea level
@@ -155,8 +154,8 @@ schema:
   - name: timezone
     logicalType: string
     physicalType: VARCHAR
-    description: IANA timezone of the venue (e.g. 'Asia/Dubai'), from an override or the weather service. NULL for the 323
-      venues outside the weather plan. Ocean 'Etc/' zones are rejected by a check.
+    description: IANA timezone of the venue (e.g. 'Asia/Dubai'), from an override or the weather service. NULL for venues
+      outside the weather plan. Ocean 'Etc/' zones are rejected by a check.
   - name: wikidata_qid
     logicalType: string
     physicalType: VARCHAR
@@ -164,8 +163,8 @@ schema:
   - name: osm_ref
     logicalType: string
     physicalType: VARCHAR
-    description: OpenStreetMap element (e.g. 'way/224984783') when a pinned OSM element supplied the point. NULL for 564
-      venues.
+    description: OpenStreetMap element (e.g. 'way/224984783') when a pinned OSM element supplied the point. NULL
+      otherwise.
   - name: geocode_source
     logicalType: string
     physicalType: VARCHAR
@@ -207,7 +206,7 @@ schema:
   - name: in_geo_plan
     logicalType: boolean
     physicalType: BOOLEAN
-    description: TRUE if the venue was in the geocoding and weather request plan (271 venues). Venues outside it can only
+    description: TRUE if the venue was in the geocoding and weather request plan. Venues outside it can only
       get coordinates from a bulk Wikidata list and get no weather, timezone or DEM elevation.
   - name: geocode_gap
     logicalType: string
@@ -299,12 +298,12 @@ schema:
     logicalType: string
     physicalType: VARCHAR
     description: Comma-separated names of failed checks that were reviewed and accepted in the override file (currently
-      'sea' or 'anchor'). NULL for 579 venues.
+      'sea' or 'anchor'). NULL when none were.
   - name: needs_review
     logicalType: boolean
     physicalType: BOOLEAN
     description: 'TRUE when any reason for doubt exists: geocode confidence is missing or low, the country, elevation or
-      timezone check is unknown or failed, or an override asks for review. 365 venues are flagged.'
+      timezone check is unknown or failed, or an override asks for review.'
   - name: review_reasons
     logicalType: string
     physicalType: VARCHAR
@@ -327,7 +326,8 @@ schema:
   - name: note
     logicalType: string
     physicalType: VARCHAR
-    description: Free-text note from the manual override file explaining a correction or a caveat. NULL for 546 venues.
+    description: Free-text note from the manual override file explaining a correction or a caveat. NULL when there is
+      none.
   - name: n_matches
     logicalType: integer
     physicalType: BIGINT
@@ -343,7 +343,7 @@ schema:
       mustBe: 0
   quality:
   - name: row_count_floor_full_data
-    description: on the complete snapshots, at least about 95% of the 556 rows of the 2026-10-28 real
+    description: on the complete snapshots, at least 90 to 95% of the 556 rows of the 2026-10-28 real
       build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
     metric: rowCount
     mustBeGreaterOrEqualTo: 520

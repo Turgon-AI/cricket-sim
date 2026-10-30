@@ -179,7 +179,7 @@ schema:
       Mean confidence (0-1) of those commentary-predicted line labels. NULL when the segment-year has none.
   quality:
   - name: row_count_floor_full_data
-    description: on the complete snapshots, at least about 95% of the 92 rows of the 2026-10-27 real
+    description: on the complete snapshots, at least 90 to 95% of the 92 rows of the 2026-10-27 real
       build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
     metric: rowCount
     mustBeGreaterOrEqualTo: 87

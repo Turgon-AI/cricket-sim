@@ -107,8 +107,8 @@ The same locked snapshots and the same `uv.lock` give the same `build_fingerprin
 - **Build:**
   - It refuses dirty code unless you pass `--allow-dirty`, which is recorded. If git is missing or fails, the
     tree counts as dirty, so a build never records itself as clean when it cannot prove it.
-  - Every contract carries two row floors: a small one that the 10-match fixture passes, and a real-data one
-    (`fullDataOnly`, about 95% of the 2026-10-27 full build) that is skipped only for a `SUBSET` fixture.
+  - Every contract carries a real-data row floor (`fullDataOnly`, 90 to 95% of the 2026-10-27 full build) that
+    is skipped only for a `SUBSET` fixture. About half also carry a small floor that the 10-match fixture passes.
   - It compares every table's row count with the build it replaces and fails if any table lost more than 1%
     of its rows. A deliberate drop (narrower scope, a dedup fix) needs `--allow-shrink`; what shrank is
     recorded in `run.json` under `shrink_check`.
