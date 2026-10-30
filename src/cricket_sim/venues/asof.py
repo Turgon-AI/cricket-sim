@@ -40,12 +40,15 @@ def venue_versions(matches: list[dict], venues: list[dict], alias_id: dict, over
     """venue_id -> versions sorted by date. Each version: venue_id, venue_version (1, 2, ...), valid_from, valid_to
     (inclusive; None for the last), inputs_as_of, venue (the geocoder's input dict), home_team, n_matches (in the
     version).
-    matches need venue, city, start_date, team_type, team1, team2."""
+    matches need venue, city, start_date, gender, team_type, team1, team2.
+    The home team counts only internationals of the overrides' home_team_gender (every gender when it is unset):
+    Cricsheet team names carry no gender, so women's matches would otherwise decide the men's side's home."""
     by_venue = defaultdict(list)
     for m in matches:
         by_venue[alias_id[(m["venue"], m["city"])]].append(m)
     primary = primary_names(overrides)
     asof = mode(overrides) == "asof"
+    home_gender = overrides.get("home_team_gender")
     out = {}
     for v in venues:
         vid, ms = v["venue_id"], sorted(by_venue.get(v["venue_id"], []), key=lambda m: (m["start_date"], m["match_id"]))
@@ -59,7 +62,7 @@ def venue_versions(matches: list[dict], venues: list[dict], alias_id: dict, over
         for day in (sorted(days) if asof else [None]):
             for m in (days[day] if asof else ms):
                 pair_n[(m["venue"], m["city"])] += 1
-                if m["team_type"] == "international":
+                if m["team_type"] == "international" and home_gender in (None, m["gender"]):
                     n_int += 1
                     for t in {m["team1"], m["team2"]} - {None}:
                         teams[t] += 1

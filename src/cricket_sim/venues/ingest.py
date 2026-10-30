@@ -233,7 +233,7 @@ def _snapshot_id(cfg: dict, plan: dict) -> str:
 def version_matches(matches: list[dict]) -> list[dict]:
     """Bronze matches in the shape asof.venue_versions reads (start date, the two teams)."""
     return [{"match_id": m.get("match_id"), "venue": m["venue"], "city": m["city"], "start_date": m["dates"][0],
-             "team_type": m["team_type"], "team1": (m["teams"] + [None, None])[0], "team2": (m["teams"] + [None, None])[1]}
+             "gender": m["gender"], "team_type": m["team_type"], "team1": (m["teams"] + [None, None])[0], "team2": (m["teams"] + [None, None])[1]}
             for m in matches]
 
 

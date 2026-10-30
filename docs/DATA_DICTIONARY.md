@@ -758,7 +758,7 @@ One row per (venue_id, venue_version): the venue as the geocoder saw it from val
 | `name` | VARCHAR | Display name of the ground: the most common Cricsheet spelling among its aliases, or a manual override. |
 | `city` | VARCHAR | Display city: the most common city among its aliases, or a manual override. NULL for 52 venues with no city in Cricsheet. |
 | `country` | VARCHAR | Country the ground is in, confirmed by testing the point against that country's bounding box; derived from a manual override, the home team, or the geocoder's label. NULL when the venue has no coordinates. |
-| `home_team` | VARCHAR | The team that played in at least half of the ground's international matches, given at least 3 internationals and no tie. NULL at neutral or little-used grounds. |
+| `home_team` | VARCHAR | The team that played in at least half of the ground's men's international matches, given at least 3 of them and no tie (home_team_gender in config/venue_overrides.yml, kept equal to the scope's gender). Women's matches do not count, since Cricsheet team names carry no gender. NULL at neutral or little-used grounds. |
 | `lat` | DOUBLE | Latitude of the ground's point in decimal degrees (WGS84). May be a city centre rather than the ground (see geocode_confidence and weather_location_quality). NULL for the 273 venues that could not be located. (degrees north) |
 | `lon` | DOUBLE | Longitude of the ground's point in decimal degrees (WGS84). NULL when lat is NULL. (degrees east) |
 | `elevation_m` | DOUBLE | Elevation above sea level in metres: a manual value, else Wikidata's declared elevation, else the Open-Meteo 90 m terrain-model value at the point (see elevation_source). NULL when none exist (all unlocated venues and 49 located ones). (m above sea level) |
@@ -802,7 +802,7 @@ One canonical record per ground with display name, coordinates, elevation, timez
 | `name` | VARCHAR | Display name of the ground: the most common Cricsheet spelling among its aliases, or a manual override. |
 | `city` | VARCHAR | Display city: the most common city among its aliases, or a manual override. NULL for 52 venues with no city in Cricsheet. |
 | `country` | VARCHAR | Country the ground is in, confirmed by testing the point against that country's bounding box; derived from a manual override, the home team, or the geocoder's label. NULL when the venue has no coordinates. |
-| `home_team` | VARCHAR | The team that played in at least half of the ground's international matches, given at least 3 internationals and no tie. NULL at neutral or little-used grounds. |
+| `home_team` | VARCHAR | The team that played in at least half of the ground's men's international matches, given at least 3 of them and no tie (home_team_gender in config/venue_overrides.yml, kept equal to the scope's gender). Women's matches do not count, since Cricsheet team names carry no gender. NULL at neutral or little-used grounds. |
 | `lat` | DOUBLE | Latitude of the ground's point in decimal degrees (WGS84). May be a city centre rather than the ground (see geocode_confidence and weather_location_quality). NULL for the 273 venues that could not be located. (degrees north) |
 | `lon` | DOUBLE | Longitude of the ground's point in decimal degrees (WGS84). NULL when lat is NULL. (degrees east) |
 | `elevation_m` | DOUBLE | Elevation above sea level in metres: a manual value, else Wikidata's declared elevation, else the Open-Meteo 90 m terrain-model value at the point (see elevation_source). NULL when none exist (all unlocated venues and 46 located ones). (m above sea level) |
@@ -1027,7 +1027,7 @@ Every canonical venue that hosts at least one in-scope match: name, city, countr
 | `name` required | VARCHAR | Display name of the ground (its most common Cricsheet spelling). |
 | `city` | VARCHAR | Display city (most common Cricsheet city for the ground). NULL when Cricsheet never gives one. |
 | `country` required | VARCHAR | Country the ground is in, as a territory name (e.g. 'Australia', 'England', 'Northern Ireland'; Caribbean grounds get their island, e.g. 'Barbados'): from a manual override, else the home team, else the geocoder's label, confirmed by the point lying inside that country's bounding box. |
-| `home_team` | VARCHAR | Team that plays in at least half of the ground's international matches (at least 3 internationals, men's and women's), over every match in the snapshot: the LATEST value. It can differ from the home team when a match was played (Pakistan in the UAE, 2009 to 2021); use dim_venue_version through dim_match.venue_version for that. NULL at neutral or rarely used grounds. |
+| `home_team` | VARCHAR | Team that plays in at least half of the ground's men's international matches (at least 3 of them; women's matches do not count, since Cricsheet team names carry no gender), over every match in the snapshot: the LATEST value. It can differ from the home team when a match was played (Pakistan in the UAE, 2009 to 2021); use dim_venue_version through dim_match.venue_version for that. NULL at neutral or rarely used grounds. |
 | `lat` required | DOUBLE | Latitude of the ground point (WGS84). (degrees) |
 | `lon` required | DOUBLE | Longitude of the ground point (WGS84). (degrees) |
 | `elevation_m` | DOUBLE | Elevation of the ground above sea level: a manual value, else Wikidata's, else the 90 m DEM sample (elevation_dem_m). NULL when none is available. (m) |
@@ -1065,7 +1065,7 @@ One row per (venue_id, venue_version) of a ground that hosts at least one in-sco
 - **Key:** `venue_id`, `venue_version`
 - **Kind:** dim · **Sources:** venues_geo, weather, cricsheet, derived · **Built from:** `venue_versions`, `dim_match`
 
-- **Limitations:** This build uses venue_context: asof (182 in-scope grounds, 556 versions): each version is built only from matches up to its valid_from date, counting every Cricsheet match at the ground (both genders, every year), not only the scope. A version valid on a date includes that date's matches, so it is "as recorded", not "known before play". With venue_context: snapshot each ground would have one version built from every match, and inputs_as_of would be its last match date.
+- **Limitations:** This build uses venue_context: asof (182 in-scope grounds, 556 versions): each version is built only from matches up to its valid_from date, counting every Cricsheet match at the ground (both genders, every year), not only the scope, except that the home team counts men's internationals only. A version valid on a date includes that date's matches, so it is "as recorded", not "known before play". With venue_context: snapshot each ground would have one version built from every match, and inputs_as_of would be its last match date.
 
 | column | type | description |
 |---|---|---|
@@ -1079,7 +1079,7 @@ One row per (venue_id, venue_version) of a ground that hosts at least one in-sco
 | `name` | VARCHAR | Display name of the ground: the most common Cricsheet spelling among its aliases, or a manual override. |
 | `city` | VARCHAR | Display city: the most common city among its aliases, or a manual override. NULL when Cricsheet gives no city for the ground. |
 | `country` | VARCHAR | Country the ground is in, confirmed by testing the point against that country's bounding box; derived from a manual override, the home team, or the geocoder's label. NULL when the venue has no coordinates. |
-| `home_team` | VARCHAR | The team that played in at least half of the ground's international matches, given at least 3 internationals and no tie. NULL at neutral or little-used grounds. |
+| `home_team` | VARCHAR | The team that played in at least half of the ground's men's international matches, given at least 3 of them and no tie (home_team_gender in config/venue_overrides.yml, kept equal to the scope's gender). Women's matches do not count, since Cricsheet team names carry no gender. NULL at neutral or little-used grounds. |
 | `lat` | DOUBLE | Latitude of the ground's point in decimal degrees (WGS84). May be a city centre rather than the ground (see geocode_confidence and weather_location_quality). NULL when the ground could not be located. (degrees north) |
 | `lon` | DOUBLE | Longitude of the ground's point in decimal degrees (WGS84). NULL when lat is NULL. (degrees east) |
 | `elevation_m` | DOUBLE | Elevation above sea level in metres: a manual value, else Wikidata's declared elevation, else the Open-Meteo 90 m terrain-model value at the point (see elevation_source). NULL when none exist (every unlocated venue and some located ones). (m above sea level) |

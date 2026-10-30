@@ -79,13 +79,13 @@ def make_wx(sid="w1", lat=EDEN[0], lon=EDEN[1], precip=0.0):
 def matches_con():
     con = duckdb.connect()
     con.execute("""CREATE TABLE matches AS SELECT * FROM (VALUES
-        ('m1', 'Eden Gardens', 'Kolkata', DATE '2020-01-01', DATE '2020-01-01', 1, 'ODI', NULL, 'international', 'India', 'Australia'),
-        ('m2', 'Eden Gardens, Kolkata', 'Kolkata', DATE '2020-01-02', DATE '2020-01-02', 1, 'T20', 'Club Cup', 'club', 'A', 'B'),
-        ('m3', 'Mystery Oval', NULL, DATE '2020-01-01', DATE '2020-01-01', 1, 'ODI', NULL, 'international', 'X', 'Y'),
-        ('m4', 'Unplanned Ground', 'Somewhere', DATE '2015-01-01', DATE '2015-01-01', 1, 'T20', 'Women League', 'club', 'C', 'D'),
-        ('m5', 'Eden Gardens', 'Kolkata', DATE '2020-03-01', DATE '2020-03-01', 1, 'ODI', NULL, 'international', 'India', 'England'),
-        ('m6', 'Eden Gardens', 'Kolkata', DATE '2019-11-22', DATE '2019-11-24', 3, 'Test', NULL, 'international', 'India', 'Bangladesh')
-    ) t(match_id, venue, city, start_date, end_date, n_dates, match_type, event_name, team_type, team1, team2)""")
+        ('m1', 'Eden Gardens', 'Kolkata', DATE '2020-01-01', DATE '2020-01-01', 1, 'ODI', NULL, 'male', 'international', 'India', 'Australia'),
+        ('m2', 'Eden Gardens, Kolkata', 'Kolkata', DATE '2020-01-02', DATE '2020-01-02', 1, 'T20', 'Club Cup', 'male', 'club', 'A', 'B'),
+        ('m3', 'Mystery Oval', NULL, DATE '2020-01-01', DATE '2020-01-01', 1, 'ODI', NULL, 'male', 'international', 'X', 'Y'),
+        ('m4', 'Unplanned Ground', 'Somewhere', DATE '2015-01-01', DATE '2015-01-01', 1, 'T20', 'Women League', 'female', 'club', 'C', 'D'),
+        ('m5', 'Eden Gardens', 'Kolkata', DATE '2020-03-01', DATE '2020-03-01', 1, 'ODI', NULL, 'male', 'international', 'India', 'England'),
+        ('m6', 'Eden Gardens', 'Kolkata', DATE '2019-11-22', DATE '2019-11-24', 3, 'Test', NULL, 'male', 'international', 'India', 'Bangladesh')
+    ) t(match_id, venue, city, start_date, end_date, n_dates, match_type, event_name, gender, team_type, team1, team2)""")
     return con
 
 

@@ -60,8 +60,9 @@ schema:
     logicalType: string
     physicalType: VARCHAR
     description: >-
-      Team that plays in at least half of the ground's international matches (at least 3 internationals, men's and
-      women's), over every match in the snapshot: the LATEST value. It can differ from the home team when a match was
+      Team that plays in at least half of the ground's men's international matches (at least 3 of them; women's
+      matches do not count, since Cricsheet team names carry no gender), over every match in the snapshot: the LATEST
+      value. It can differ from the home team when a match was
       played (Pakistan in the UAE, 2009 to 2021); use dim_venue_version through dim_match.venue_version for that.
       NULL at neutral or rarely used grounds.
   - name: lat

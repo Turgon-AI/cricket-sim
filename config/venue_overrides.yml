@@ -13,6 +13,11 @@
 # venues_geo and weather: with it on, a geocode or weather request the locked snapshots lack fails the build.
 venue_context: asof
 
+# home_team_gender: the home team of a ground (version) is the team in at least half of its internationals of this
+# gender. Cricsheet team names carry no gender, so counting women's matches let them decide the men's side's home
+# (Takashinga, Harare, 2019 became Tanzania's). Keep it equal to config/scope.yml gender (a test checks).
+home_team_gender: male
+
 # merge: primary core name -> other core names of the SAME ground (renames, sponsor names, misspellings).
 # "Core|City" merges a core only where Cricsheet gives that city.
 merge:

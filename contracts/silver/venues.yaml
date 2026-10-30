@@ -54,8 +54,9 @@ schema:
   - name: home_team
     logicalType: string
     physicalType: VARCHAR
-    description: The team that played in at least half of the ground's international matches, given at least 3 internationals
-      and no tie. NULL at neutral or little-used grounds.
+    description: The team that played in at least half of the ground's men's international matches, given at least 3 of
+      them and no tie (home_team_gender in config/venue_overrides.yml, kept equal to the scope's gender). Women's matches
+      do not count, since Cricsheet team names carry no gender. NULL at neutral or little-used grounds.
   - name: lat
     logicalType: number
     physicalType: DOUBLE

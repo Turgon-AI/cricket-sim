@@ -13,7 +13,7 @@ description:
     a version valid on a date is built from that date''s matches too.'
   limitations: 'This build uses venue_context: asof (182 in-scope grounds, 556 versions): each version is built only from
     matches up to its valid_from date, counting every Cricsheet match at the ground (both genders, every year), not
-    only the scope. A version valid on a date includes that date''s matches, so it is "as recorded", not "known before
+    only the scope, except that the home team counts men''s internationals only. A version valid on a date includes that date''s matches, so it is "as recorded", not "known before
     play". With venue_context: snapshot each ground would have one version built from every match, and inputs_as_of
     would be its last match date.'
 schema:
@@ -88,8 +88,9 @@ schema:
   - name: home_team
     logicalType: string
     physicalType: VARCHAR
-    description: The team that played in at least half of the ground's international matches, given at least 3 internationals
-      and no tie. NULL at neutral or little-used grounds.
+    description: The team that played in at least half of the ground's men's international matches, given at least 3 of
+      them and no tie (home_team_gender in config/venue_overrides.yml, kept equal to the scope's gender). Women's matches
+      do not count, since Cricsheet team names carry no gender. NULL at neutral or little-used grounds.
   - name: lat
     logicalType: number
     physicalType: DOUBLE

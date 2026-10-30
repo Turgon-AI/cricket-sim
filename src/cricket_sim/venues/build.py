@@ -99,7 +99,7 @@ def zip_dates_loader(zip_path: Path):
 
 def _matches(con) -> list[dict]:
     cur = con.execute("""SELECT match_id, venue, city, start_date, coalesce(end_date, start_date) AS end_date,
-                                coalesce(n_dates, 1) AS n_dates, match_type, event_name, team_type, team1, team2
+                                coalesce(n_dates, 1) AS n_dates, match_type, event_name, gender, team_type, team1, team2
                          FROM matches ORDER BY match_id""")
     cols = [d[0] for d in cur.description]
     return [dict(zip(cols, r)) for r in cur.fetchall()]

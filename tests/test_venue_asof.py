@@ -29,7 +29,7 @@ MATCHES = [("m1", "Calcutta Oval", "Kolkata", date(2010, 1, 5), "India", "Austra
 
 def _dicts(rows):
     return [{"match_id": r[0], "venue": r[1], "city": r[2], "start_date": r[3], "team_type": "international",
-             "team1": r[4], "team2": r[5]} for r in rows]
+             "team1": r[4], "team2": r[5], "gender": r[6] if len(r) > 6 else "male"} for r in rows]
 
 
 def _versions(rows, overrides):
@@ -50,6 +50,28 @@ def test_t1_04_later_spelling_does_not_change_the_version_of_earlier_matches():
     # snapshot mode (the default): one version from every match, so the 2010 matches see the 2020 spelling
     snap = _versions(MATCHES, SNAP)["eden-gardens"]
     assert len(snap) == 1 and snap[0]["venue"]["search_names"] == ["Calcutta Oval", "Eden Gardens"]
+
+
+def test_the_home_team_counts_only_the_scope_gender():
+    # Takashinga, 2019: women's and men's internationals at one ground. Team names carry no gender, so counting the
+    # women's matches made Tanzania (women) the home side of a ground where Zimbabwe's men play.
+    rows = [("w1", "Takashinga Sports Club", "Harare", date(2019, 5, 1), "Tanzania", "Kenya", "female"),
+            ("w4", "Takashinga Sports Club", "Harare", date(2019, 5, 4), "Tanzania", "Rwanda", "female"),
+            ("w2", "Takashinga Sports Club", "Harare", date(2019, 5, 2), "Tanzania", "Namibia", "female"),
+            ("w3", "Takashinga Sports Club", "Harare", date(2019, 5, 3), "Tanzania", "Uganda", "female"),
+            ("m1", "Takashinga Sports Club", "Harare", date(2019, 6, 1), "Zimbabwe", "Netherlands", "male"),
+            ("m2", "Takashinga Sports Club", "Harare", date(2019, 6, 2), "Zimbabwe", "UAE", "male"),
+            ("m3", "Takashinga Sports Club", "Harare", date(2019, 6, 3), "Zimbabwe", "Ireland", "male")]
+    plain = {**ASOF, "merge": {}, "home_team_gender": "male"}
+    latest = _versions(rows, plain)["takashinga-sports-club"][-1]
+    assert latest["home_team"] == "Zimbabwe"
+    assert _versions(rows[:4], plain)["takashinga-sports-club"][-1]["home_team"] is None   # women's matches only
+    assert _versions(rows, {**plain, "home_team_gender": None})["takashinga-sports-club"][-1]["home_team"] == "Tanzania"
+
+
+def test_the_venue_home_rule_counts_the_scope_gender():
+    # the venue code may not read scope.yml (context does not depend on scope), so the two settings are kept equal here
+    assert load_overrides()["home_team_gender"] == paths.load_yaml("scope.yml")["gender"]
 
 
 # ---------------------------------------------------------------- full venue build on synthetic snapshots
@@ -86,9 +108,10 @@ def _wx(files=(), sid="w1"):
 def _build(tmp_path, rows, overrides, out, geo, wx):
     con = duckdb.connect()
     con.execute("CREATE TABLE matches (match_id VARCHAR, venue VARCHAR, city VARCHAR, start_date DATE, end_date DATE, "
-                "n_dates INTEGER, match_type VARCHAR, event_name VARCHAR, team_type VARCHAR, team1 VARCHAR, team2 VARCHAR)")
+                "n_dates INTEGER, match_type VARCHAR, event_name VARCHAR, gender VARCHAR, team_type VARCHAR, team1 VARCHAR, "
+                "team2 VARCHAR)")
     for mid, venue, city, day, t1, t2 in rows:
-        con.execute("INSERT INTO matches VALUES (?, ?, ?, ?, ?, 1, 'ODI', NULL, 'international', ?, ?)",
+        con.execute("INSERT INTO matches VALUES (?, ?, ?, ?, ?, 1, 'ODI', NULL, 'male', 'international', ?, ?)",
                     [mid, venue, city, day, day, t1, t2])
     vb._build(con, geo=geo, wx=wx, out_dir=tmp_path / out, overrides=overrides, reference=load_reference())
     return con
