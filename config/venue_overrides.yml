@@ -155,7 +155,7 @@ venues:
   mission-road-ground: {wikidata_qid: Q23038215}
   namibia-cricket-ground: {wikidata_qid: Q133443345}
   sportpark-het-schootsveld: {wikidata_qid: Q7579625, country: Netherlands}
-  sportpark-maarschalkerweerd: {wikidata_qid: Q2235985}
+  sportpark-maarschalkerweerd: {wikidata_qid: Q2235985, country: Netherlands, note: "Utrecht; its first men's internationals (a 2018 European qualifier) were mostly Germany's, so the home-team rule pointed at Germany"}
   tribhuvan-university-international-cricket-ground: {wikidata_qid: Q7840418}
   western-australia-cricket-association-ground: {wikidata_qid: Q2738971}
   # Wikidata item 'Chevrolet Park' (a former name) is the Bloemfontein ground; the automatic search had only the city.
