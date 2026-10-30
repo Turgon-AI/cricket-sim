@@ -149,7 +149,7 @@ venues:
   maple-leaf-north-west-ground: {wikidata_qid: Q5268956, needs_review: true, note: "coordinates of the Maple Leaf Cricket Club grounds, King City (both grounds share them)"}
   royal-brussels-cricket-club-ground: {wikidata_qid: Q65087740}
   bangabandhu-national-stadium: {wikidata_qid: Q806456}
-  city-oval: {wikidata_qid: Q5123337}
+  city-oval: {wikidata_qid: Q5123337, country: South Africa, note: "Pietermaritzburg; one men's international (2003), so no home team to give the country"}
   lisicji-jarak-cricket-ground: {wikidata_qid: Q113245092}
   mahinda-rajapaksa-international-cricket-stadium: {wikidata_qid: Q1684285}
   mission-road-ground: {wikidata_qid: Q23038215}
