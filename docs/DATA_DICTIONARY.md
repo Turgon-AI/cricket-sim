@@ -744,7 +744,7 @@ One row per (venue_id, venue_version): the venue as the geocoder saw it from val
 - **Key:** `venue_id`, `venue_version`
 - **Kind:** entity · **Sources:** venues_geo, weather, cricsheet, derived · **Built from:** `matches`
 
-- **Limitations:** This build uses venue_context: asof (590 venues, 1,296 versions): the versions use only matches up to each date. With venue_context: snapshot each venue would have one version built from every match in the snapshot, so a later spelling could move an early match's point. silver venues is the latest version of each venue. Counts in the column descriptions are venue counts from the one-version-per-venue (snapshot) view, a guide only: over all 1,296 versions they are larger.
+- **Limitations:** This build uses venue_context: asof (590 venues, 1,184 versions): the versions use only matches up to each date. With venue_context: snapshot each venue would have one version built from every match in the snapshot, so a later spelling could move an early match's point. silver venues is the latest version of each venue. Counts in the column descriptions are venue counts from the one-version-per-venue (snapshot) view, a guide only: over all 1,184 versions they are larger.
 
 | column | type | description |
 |---|---|---|
@@ -783,7 +783,7 @@ One row per (venue_id, venue_version): the venue as the geocoder saw it from val
 | `needs_review` | BOOLEAN | TRUE when any reason for doubt exists: geocode confidence is missing or low, the country, elevation or timezone check is unknown or failed, or an override asks for review. 365 venues are flagged. |
 | `review_reasons` | VARCHAR | Semicolon-separated reasons behind needs_review; NULL when needs_review is FALSE. |
 | `weather_location_quality` | VARCHAR | How much to trust weather taken at this point: 'verified_ground' (trusted point, no review needed), 'unverified_point' (a point exists but needs review) or 'city_centroid' (city centre only). NULL when the venue has no coordinates. |
-| `note` | VARCHAR | Free-text note from the manual override file explaining a correction or a caveat. NULL for 546 venues. |
+| `note` | VARCHAR | Free-text note from the manual override file explaining a correction or a caveat. NULL for 544 venues. |
 | `n_matches` | BIGINT | Number of Cricsheet matches at the venue whose start date falls in this version (all aliases combined, no scope). (matches) |
 
 ### venues
@@ -827,7 +827,7 @@ One canonical record per ground with display name, coordinates, elevation, timez
 | `needs_review` | BOOLEAN | TRUE when any reason for doubt exists: geocode confidence is missing or low, the country, elevation or timezone check is unknown or failed, or an override asks for review. 366 venues are flagged. |
 | `review_reasons` | VARCHAR | Semicolon-separated reasons behind needs_review; NULL when needs_review is FALSE. |
 | `weather_location_quality` | VARCHAR | How much to trust weather taken at this point: 'verified_ground' (trusted point, no review needed), 'unverified_point' (a point exists but needs review) or 'city_centroid' (city centre only). NULL when the venue has no coordinates. |
-| `note` | VARCHAR | Free-text note from the manual override file explaining a correction or a caveat. NULL for 546 venues. |
+| `note` | VARCHAR | Free-text note from the manual override file explaining a correction or a caveat. NULL for 544 venues. |
 | `n_matches` | BIGINT | Number of Cricsheet matches played at the venue (all aliases combined), over all of Cricsheet with no scope applied. (matches) |
 | `first_match_date` | DATE | Start date of the earliest Cricsheet match at the venue. |
 | `last_match_date` | DATE | Start date of the latest Cricsheet match at the venue. |
@@ -1027,7 +1027,7 @@ Every canonical venue that hosts at least one in-scope match: name, city, countr
 | `name` required | VARCHAR | Display name of the ground (its most common Cricsheet spelling). |
 | `city` | VARCHAR | Display city (most common Cricsheet city for the ground). NULL when Cricsheet never gives one. |
 | `country` required | VARCHAR | Country the ground is in, as a territory name (e.g. 'Australia', 'England', 'Northern Ireland'; Caribbean grounds get their island, e.g. 'Barbados'): from a manual override, else the home team, else the geocoder's label, confirmed by the point lying inside that country's bounding box. |
-| `home_team` | VARCHAR | Team that plays in at least half of the ground's men's international matches (at least 3 of them; women's matches do not count, since Cricsheet team names carry no gender), over every match in the snapshot: the LATEST value. It can differ from the home team when a match was played (Pakistan in the UAE, 2009 to 2021); use dim_venue_version through dim_match.venue_version for that. NULL at neutral or rarely used grounds. |
+| `home_team` | VARCHAR | Team that plays in at least half of the ground's men's international matches (at least 3 of them; women's matches do not count, since Cricsheet team names carry no gender), over every match in the snapshot: the LATEST value. It can differ from the home team when a match was played (Pakistan in the UAE, 2008 to 2023); use dim_venue_version through dim_match.venue_version for that. NULL at neutral or rarely used grounds. |
 | `lat` required | DOUBLE | Latitude of the ground point (WGS84). (degrees) |
 | `lon` required | DOUBLE | Longitude of the ground point (WGS84). (degrees) |
 | `elevation_m` | DOUBLE | Elevation of the ground above sea level: a manual value, else Wikidata's, else the 90 m DEM sample (elevation_dem_m). NULL when none is available. (m) |
@@ -1065,7 +1065,7 @@ One row per (venue_id, venue_version) of a ground that hosts at least one in-sco
 - **Key:** `venue_id`, `venue_version`
 - **Kind:** dim · **Sources:** venues_geo, weather, cricsheet, derived · **Built from:** `venue_versions`, `dim_match`
 
-- **Limitations:** This build uses venue_context: asof (182 in-scope grounds, 556 versions): each version is built only from matches up to its valid_from date, counting every Cricsheet match at the ground (both genders, every year), not only the scope, except that the home team counts men's internationals only. A version valid on a date includes that date's matches, so it is "as recorded", not "known before play". With venue_context: snapshot each ground would have one version built from every match, and inputs_as_of would be its last match date.
+- **Limitations:** This build uses venue_context: asof (182 in-scope grounds, 552 versions): each version is built only from matches up to its valid_from date, counting every Cricsheet match at the ground (both genders, every year), not only the scope, except that the home team counts men's internationals only. A version valid on a date includes that date's matches, so it is "as recorded", not "known before play". With venue_context: snapshot each ground would have one version built from every match, and inputs_as_of would be its last match date.
 
 | column | type | description |
 |---|---|---|

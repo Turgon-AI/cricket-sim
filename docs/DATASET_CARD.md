@@ -2,7 +2,7 @@
 
 Structured after *Datasheets for Datasets* (Gebru et al., 2021). Describes the dataset export
 (`cricket export` → `data/export/<build fingerprint>/`). Every number here comes from `data/gold/headline.json`
-of build `3eda829dd9fad0aa` unless stated; the column-level documentation is the export's README.md (generated from
+of build `7ea456db4e50d1f3` unless stated; the column-level documentation is the export's README.md (generated from
 the data contracts) and `croissant.json` (MLCommons Croissant 1.0).
 
 ## Motivation
@@ -160,7 +160,7 @@ The pipeline runs bronze → staging → silver → gold (see docs/ARCHITECTURE.
 
 **As-of venue context:** a match's venue name, city, search strings, home team, geocode and weather placement use
 only matches up to that match's date. A venue gets a new version whenever one of those inputs changes: the silver
-layer holds 590 venues in 1,296 as-of versions (305 venues have more than one), and each match takes the version
+layer holds 590 venues in 1,184 as-of versions (263 venues have more than one), and each match takes the version
 valid on its start date. Weather is placed at that version's point. The contracts on `venue_versions` and
 `match_venues` check this on every build, and a test rebuilds the context with every later match removed and
 requires every earlier row to stay the same. Gold publishes those versions for the 182 in-scope grounds as
@@ -237,4 +237,4 @@ reported to Cricsheet (cricsheet.org), so everyone downstream benefits.
 **Can others contribute?** Yes, through pull requests. Every change must pass the contracts, the fixture build
 and the leakage test in CI.
 
-<!-- cricket-sim card stamp: build_fingerprint=3eda829dd9fad0aa matches_in_scope=5871 balls_in_scope=3657877 pct_matches_with_weather=99.97 pct_in_scope_players_with_dob_wikidata=90.5 afghanistan_withheld_odis=188 -->
+<!-- cricket-sim card stamp: build_fingerprint=7ea456db4e50d1f3 matches_in_scope=5871 balls_in_scope=3657877 pct_matches_with_weather=99.97 pct_in_scope_players_with_dob_wikidata=90.5 afghanistan_withheld_odis=188 -->

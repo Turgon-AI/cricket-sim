@@ -11,7 +11,7 @@ description:
     valid_to dates, the home team, the geocoded point and its checks. dim_match.venue_version names the version valid on
     a match''s start date. A pre-match feature must take the latest version with inputs_as_of before the match date, since
     a version valid on a date is built from that date''s matches too.'
-  limitations: 'This build uses venue_context: asof (182 in-scope grounds, 556 versions): each version is built only from
+  limitations: 'This build uses venue_context: asof (182 in-scope grounds, 552 versions): each version is built only from
     matches up to its valid_from date, counting every Cricsheet match at the ground (both genders, every year), not
     only the scope, except that the home team counts men''s internationals only. A version valid on a date includes that date''s matches, so it is "as recorded", not "known before
     play". With venue_context: snapshot each ground would have one version built from every match, and inputs_as_of

@@ -282,7 +282,7 @@ schema:
   - name: note
     logicalType: string
     physicalType: VARCHAR
-    description: Free-text note from the manual override file explaining a correction or a caveat. NULL for 546
+    description: Free-text note from the manual override file explaining a correction or a caveat. NULL for 544
       venues.
   - name: n_matches
     logicalType: integer

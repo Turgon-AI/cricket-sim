@@ -10,10 +10,10 @@ description:
   purpose: 'What the venue context knew about each ground over time: one row per venue version with the geocoder''s
     inputs, the point found from them and the sanity checks. The weather of a match is placed at the point of the version
     valid on its start date.'
-  limitations: 'This build uses venue_context: asof (590 venues, 1,296 versions): the versions use only matches up to each date. With
+  limitations: 'This build uses venue_context: asof (590 venues, 1,184 versions): the versions use only matches up to each date. With
     venue_context: snapshot each venue would have one version built from every match in the snapshot, so a later spelling
     could move an early match''s point. silver venues is the latest version of each venue. Counts in the column
-    descriptions are venue counts from the one-version-per-venue (snapshot) view, a guide only: over all 1,296 versions
+    descriptions are venue counts from the one-version-per-venue (snapshot) view, a guide only: over all 1,184 versions
     they are larger.'
 schema:
 - name: venue_versions
@@ -325,7 +325,7 @@ schema:
   - name: note
     logicalType: string
     physicalType: VARCHAR
-    description: Free-text note from the manual override file explaining a correction or a caveat. NULL for 546 venues.
+    description: Free-text note from the manual override file explaining a correction or a caveat. NULL for 544 venues.
   - name: n_matches
     logicalType: integer
     physicalType: BIGINT
