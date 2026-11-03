@@ -35,7 +35,7 @@ Start with: [docs/DATASET_CARD.md](docs/DATASET_CARD.md) (what the data is and h
 | source | used for | licence | in the export? | how to obtain |
 |---|---|---|---|---|
 | [Cricsheet](https://cricsheet.org) | ball-by-ball, people register, known-missing list | ODC-BY 1.0 | yes | `cricket ingest cricsheet`, `cricsheet_missing` |
-| [Wikipedia](https://en.wikipedia.org) season pages (pinned revisions) | reference list of internationals | CC BY-SA 4.0 | yes (2 share-alike files) | `cricket ingest wiki_fixtures` |
+| [Wikipedia](https://en.wikipedia.org) season pages (pinned revisions) | reference list of internationals and their results | CC BY-SA 4.0 | yes (3 share-alike files) | `cricket ingest wiki_fixtures` |
 | [Wikidata](https://www.wikidata.org) | player birth date and nationality; venue coordinates | CC0 | yes | `cricket ingest wikidata_players`, `venues_geo` |
 | [OpenStreetMap](https://www.openstreetmap.org) via Nominatim | venue geocodes | ODbL 1.0 | yes (`dim_venue`) | `cricket ingest venues_geo` |
 | [Open-Meteo](https://open-meteo.com) (ECMWF ERA5) | hourly weather | CC BY 4.0 | yes | `cricket ingest weather` |

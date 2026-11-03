@@ -67,10 +67,13 @@ smaller nations are under-represented.
 - the match state *before* the ball;
 - the outcome: runs by type, extras, boundaries, wickets and reviews.
 
-Each `fact_delivery` column is labelled, in the contract and the README, with one of three timings:
+Each `fact_delivery` column is labelled, in the contract and the README, with one of two timings:
 - `pre_ball`: knowable before the ball was bowled.
-- `hindsight`: built from earlier balls, but blanked or flagged using how the innings ended.
 - `outcome`: what happened on the ball.
+
+A third timing, `hindsight` (built from earlier balls, but blanked or flagged using how the innings ended), is
+kept in its own table, `fact_delivery_hindsight`, on the same ball key, so `SELECT *` on `fact_delivery` never
+returns it.
 
 **Is there a label or target?** Not one. Typical targets are runs on the ball, wicket on the ball, the innings
 total, or the match winner (`dim_match`).
@@ -81,6 +84,10 @@ total, or the match winner (`dim_match`).
 - **Player country:** `dim_player.country` is kept as built. `country_conflict` flags the 191 in-scope players
   whose Wikidata citizenship names no national side they played for in Cricsheet; the country itself is not
   changed.
+- **Player country over time:** `dim_player.country` is the latest national side. `dim_player_team` gives each
+  player's spells with one side (2,390 spells for 2,348 capped in-scope players; 40 played for more than one
+  country, e.g. Roelof van der Merwe for South Africa, then the Netherlands), so nationality can be taken as of any
+  match date.
 - **Player physicals, batting hand and bowling style:** absent. No open source records them with usable
   coverage.
 - **Field placements, pitch reports and ball-tracking:** not included. They are not openly available.
@@ -91,7 +98,14 @@ total, or the match winner (`dim_match`).
 5,868 of 5,871 scoped matches (99.95%). This is an internal-consistency rate, not a scorecard reconciliation
 accuracy estimate. The three flagged matches are: a 7-ball over in Zimbabwe v South Africa (T20I, 2022), the 2006 Oval Test, which was awarded
 to England when Pakistan did not take the field, and Canada v Nepal (ODI, 2024), which Nepal won only through 5 post-innings penalty runs that are on no ball
-(`result_in_ball_stream = false`). All three stay in the data with `passes_quality = false`. Cricsheet itself is volunteer-built and occasionally
+(`result_in_ball_stream = false`). All three stay in the data with `passes_quality = false`.
+
+**Checked against an outside source:** `report_result_check` compares the result of every international linked
+to the Wikipedia reference list (4,597 matches) with the pinned season page. 4,582 agree on the kind of result,
+the winner and the margin. None differ on the kind of result or the winner. 15 differ only on the margin; in 14 of
+them Cricsheet's own innings totals give Cricsheet's margin (e.g. Australia by 277 runs over West Indies in June 2015, which
+Wikipedia lists as 227), so the page is the likely error; the 15th is a D/L result, where the margin cannot be
+recomputed. The build fails if a result or winner ever disagrees. Cricsheet itself is volunteer-built and occasionally
 corrected; `dim_match.cricsheet_revision` records the revision used. No in-scope chase is flagged `inconsistent_with_balls` any more: the three that were had a 7-ball
 over that Cricsheet lists as miscounted, which the ball limit now allows for.
 
@@ -190,8 +204,8 @@ every build for types, keys, foreign keys and quality rules.
 - teaching leakage-safe feature design with sports data.
 
 **Use with care:**
-- **Model inputs:** use only `pre_ball` columns. `hindsight` columns (`target_status`,
-  `innings_length_status`, `innings_balls_limit`, `balls_remaining_before`, `target_runs`,
+- **Model inputs:** use only `pre_ball` columns. The `hindsight` columns of `fact_delivery_hindsight`
+  (`target_status`, `innings_length_status`, `innings_balls_limit`, `balls_remaining_before`, `target_runs`,
   `runs_required_before`, `batters_absent`) are for choosing which rows to train on.
 - **Venue features:** use `dim_venue_version`, taking the latest version with `inputs_as_of` before the match
   date (the weather in `fact_match_weather_hourly` is placed by venue version too). `dim_venue` is a
@@ -219,8 +233,8 @@ Parquet only.
   `dim_venue_version`, `fact_match_weather_hourly` (weather is taken at the geocoded point, so the Open-Meteo
   CC BY 4.0 data is carried under the stricter licence), `model_ball_win_probability` (it uses the home team) and
   the `report_model_*` files, which are built partly from it.
-- **CC BY-SA 4.0:** `map_match_ids` and `report_international_coverage`, because of Wikipedia. These two files
-  must stay share-alike.
+- **CC BY-SA 4.0:** `map_match_ids`, `report_international_coverage` and `report_result_check`, because of
+  Wikipedia. These three files must stay share-alike.
 
 **What is excluded:** nothing derived from ESPNcricinfo or Hawk-Eye is in the export. The export step refuses
 any such table.

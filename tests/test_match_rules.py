@@ -3,6 +3,7 @@ nominal target and lead, the known-chase contract check, results that need event
 the scope.yml schema. Each test pins one rule."""
 
 import json
+import re
 import zipfile
 
 import duckdb
@@ -25,10 +26,11 @@ def _rule(table: str, name: str) -> str:
 
 
 def _rule_hits(table: str, name: str, columns: str, rows: str) -> int:
-    """Run a contract SQL rule on a few literal rows; the result is the number of violations."""
+    """Run a contract SQL rule on a few literal rows; the result is the number of violations. A rule that joins
+    another table (${table:name}) reads the same rows, so give them the columns of both."""
     con = duckdb.connect()
     con.execute(f"CREATE TABLE t AS SELECT * FROM (VALUES {rows}) v({columns})")
-    return con.execute(_rule(table, name).replace("${table}", "t")).fetchone()[0]
+    return con.execute(re.sub(r"\$\{table(:\w+)?\}", "t", _rule(table, name))).fetchone()[0]
 
 
 def _match_json(match_type="T20", overs=20, target_overs="20"):
@@ -194,17 +196,18 @@ def test_nominal_target_equals_target_runs_whenever_the_target_is_unrevised():
 
 
 def test_nominal_target_rule_is_a_contract_check():
-    cols = "target_status, nominal_target_runs, target_runs"
-    for table in ("fact_innings", "fact_delivery"):
-        assert _rule_hits(table, "nominal_target_equals_target", cols, "('test_derived', 296, 301)") == 1
+    # fact_delivery_hindsight takes nominal_target_runs from fact_delivery, joined on the ball key
+    cols = "match_id, innings, delivery_number, target_status, nominal_target_runs, target_runs"
+    for table in ("fact_innings", "fact_delivery_hindsight"):
+        assert _rule_hits(table, "nominal_target_equals_target", cols, "('m', 4, 1, 'test_derived', 296, 301)") == 1
         assert _rule_hits(table, "nominal_target_equals_target",
-                          cols, "('test_derived', 301, 301), ('revised_timing_unknown', NULL, NULL), "
-                                "('none', NULL, NULL)") == 0
+                          cols, "('m', 4, 1, 'test_derived', 301, 301), ('m', 2, 1, 'revised_timing_unknown', NULL, NULL), "
+                                "('m', 1, 1, 'none', NULL, NULL)") == 0
 
 
 # ---- known_chase_not_finished -----------------------------------------------------------------
 
-@pytest.mark.parametrize("table", ["fact_delivery", "int_ball_state_pre"])
+@pytest.mark.parametrize("table", ["fact_delivery_hindsight", "int_ball_state_pre"])
 def test_known_chase_check_catches_a_ball_with_zero_balls_left(table):
     cols = "target_status, runs_required_before, balls_remaining_before"
     assert _rule_hits(table, "known_chase_not_finished", cols, "('set', 5, 0)") == 1

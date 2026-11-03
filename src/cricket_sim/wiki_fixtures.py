@@ -401,7 +401,7 @@ def parse_wikitext(title: str, wikitext: str) -> list[dict]:
         })
     _correct_heading_teams(out)
     for row in out:
-        winner = row.pop("_winner")
+        winner = row["winner"] = row.pop("_winner")
         flags = []
         if row["team1"] and row["team1"] == row["team2"]:
             flags.append("same_team")
@@ -437,8 +437,8 @@ SCHEMA = pa.schema([
     ("match_format", pa.string()), ("match_number", pa.int32()), ("cricinfo_match_id", pa.int64()),
     ("date_text", pa.string()), ("start_date", pa.date32()),
     ("team1", pa.string()), ("team2", pa.string()), ("teams_source", pa.string()),
-    ("result_text", pa.string()), ("result_class", pa.string()), ("is_abandoned_no_ball", pa.bool_()),
-    ("involves_afghanistan", pa.bool_()), ("page_title", pa.string()), ("page_revid", pa.int64()),
+    ("result_text", pa.string()), ("result_class", pa.string()), ("winner", pa.string()),
+    ("is_abandoned_no_ball", pa.bool_()), ("involves_afghanistan", pa.bool_()), ("page_title", pa.string()), ("page_revid", pa.int64()),
     ("section_heading", pa.string()),
     ("qa_flags", pa.string()),
     ("duplicates", pa.int32()), ("duplicate_conflict", pa.bool_()), ("conflict_fields", pa.string()),

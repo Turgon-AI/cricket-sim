@@ -1,0 +1,200 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.report_result_check
+name: report_result_check
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Accuracy against an outside source, not just internal consistency: every in-scope international linked to
+    the Wikipedia reference list (map_match_ids) has its Cricsheet result compared with the result cell of the pinned
+    Wikipedia season page: the kind of result, the winner and the margin.'
+  limitations: 'Only internationals linked to a numbered reference match are checked (no IPL). Wikipedia''s result cell
+    is free text; the winner is read only where the cell starts with a team flag, and a margin only where it says runs,
+    wickets or an innings. A margin disagreement where Cricsheet''s own innings totals give its margin
+    (cricsheet_margin_follows_from_totals) most likely points at an error on the Wikipedia page, not in Cricsheet; the
+    report does not decide which source is right.'
+schema:
+- name: report_result_check
+  physicalName: data/gold/report_result_check.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per linked international with both sources' results side by side, the three tri-state checks
+    (class, winner, margin; NULL = not checkable) and a status.
+  dataGranularityDescription: One row per Cricsheet match linked to a reference match (the rows of map_match_ids).
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match identifier.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: dim_match.match_id
+  - name: segment
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''Test'', ''ODI'' or ''T20I''.'
+    required: true
+  - name: reference_number
+    logicalType: integer
+    physicalType: INTEGER
+    description: Official match number in the reference list (e.g. ODI 4787).
+    required: true
+  - name: reference_result_text
+    logicalType: string
+    physicalType: VARCHAR
+    description: Wikipedia's result cell as plain text, e.g. 'New Zealand by 7 wickets'.
+  - name: reference_result_class
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Wikipedia''s result class: ''result'', ''draw'', ''tie'', ''no_result'', ''abandoned'' or ''unknown''.'
+    required: true
+  - name: reference_winner
+    logicalType: string
+    physicalType: VARCHAR
+    description: The winner named by the result cell, in Cricsheet team naming; NULL when the cell names none.
+  - name: reference_by_innings
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: The result cell says the match was won by an innings.
+  - name: reference_runs
+    logicalType: integer
+    physicalType: INTEGER
+    description: Runs margin read from the result cell (for an innings win, the runs after 'an innings and').
+  - name: reference_wickets
+    logicalType: integer
+    physicalType: INTEGER
+    description: Wickets margin read from the result cell.
+  - name: cricsheet_result_class
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Cricsheet''s result in the same classes: ''result'' (a winner, awards included), ''tie'', ''draw''
+      or ''no_result''.'
+    required: true
+    quality:
+    - name: valid_class
+      metric: invalidValues
+      arguments:
+        validValues:
+        - result
+        - tie
+        - draw
+        - no_result
+      mustBe: 0
+  - name: winner
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet's winner (dim_match.winner).
+  - name: win_by_runs
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Cricsheet's runs margin (dim_match.win_by_runs).
+  - name: win_by_wickets
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Cricsheet's wickets margin (dim_match.win_by_wickets).
+  - name: win_by_innings
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Cricsheet's innings margin (dim_match.win_by_innings).
+  - name: method
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet's result method, e.g. 'D/L' or 'Awarded' (dim_match.method).
+  - name: class_agrees
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: The two result classes agree. Wikipedia's 'abandoned' agrees with Cricsheet's no result or draw (a
+      match abandoned after play started; Cricsheet holds no match without a ball). NULL when Wikipedia's class is
+      'unknown'.
+  - name: winner_agrees
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: Both sources name a winner and it is the same team. NULL when either has no winner or Wikipedia's cell
+      names none.
+  - name: margin_agrees
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: Both sources have a winner and the margin (innings, runs or wickets) is the same. NULL when either has
+      no winner, the match was awarded, or Wikipedia's cell gives no readable margin.
+  - name: cricsheet_margin_follows_from_totals
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: Cricsheet's stated margin follows from its own innings totals (int_match_quality.result_consistent);
+      NULL where that is not checkable (rain rule, innings win, no winner).
+  - name: status
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''agrees'', ''margin_differs'', ''winner_differs'', ''class_differs'' (the first failing check in
+      that order of severity, worst last) or ''not_checkable'' (Wikipedia''s class is unknown).'
+    required: true
+    quality:
+    - name: valid_status
+      metric: invalidValues
+      arguments:
+        validValues:
+        - agrees
+        - margin_differs
+        - winner_differs
+        - class_differs
+        - not_checkable
+      mustBe: 0
+  - name: page_title
+    logicalType: string
+    physicalType: VARCHAR
+    description: Title of the Wikipedia season page the reference row came from (CC BY-SA 4.0 source).
+    required: true
+  - name: page_revid
+    logicalType: integer
+    physicalType: BIGINT
+    description: Pinned revision id of that page.
+    required: true
+  quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least 90% of the 4,597 linked internationals of the 2026-11-03 real
+      build (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 4100
+    customProperties:
+    - property: fullDataOnly
+      value: true
+  - name: one_row_per_linked_match
+    description: every map_match_ids row is checked once
+    type: sql
+    query: SELECT (SELECT count(*) FROM ${table:map_match_ids}) - count(*) FROM ${table}
+    mustBe: 0
+  - name: no_class_disagreement
+    description: no linked match has a different kind of result on Wikipedia
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE status = 'class_differs'
+    mustBe: 0
+  - name: no_winner_disagreement
+    description: no linked match has a different winner on Wikipedia
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE status = 'winner_differs'
+    mustBe: 0
+  - name: margin_disagreements_have_consistent_cricsheet_totals
+    description: where the margins differ, Cricsheet's own innings totals never contradict its margin, so no
+      disagreement is left that Cricsheet's data cannot account for
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE status = 'margin_differs' AND cricsheet_margin_follows_from_totals IS FALSE
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: report
+- property: sources
+  value:
+  - wiki_fixtures
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - map_match_ids
+  - wikipedia_fixtures
+  - dim_match
+  - int_match_quality

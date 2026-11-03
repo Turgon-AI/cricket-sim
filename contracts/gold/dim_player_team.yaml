@@ -1,0 +1,136 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.dim_player_team
+name: dim_player_team
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: 'Nationality over time: for every in-scope player, each spell of internationals played for one national
+    side, with valid_from / valid_to dates. dim_player.country is only the latest team; this table gives the team as
+    of any match date, e.g. Roelof van der Merwe for South Africa, then the Netherlands.'
+  limitations: 'Built from Cricsheet internationals only (both genders, every year, composite XIs such as the ICC World
+    XI ignored), so a player''s nationality before their first Cricsheet international, or a cap Cricsheet does not hold
+    (Afghanistan), is not here. A spell starts on its first match, so a match on date d was played under the spell with
+    valid_from <= d <= valid_to, and a pre-match feature must take the spell with valid_from < d. A player Cricsheet
+    shows for two teams on the same day (a shared id) is flagged two_teams_same_day; their spells can alternate.'
+  usage: Join on player_id = dim_player.cricsheet_id and a match date between valid_from and coalesce(valid_to, the
+    date).
+schema:
+- name: dim_player_team
+  physicalName: data/gold/dim_player_team.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per spell of a player with one national team, in date order, for every player in dim_player who
+    played at least one Cricsheet international.
+  dataGranularityDescription: One row per (player_id, spell).
+  properties:
+  - name: player_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet person identifier (8 hex characters).
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    relationships:
+    - to: dim_player.cricsheet_id
+  - name: spell
+    logicalType: integer
+    physicalType: INTEGER
+    description: 1, 2, ... in date order. A new spell starts each time the player's next international is for a
+      different national side than the one before.
+    primaryKey: true
+    primaryKeyPosition: 2
+    required: true
+  - name: team
+    logicalType: string
+    physicalType: VARCHAR
+    description: The national side of this spell, as a Cricsheet team name.
+    required: true
+  - name: valid_from
+    logicalType: date
+    physicalType: DATE
+    description: First match date of the spell. The player's nationality is this team from this date.
+    required: true
+  - name: valid_to
+    logicalType: date
+    physicalType: DATE
+    description: Last day the spell covers (the day before the next spell's first match); NULL for the latest spell.
+  - name: first_match_date
+    logicalType: date
+    physicalType: DATE
+    description: First international of the spell (equal to valid_from).
+    required: true
+  - name: last_match_date
+    logicalType: date
+    physicalType: DATE
+    description: Last international of the spell.
+    required: true
+  - name: matches
+    logicalType: integer
+    physicalType: INTEGER
+    description: Cricsheet internationals the player played for this team in this spell.
+    required: true
+    quality:
+    - name: positive
+      type: sql
+      query: SELECT count(*) FROM ${table} WHERE ${column} < 1
+      mustBe: 0
+  - name: two_teams_same_day
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: True on every spell of a player Cricsheet lists for two different national sides on the same date
+      (almost certainly two people sharing one Cricsheet id); their spells are not reliable.
+    required: true
+  quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, at least 90% of the 2,390 rows of the 2026-11-03 real build (skipped for
+      the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 2150
+    customProperties:
+    - property: fullDataOnly
+      value: true
+  - name: spells_are_ordered
+    type: sql
+    description: spells are 1..n per player, valid_from strictly increasing, consecutive spells change team, and each
+      valid_to is the day before the next spell starts (NULL on the last). Players flagged two_teams_same_day may
+      start two spells on one day.
+    query: SELECT count(*) FROM (SELECT spell, team, valid_from, valid_to, two_teams_same_day, row_number() OVER w AS rn,
+      lead(valid_from) OVER w AS next_from, lag(team) OVER w AS prev_team FROM ${table} WINDOW w AS (PARTITION BY player_id
+      ORDER BY spell)) WHERE spell <> rn OR team = prev_team OR (next_from IS NULL) <> (valid_to IS NULL) OR (next_from
+      IS NOT NULL AND (valid_to <> next_from - 1 OR (next_from <= valid_from AND NOT two_teams_same_day)))
+    mustBe: 0
+  - name: spell_dates_in_order
+    type: sql
+    description: a spell's first match is its valid_from and comes no later than its last match
+    query: SELECT count(*) FROM ${table} WHERE first_match_date <> valid_from OR last_match_date < first_match_date
+    mustBe: 0
+  - name: latest_spell_is_dim_player_country
+    type: sql
+    description: the latest spell's team is dim_player.country wherever that country came from Cricsheet internationals
+    query: SELECT count(*) FROM ${table} t JOIN ${table:dim_player} p ON p.cricsheet_id = t.player_id WHERE t.valid_to
+      IS NULL AND p.country_source LIKE 'cricsheet%' AND p.country IS DISTINCT FROM t.team
+    mustBe: 0
+  - name: every_capped_player_has_spells
+    type: sql
+    description: every player whose dim_player.country came from Cricsheet internationals has exactly one open-ended
+      (latest) spell, and no other player has any
+    query: SELECT (SELECT count(*) FROM ${table:dim_player} WHERE country_source LIKE 'cricsheet%') - count(*) FILTER
+      (valid_to IS NULL) FROM ${table}
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: dim
+- property: sources
+  value:
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - match_players
+  - matches
+  - dim_player

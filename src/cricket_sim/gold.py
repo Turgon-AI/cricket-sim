@@ -14,7 +14,7 @@ scope never needs a re-ingest. The export (export.py) reads gold only.
 import pyarrow as pa
 
 from . import ball_layers
-from .context_players import MAX_LAST_MATCH_AGE
+from .context_players import COMPOSITE_TEAMS, MAX_LAST_MATCH_AGE
 from .paths import GOLD, SUBSET, load_yaml
 from .wiki_fixtures import link_reference, load_link_overrides
 
@@ -211,6 +211,94 @@ QUALITY_CHECKS = ["runs_add_up", "extras_add_up", "overs_consistent", "wickets_w
                   "result_in_ball_stream"]
 
 
+# Nationality over time: a spell is an unbroken run of internationals for one national side (composite XIs
+# ignored), over ALL internationals of every in-scope player. dim_player.country is the last spell's team; a match
+# on date d was played under the spell with valid_from <= d <= valid_to, and a pre-match feature takes the spell
+# with valid_from < d. A player shown for two teams on one day (a shared Cricsheet id) is flagged. Reads
+# match_players, matches and dim_player.
+_COMPOSITE = ", ".join(f"'{t}'" for t in COMPOSITE_TEAMS)
+PLAYER_TEAM_SQL = f"""
+        WITH x AS (
+            SELECT DISTINCT mp.player_id, mp.team, m.start_date, m.match_id
+            FROM match_players mp JOIN matches m USING (match_id)
+            WHERE m.team_type = 'international' AND mp.team NOT IN ({_COMPOSITE})
+              AND mp.player_id IN (SELECT cricsheet_id FROM dim_player)
+        ), s AS (
+            SELECT *, coalesce(team <> lag(team) OVER (PARTITION BY player_id ORDER BY start_date, match_id), false)
+                AS new_spell
+            FROM x
+        ), g AS (
+            SELECT *, CAST(1 + sum(CAST(new_spell AS INTEGER)) OVER (PARTITION BY player_id ORDER BY start_date, match_id
+                ROWS UNBOUNDED PRECEDING) AS INTEGER) AS spell
+            FROM s
+        ), spells AS (
+            SELECT player_id, spell, any_value(team) AS team, min(start_date) AS first_match_date,
+                max(start_date) AS last_match_date, CAST(count(DISTINCT match_id) AS INTEGER) AS matches
+            FROM g GROUP BY player_id, spell
+        )
+        SELECT player_id, spell, team, first_match_date AS valid_from,
+            lead(first_match_date) OVER (PARTITION BY player_id ORDER BY spell) - 1 AS valid_to,
+            first_match_date, last_match_date, matches,
+            player_id IN (SELECT player_id FROM x GROUP BY player_id, start_date HAVING count(DISTINCT team) > 1)
+                AS two_teams_same_day
+        FROM spells"""
+
+
+# Accuracy, not just consistency: every in-scope international linked to the reference list (map_match_ids) has
+# its result compared with the Wikipedia season page. Class: who won / tie / draw / no result ('abandoned' after
+# play started is Cricsheet's no result, or a draw in a Test). Winner: the team the result cell leads with.
+# Margin: runs, wickets or an innings, read from the result text. NULL = not checkable for this match.
+# cricsheet_margin_follows_from_totals says whether Cricsheet's own innings totals give its margin, so a margin
+# disagreement where that is true points at the reference, not at Cricsheet.
+RESULT_CHECK_SQL = r"""
+    WITH r AS (
+        SELECT c.match_id, c.segment, c.reference_number, w.result_text AS reference_result_text,
+            w.result_class AS reference_result_class, w.winner AS reference_winner,
+            regexp_matches(lower(w.result_text), '\binn') AS reference_by_innings,
+            try_cast(regexp_extract(lower(w.result_text), '(\d+)\s*runs?\b', 1) AS INTEGER) AS reference_runs,
+            try_cast(regexp_extract(lower(w.result_text), '(\d+)\s*(wickets?|wkts?)\b', 1) AS INTEGER)
+                AS reference_wickets,
+            c.page_title, c.page_revid
+        FROM map_match_ids c
+        JOIN wikipedia_fixtures w ON w.match_format = c.segment AND w.match_number = c.reference_number
+    ), j AS (
+        SELECT r.*,
+            CASE WHEN d.winner IS NOT NULL THEN 'result' WHEN d.result = 'tie' THEN 'tie'
+                 WHEN d.result = 'draw' THEN 'draw' WHEN d.result = 'no result' THEN 'no_result' END
+                AS cricsheet_result_class,
+            d.winner, d.win_by_runs, d.win_by_wickets, d.win_by_innings, d.method,
+            q.result_consistent AS cricsheet_margin_follows_from_totals
+        FROM r JOIN dim_match d USING (match_id) JOIN int_match_quality q USING (match_id)
+    ), c AS (
+        SELECT *,
+            CASE WHEN reference_result_class = 'unknown' THEN NULL
+                 WHEN reference_result_class = 'abandoned' THEN cricsheet_result_class IN ('no_result', 'draw')
+                 ELSE reference_result_class = cricsheet_result_class END AS class_agrees,
+            CASE WHEN reference_result_class = 'result' AND cricsheet_result_class = 'result'
+                      AND reference_winner IS NOT NULL THEN reference_winner = winner END AS winner_agrees,
+            CASE WHEN reference_result_class <> 'result' OR cricsheet_result_class <> 'result'
+                      OR method = 'Awarded' THEN NULL
+                 WHEN reference_by_innings THEN win_by_innings IS NOT NULL
+                      AND reference_runs IS NOT DISTINCT FROM win_by_runs
+                 WHEN win_by_innings IS NOT NULL THEN false
+                 WHEN reference_wickets IS NOT NULL THEN reference_wickets IS NOT DISTINCT FROM win_by_wickets
+                 WHEN reference_runs IS NOT NULL THEN reference_runs IS NOT DISTINCT FROM win_by_runs END
+                AS margin_agrees
+        FROM j
+    )
+    SELECT match_id, segment, reference_number, reference_result_text, reference_result_class, reference_winner,
+        reference_by_innings, reference_runs, reference_wickets,
+        cricsheet_result_class, winner, win_by_runs, win_by_wickets, win_by_innings, method,
+        class_agrees, winner_agrees, margin_agrees, cricsheet_margin_follows_from_totals,
+        CASE WHEN class_agrees IS NULL THEN 'not_checkable'
+             WHEN NOT class_agrees THEN 'class_differs'
+             WHEN winner_agrees IS FALSE THEN 'winner_differs'
+             WHEN margin_agrees IS FALSE THEN 'margin_differs'
+             ELSE 'agrees' END AS status,
+        page_title, page_revid
+    FROM c"""
+
+
 def _reference_where(scope: dict) -> str:
     """The reference rows the coverage report covers (scope start, known result, full-member T20Is)."""
     return f"""start_date >= DATE '{scope['from_date']}' AND result_class <> 'unknown'
@@ -275,6 +363,8 @@ def build_gold(con) -> dict:
         WHERE p.cricsheet_id IN (SELECT mp.player_id FROM match_players mp JOIN scope USING (match_id))""",
           "cricsheet_id")
 
+    write("dim_player_team", PLAYER_TEAM_SQL, "player_id, spell")
+
     write("dim_venue", """
         SELECT v.* FROM venues v WHERE v.venue_id IN (SELECT venue_id FROM dim_match)""", "venue_id")
 
@@ -307,6 +397,8 @@ def build_gold(con) -> dict:
         LEFT JOIN totals t USING (match_id, innings)""", "match_id, innings")
 
     # The product: one row per ball, the state BEFORE it (from earlier balls only), then what happened.
+    # The hindsight state lives in fact_delivery_hindsight, so `SELECT *` here never hands a model a column whose
+    # NULLs and statuses reveal how the innings ended.
     write("fact_delivery", """
         SELECT b.match_id, b.innings, b.delivery_number, b.batting_team, b.is_super_over,
             b.over, b.ball_in_over, b.actual_delivery, b.legal_balls_in_over_before,
@@ -315,9 +407,6 @@ def build_gold(con) -> dict:
             s.scheduled_balls_limit, s.scheduled_balls_remaining_before,
             s.nominal_target_runs, s.nominal_runs_required_before,
             s.match_lead_before, s.wickets_limit,
-            -- hindsight: cross-checked against how the innings went (choose rows with these, never predict with them)
-            s.batters_absent, s.innings_balls_limit, s.balls_remaining_before, s.innings_length_status,
-            s.target_runs, s.runs_required_before, s.target_status,
             b.is_legal, b.runs_batter, b.runs_extras, b.runs_total, b.runs_non_boundary,
             b.runs_batter = 4 AND NOT b.runs_non_boundary AS is_four,
             b.runs_batter = 6 AND NOT b.runs_non_boundary AS is_six,
@@ -326,6 +415,14 @@ def build_gold(con) -> dict:
         FROM balls b JOIN scope USING (match_id)
         JOIN int_ball_state_pre s USING (match_id, innings, delivery_number)""",
           "match_id, innings, delivery_number")
+
+    # hindsight: computed from earlier balls but cross-checked against how the innings went (cut short,
+    # rain-revised). Join on the ball key to choose training rows; never a model input.
+    write("fact_delivery_hindsight", """
+        SELECT s.match_id, s.innings, s.delivery_number,
+            s.batters_absent, s.innings_balls_limit, s.balls_remaining_before, s.innings_length_status,
+            s.target_runs, s.runs_required_before, s.target_status
+        FROM int_ball_state_pre s JOIN scope USING (match_id)""", "match_id, innings, delivery_number")
 
     write("fact_dismissal", "SELECT w.* FROM wickets w JOIN scope USING (match_id)",
           "match_id, innings, delivery_number, wicket_number")
@@ -442,6 +539,8 @@ def build_gold(con) -> dict:
     dupes = con.execute("SELECT count(*) - count(DISTINCT match_id) FROM map_match_ids").fetchone()[0]
     if dupes:
         raise SystemExit(f"map_match_ids: {dupes} Cricsheet matches linked to more than one reference match")
+
+    write("report_result_check", RESULT_CHECK_SQL, "segment, match_id")
 
     write("report_cricsheet_known_missing", f"""
         SELECT list_name, start_date, teams FROM cricsheet_missing
@@ -635,6 +734,10 @@ def _headline(con, scope: dict) -> dict:
             "SELECT segment, status, count(*) FROM report_international_coverage GROUP BY ALL ORDER BY ALL").fetchall()},
         "cricsheet_internationals_not_in_reference": dict(con.execute(
             "SELECT segment, count(*) FROM report_cricsheet_not_in_reference GROUP BY ALL ORDER BY ALL").fetchall()),
+        "result_check_vs_wikipedia": dict(con.execute(
+            "SELECT status, count(*) FROM report_result_check GROUP BY ALL ORDER BY ALL").fetchall()),
+        "players_with_more_than_one_national_team": q(
+            "SELECT count(DISTINCT player_id) FROM dim_player_team WHERE spell > 1")[0],
         "cricsheet_known_missing_in_scope": dict(con.execute(
             "SELECT list_name, count(*) FROM report_cricsheet_known_missing GROUP BY ALL ORDER BY ALL").fetchall()),
         "pct_matches_with_weather": q("SELECT round(100.0 * avg(CASE WHEN EXISTS (SELECT 1 FROM int_match_weather_daily w "

@@ -52,9 +52,11 @@ flowchart LR
   subgraph gold["gold"]
     dim_match[dim_match]
     dim_player[dim_player]
+    dim_player_team[dim_player_team]
     dim_venue[dim_venue]
     dim_venue_version[dim_venue_version]
     fact_delivery[fact_delivery]
+    fact_delivery_hindsight[fact_delivery_hindsight]
     fact_dismissal[fact_dismissal]
     fact_innings[fact_innings]
     fact_match_weather_hourly[fact_match_weather_hourly]
@@ -76,6 +78,7 @@ flowchart LR
     report_ipl_seasons[report_ipl_seasons]
     report_match_quality[report_match_quality]
     report_player_careers[report_player_careers]
+    report_result_check[report_result_check]
   end
   subgraph models["models"]
     model_ball_outcome[model_ball_outcome]
@@ -138,6 +141,9 @@ flowchart LR
   players --> dim_player
   match_players --> dim_player
   matches --> dim_player
+  match_players --> dim_player_team
+  matches --> dim_player_team
+  dim_player --> dim_player_team
   venues --> dim_venue
   dim_match --> dim_venue
   venue_versions --> dim_venue_version
@@ -145,6 +151,7 @@ flowchart LR
   balls --> fact_delivery
   matches --> fact_delivery
   int_ball_state_pre --> fact_delivery
+  int_ball_state_pre --> fact_delivery_hindsight
   wickets --> fact_dismissal
   matches --> fact_dismissal
   innings --> fact_innings
@@ -201,6 +208,10 @@ flowchart LR
   matches --> report_match_quality
   int_player_match_stats --> report_player_careers
   dim_player --> report_player_careers
+  map_match_ids --> report_result_check
+  wikipedia_fixtures --> report_result_check
+  dim_match --> report_result_check
+  int_match_quality --> report_result_check
   fact_delivery --> model_ball_outcome
   fact_innings --> model_ball_outcome
   dim_match --> model_ball_outcome

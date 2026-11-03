@@ -23,16 +23,28 @@ def test_per_ball_tables_declare_one_timing_class_and_the_ball_key():
         assert contracts.get(table).primary_key == ["match_id", "innings", "delivery_number"], table
 
 
-def test_fact_delivery_marks_every_column_pre_ball_hindsight_or_outcome():
-    c = contracts.get("fact_delivery")
-    timing = {col["name"]: c.column_props(col).get("timingClass") for col in c.columns if not col.get("primaryKey")}
-    allowed = {"pre_ball", "hindsight", "outcome"}
-    assert set(timing.values()) == allowed, {k: v for k, v in timing.items() if v not in allowed}
+def _timings(table: str) -> dict:
+    c = contracts.get(table)
+    return {col["name"]: c.column_props(col).get("timingClass") for col in c.columns if not col.get("primaryKey")}
+
+
+def test_fact_delivery_marks_every_column_pre_ball_or_outcome():
+    timing = _timings("fact_delivery")
+    assert set(timing.values()) == {"pre_ball", "outcome"}, timing
     assert timing["innings_runs_before"] == "pre_ball" and timing["runs_total"] == "outcome"
-    assert timing["nominal_runs_required_before"] == "pre_ball" and timing["target_status"] == "hindsight"
-    # columns are grouped: everything knowable before the ball, then hindsight, then the outcome
-    order = [timing[col["name"]] for col in c.columns if not col.get("primaryKey")]
-    assert order == sorted(order, key=["pre_ball", "hindsight", "outcome"].index)
+    assert timing["nominal_runs_required_before"] == "pre_ball"
+    # columns are grouped: everything knowable before the ball, then the outcome
+    order = list(timing.values())
+    assert order == sorted(order, key=["pre_ball", "outcome"].index)
+
+
+def test_hindsight_state_lives_outside_fact_delivery():
+    """SELECT * on fact_delivery must not hand a model a column whose NULLs reveal how the innings ended."""
+    hindsight = _timings("fact_delivery_hindsight")
+    assert set(hindsight.values()) == {"hindsight"}
+    assert {"target_status", "target_runs", "runs_required_before", "balls_remaining_before"} <= set(hindsight)
+    assert not set(hindsight) & set(_timings("fact_delivery"))
+    assert contracts.get("fact_delivery_hindsight").primary_key == contracts.get("fact_delivery").primary_key
 
 
 def _fixture(tmp_path, monkeypatch, parent_rows, child_rows):

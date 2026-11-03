@@ -878,6 +878,7 @@ One row per (match_format, match_number) after de-duplicating rows that appear o
 | `teams_source` | VARCHAR | How team1/team2 were derived: 'row' (team templates in the row), 'header' (captain columns), 'heading' or 'heading_multi_host' (section title, home team first, less reliable), 'heading_corrected' (title fixed using winners), 'none'. |
 | `result_text` | VARCHAR | Result cell as plain text (links and templates removed), e.g. 'New Zealand by 7 wickets'. Empty string for future matches. |
 | `result_class` | VARCHAR | Coarse class of result_text: 'result', 'draw', 'tie', 'no_result', 'abandoned' or 'unknown' (not parseable or no result yet). |
+| `winner` | VARCHAR | The team the result cell names first (its flag template), mapped to Cricsheet's team naming, when result_class is 'result'. NULL when the cell names no team (e.g. 'by 7 wickets'), or for any other result class. |
 | `is_abandoned_no_ball` | BOOLEAN | True for matches abandoned without a ball bowled (13 rows). |
 | `involves_afghanistan` | BOOLEAN | True when 'Afghanistan' appears anywhere in the row text or team columns. Cricsheet withholds Afghanistan's matches, so these explain absences. |
 | `page_title` | VARCHAR | Title of the Wikipedia season page the row came from. |
@@ -896,9 +897,11 @@ Everything derived. int_ = building blocks over all matches; dim_/fact_/map_/rep
 |---|---|---|
 | [`dim_match`](#dim_match) | One row per in-scope match. | match_id |
 | [`dim_player`](#dim_player) | One row per player (Cricsheet person) who appears on a team sheet of at least one in-scope match. | cricsheet_id |
+| [`dim_player_team`](#dim_player_team) | One row per (player_id, spell). | player_id, spell |
 | [`dim_venue`](#dim_venue) | One row per canonical venue (ground) referenced by dim_match. | venue_id |
 | [`dim_venue_version`](#dim_venue_version) | One row per venue version (venue_id, venue_version). | venue_id, venue_version |
 | [`fact_delivery`](#fact_delivery) | One row per delivery bowled (wides and no-balls included), keyed by (match_id, innings, delivery_number). | match_id, innings, delivery_number |
+| [`fact_delivery_hindsight`](#fact_delivery_hindsight) | One row per delivery bowled (wides and no-balls included), keyed by (match_id, innings, delivery_number), the same rows as fact_delivery. | match_id, innings, delivery_number |
 | [`fact_dismissal`](#fact_dismissal) | One row per wicket entry on a delivery, keyed by (match_id, innings, delivery_number, wicket_number); a ball can carry two entries (e.g. a catch plus a retirement). | match_id, innings, delivery_number, wicket_number |
 | [`fact_innings`](#fact_innings) | One row per innings of an in-scope match (super overs included), keyed by (match_id, innings). | match_id, innings |
 | [`fact_match_weather_hourly`](#fact_match_weather_hourly) | One row per match, match day and hour, keyed by (match_id, match_day_number, utc_datetime). | match_id, match_day_number, utc_datetime |
@@ -920,6 +923,7 @@ Everything derived. int_ = building blocks over all matches; dim_/fact_/map_/rep
 | [`report_ipl_seasons`](#report_ipl_seasons) | One row per IPL season (calendar year of match start). | season_year |
 | [`report_match_quality`](#report_match_quality) | One row per match in scope (same rows as dim_match). | match_id |
 | [`report_player_careers`](#report_player_careers) | One row per (player, format family, gender) for every in-scope player. | player_id, format_family, gender |
+| [`report_result_check`](#report_result_check) | One row per Cricsheet match linked to a reference match (the rows of map_match_ids). | match_id |
 
 ### dim_match
 
@@ -1010,6 +1014,28 @@ Every player who appears in an in-scope match: Cricsheet and ESPNcricinfo identi
 | `citizenships` | VARCHAR[] | Sorted list of Wikidata citizenship labels (English). NULL when none is recorded. |
 | `wikidata_height_cm` | DOUBLE | Height in centimetres from Wikidata (median of recorded values, kept only between 120 and 240 cm). Recorded for just 33 players, so NULL for nearly everyone; kept out of the exported table. (cm) |
 | `wikidata_dob_quarantine` | DATE[] | Every distinct day-precision, non-deprecated date of birth found on the linked Wikidata item, before cleaning; lets rejected dates (conflicts, placeholders, impossible ages) be inspected. NULL when none exist. |
+
+### dim_player_team
+
+One row per spell of a player with one national team, in date order, for every player in dim_player who played at least one Cricsheet international.
+
+- **One row is:** One row per (player_id, spell).
+- **Key:** `player_id`, `spell`
+- **Kind:** dim · **Sources:** cricsheet, derived · **Built from:** `match_players`, `matches`, `dim_player`
+
+- **Limitations:** Built from Cricsheet internationals only (both genders, every year, composite XIs such as the ICC World XI ignored), so a player's nationality before their first Cricsheet international, or a cap Cricsheet does not hold (Afghanistan), is not here. A spell starts on its first match, so a match on date d was played under the spell with valid_from <= d <= valid_to, and a pre-match feature must take the spell with valid_from < d. A player Cricsheet shows for two teams on the same day (a shared id) is flagged two_teams_same_day; their spells can alternate.
+
+| column | type | description |
+|---|---|---|
+| `player_id` **key** | VARCHAR | Cricsheet person identifier (8 hex characters). |
+| `spell` **key** | INTEGER | 1, 2, ... in date order. A new spell starts each time the player's next international is for a different national side than the one before. |
+| `team` required | VARCHAR | The national side of this spell, as a Cricsheet team name. |
+| `valid_from` required | DATE | First match date of the spell. The player's nationality is this team from this date. |
+| `valid_to` | DATE | Last day the spell covers (the day before the next spell's first match); NULL for the latest spell. |
+| `first_match_date` required | DATE | First international of the spell (equal to valid_from). |
+| `last_match_date` required | DATE | Last international of the spell. |
+| `matches` required | INTEGER | Cricsheet internationals the player played for this team in this spell. |
+| `two_teams_same_day` required | BOOLEAN | True on every spell of a player Cricsheet lists for two different national sides on the same date (almost certainly two people sharing one Cricsheet id); their spells are not reliable. |
 
 ### dim_venue
 
@@ -1109,13 +1135,13 @@ One row per (venue_id, venue_version) of a ground that hosts at least one in-sco
 
 ### fact_delivery
 
-Every delivery of every in-scope match, with the batting side, over and ball position, the players on the field, the pre-ball match state (score, wickets, balls left, target, runs required, Test lead) and the ball's outcome (legality, runs by type, boundaries, extras, wickets, DRS review).
+Every delivery of every in-scope match, with the batting side, over and ball position, the players on the field, the pre-ball match state (score, wickets, scheduled balls left, nominal target and runs required, Test lead) and the ball's outcome (legality, runs by type, boundaries, extras, wickets, DRS review).
 
 - **One row is:** One row per delivery bowled (wides and no-balls included), keyed by (match_id, innings, delivery_number).
 - **Key:** `match_id`, `innings`, `delivery_number`
 - **Kind:** fact · **Sources:** cricsheet, derived · **Built from:** `balls`, `matches`, `int_ball_state_pre`
 
-- **Limitations:** Scope: men's Tests, ODIs, T20Is between two ICC full members, and the IPL, from 2001 (config/scope.yml); Cricsheet coverage is incomplete (see report_international_coverage; e.g. Afghanistan matches are withheld by Cricsheet). The '_before' columns never include the ball itself; the build checks that the next ball's state equals this state plus this ball. Rain-revised chases (target_status 'revised_timing_unknown', about 419 innings) and innings of unknown length (innings_length_status 'reduced_timing_unknown') have NULL target and/or ball limit on purpose: Cricsheet records only the final revised target, not when it changed. Before late 2017 Cricsheet folded byes off a no-ball into the no-ball count (see noball_includes_byes). A wicket on the ball is in dismissal_count; who was out and how is in fact_dismissal. 3 matches in scope fail the quality checks (dim_match.passes_quality).
+- **Limitations:** Scope: men's Tests, ODIs, T20Is between two ICC full members, and the IPL, from 2001 (config/scope.yml); Cricsheet coverage is incomplete (see report_international_coverage; e.g. Afghanistan matches are withheld by Cricsheet). The '_before' columns never include the ball itself; the build checks that the next ball's state equals this state plus this ball. The target and ball limit as cross-checked against how the innings went (NULL for rain-revised chases and innings of unknown length) are hindsight, so they live in fact_delivery_hindsight, not here; the nominal_ and scheduled_ columns are their pre-ball counterparts. Before late 2017 Cricsheet folded byes off a no-ball into the no-ball count (see noball_includes_byes). A wicket on the ball is in dismissal_count; who was out and how is in fact_dismissal. 3 matches in scope fail the quality checks (dim_match.passes_quality).
 
 | column | type | description | timing |
 |---|---|---|---|
@@ -1143,13 +1169,6 @@ Every delivery of every in-scope match, with the batting side, over and ball pos
 | `nominal_runs_required_before` | INTEGER | nominal_target_runs minus the runs already scored: runs still needed against the target as it stood when the innings began. Safe as a model input. (runs) | pre_ball |
 | `match_lead_before` | INTEGER | Tests only: the batting side's lead in the match before this ball, i.e. all runs it has scored in the match so far (earlier innings plus this innings up to the previous ball, penalty runs included) minus all runs the opposition has scored. Negative = trailing. NULL for limited-overs and super-over innings. (runs) | pre_ball |
 | `wickets_limit` required | INTEGER | Dismissals that end the innings: 10, or 2 in a super over. When batters are absent hurt (batters_absent > 0) the innings actually ends after wickets_limit - batters_absent dismissals. (wickets) | pre_ball |
-| `batters_absent` required | BIGINT | Number of batters Cricsheet lists as absent hurt (unable to bat) in this innings, usually 0. Recorded once per innings, so it is treated as known from the innings' first ball. HINDSIGHT: Cricsheet records absentees for the whole innings, so on early balls this can reveal an injury that only became known later. Use it to choose rows, never as a model input. (batters) | hindsight |
-| `innings_balls_limit` | SMALLINT | Maximum legal balls the innings could last, as known before its first ball: scheduled overs x balls per over (300 in a 50-over ODI, 120 in a T20) plus the extra balls of any over Cricsheet lists as miscounted (a listed 7-ball over makes it 301, a 5-ball over 299), or one over (6 balls) for a super over. NULL for Tests (no limit) and whenever the innings may have been shortened at a time the data cannot tell (innings_length_status = 'reduced_timing_unknown', e.g. rain-revised chases). HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. (balls) | hindsight |
-| `balls_remaining_before` | SMALLINT | innings_balls_limit minus legal_balls_before: legal balls left in the innings before this ball. NULL whenever innings_balls_limit is NULL. HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. (balls) | hindsight |
-| `innings_length_status` required | VARCHAR | How much of the innings' length is known before it starts. 'full_known' = a limited-overs innings whose full scheduled allocation applied from its first ball (a first innings that used all its balls or was bowled out, or any innings of a match whose chase was unrevised); 'reduced_timing_unknown' = a limited-overs innings that may have been shortened (usually by rain) at an unknown moment: a rain-revised or inconsistent chase, or a first innings that ended early without being bowled out. Cricsheet does not record when overs were lost, so no ball limit is given; 'unlimited' = a Test innings (no over limit); 'super_over' = a super-over innings (6 balls, 2 wickets). HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. | hindsight |
-| `target_runs` | INTEGER | Runs the batting side must reach to win, as known at the start of the innings (it never changes mid-innings). Set only when target_status is 'set' (unrevised limited-overs chase: Cricsheet's stated target, or the first-innings total + 1 when Cricsheet gives none), 'super_over_derived' (the first super-over innings' total + 1) or 'test_derived' (Test fourth innings: the opposition's runs minus the batting side's runs over innings 1-3, + 1). NULL otherwise, including rain-revised chases: Cricsheet stores only the FINAL revised target, not when it was set, so using it ball by ball would leak the future. HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. (runs) | hindsight |
-| `runs_required_before` | INTEGER | target_runs minus innings_runs_before: runs still needed to win before this ball. NULL when target_runs is NULL. Always at least 1 where present. HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. (runs) | hindsight |
-| `target_status` required | VARCHAR | Why target_runs has (or lacks) a value. 'set' = unrevised limited-overs chase, target and ball limit known; 'revised_timing_unknown' = chase revised by a rain rule (D/L) or set over fewer than the scheduled overs; Cricsheet records only the final revised target, so target_runs and innings_balls_limit are NULL; 'inconsistent_with_balls' = a chase that looks unrevised but whose own balls contradict its target (it reached the target, or used up its overs, before its last ball), treated as unknown, so NULL; 'super_over_derived' = second innings of a super over; 'test_derived' = fourth innings of a Test; 'none' = no target applies (first innings, first super-over innings, Test innings 1-3). HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. | hindsight |
 | `is_legal` required | BOOLEAN | True if the delivery counts toward the over (not a wide and not a no-ball). Known only once the ball is bowled. | outcome |
 | `runs_batter` required | SMALLINT | Runs credited to the batter off this delivery (off the bat, including boundaries). (runs) | outcome |
 | `runs_extras` required | SMALLINT | Extra runs on this delivery: wides + noballs + byes + legbyes + penalty. (runs) | outcome |
@@ -1166,6 +1185,29 @@ Every delivery of every in-scope match, with the batting side, over and ball pos
 | `wicket_count` required | SMALLINT | Number of wicket entries Cricsheet records on this delivery, including retirements ('retired hurt', 'retired not out') that are not dismissals. Use dismissal_count for wickets that count. (wickets) | outcome |
 | `dismissal_count` required | SMALLINT | Dismissals on this delivery that count against the batting side (0, 1, rarely 2): wicket entries other than 'retired hurt' and 'retired not out'. Details in fact_dismissal. (wickets) | outcome |
 | `has_review` required | BOOLEAN | True if a DRS (player or umpire) review was recorded on this delivery. Reviews happen after the ball, so this is an outcome. | outcome |
+
+### fact_delivery_hindsight
+
+For every delivery in fact_delivery, the innings length and target as cross-checked against how the innings went, and the balls left and runs required that follow from them.
+
+- **One row is:** One row per delivery bowled (wides and no-balls included), keyed by (match_id, innings, delivery_number), the same rows as fact_delivery.
+- **Key:** `match_id`, `innings`, `delivery_number`
+- **Kind:** fact · **Sources:** cricsheet, derived · **Built from:** `int_ball_state_pre`
+
+- **Limitations:** Rain-revised chases (target_status 'revised_timing_unknown') and innings of unknown length (innings_length_status 'reduced_timing_unknown') have NULL target and/or ball limit on purpose. Cricsheet records only the final revised target, not when it changed.
+
+| column | type | description | timing |
+|---|---|---|---|
+| `match_id` **key** | VARCHAR | Cricsheet match identifier (the name of the match's file in Cricsheet's download, e.g. '1000851'). For most internationals it equals the ESPNcricinfo match id, but do not rely on that; use map_match_ids. Joins to dim_match.match_id. |  |
+| `innings` **key** | SMALLINT | Innings number within the match, from 1, in batting order. Super overs continue the numbering (a tied T20 with one super over has innings 3 and 4 as its super-over innings). |  |
+| `delivery_number` **key** | INTEGER | Position of the delivery within its innings, from 1, counting every delivery including wides and no-balls. Follows Ari Adaikalam's key convention, so (match_id, innings, delivery_number) also joins to that Kaggle dataset. |  |
+| `batters_absent` required | BIGINT | Number of batters Cricsheet lists as absent hurt (unable to bat) in this innings, usually 0. Recorded once per innings, so it is treated as known from the innings' first ball. HINDSIGHT: Cricsheet records absentees for the whole innings, so on early balls this can reveal an injury that only became known later. Use it to choose rows, never as a model input. (batters) | hindsight |
+| `innings_balls_limit` | SMALLINT | Maximum legal balls the innings could last, as known before its first ball: scheduled overs x balls per over (300 in a 50-over ODI, 120 in a T20) plus the extra balls of any over Cricsheet lists as miscounted (a listed 7-ball over makes it 301, a 5-ball over 299), or one over (6 balls) for a super over. NULL for Tests (no limit) and whenever the innings may have been shortened at a time the data cannot tell (innings_length_status = 'reduced_timing_unknown', e.g. rain-revised chases). HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. (balls) | hindsight |
+| `balls_remaining_before` | SMALLINT | innings_balls_limit minus legal_balls_before: legal balls left in the innings before this ball. NULL whenever innings_balls_limit is NULL. HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. (balls) | hindsight |
+| `innings_length_status` required | VARCHAR | How much of the innings' length is known before it starts. 'full_known' = a limited-overs innings whose full scheduled allocation applied from its first ball (a first innings that used all its balls or was bowled out, or any innings of a match whose chase was unrevised); 'reduced_timing_unknown' = a limited-overs innings that may have been shortened (usually by rain) at an unknown moment: a rain-revised or inconsistent chase, or a first innings that ended early without being bowled out. Cricsheet does not record when overs were lost, so no ball limit is given; 'unlimited' = a Test innings (no over limit); 'super_over' = a super-over innings (6 balls, 2 wickets). HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. | hindsight |
+| `target_runs` | INTEGER | Runs the batting side must reach to win, as known at the start of the innings (it never changes mid-innings). Set only when target_status is 'set' (unrevised limited-overs chase: Cricsheet's stated target, or the first-innings total + 1 when Cricsheet gives none), 'super_over_derived' (the first super-over innings' total + 1) or 'test_derived' (Test fourth innings: the opposition's runs minus the batting side's runs over innings 1-3, + 1). NULL otherwise, including rain-revised chases: Cricsheet stores only the FINAL revised target, not when it was set, so using it ball by ball would leak the future. HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. (runs) | hindsight |
+| `runs_required_before` | INTEGER | target_runs minus innings_runs_before: runs still needed to win before this ball. NULL when target_runs is NULL. Always at least 1 where present. HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. (runs) | hindsight |
+| `target_status` required | VARCHAR | Why target_runs has (or lacks) a value. 'set' = unrevised limited-overs chase, target and ball limit known; 'revised_timing_unknown' = chase revised by a rain rule (D/L) or set over fewer than the scheduled overs; Cricsheet records only the final revised target, so target_runs and innings_balls_limit are NULL; 'inconsistent_with_balls' = a chase that looks unrevised but whose own balls contradict its target (it reached the target, or used up its overs, before its last ball), treated as unknown, so NULL; 'super_over_derived' = second innings of a super over; 'test_derived' = fourth innings of a Test; 'none' = no target applies (first innings, first super-over innings, Test innings 1-3). HINDSIGHT: computed from earlier balls, but blanked or flagged using how the innings actually went (cut short, rain-revised), so its NULLs and status reveal the future. Use it to choose which rows to train on, never as a model input; use the scheduled_/nominal_ columns instead. | hindsight |
 
 ### fact_dismissal
 
@@ -1723,6 +1765,41 @@ Career totals per player and format family across every Cricsheet match, for pla
 | `bowl_balls` | BIGINT | Legal balls bowled. (balls) |
 | `bowl_runs` | BIGINT | Runs conceded (off the bat plus wides and no-balls; byes and leg byes are not charged to the bowler). (runs) |
 | `bowl_wickets` | BIGINT | Wickets credited to the bowler (caught, bowled, lbw, caught and bowled, stumped, hit wicket). (wickets) |
+
+### report_result_check
+
+One row per linked international with both sources' results side by side, the three tri-state checks (class, winner, margin; NULL = not checkable) and a status.
+
+- **One row is:** One row per Cricsheet match linked to a reference match (the rows of map_match_ids).
+- **Key:** `match_id`
+- **Kind:** report · **Sources:** wiki_fixtures, cricsheet, derived · **Built from:** `map_match_ids`, `wikipedia_fixtures`, `dim_match`, `int_match_quality`
+
+- **Limitations:** Only internationals linked to a numbered reference match are checked (no IPL). Wikipedia's result cell is free text; the winner is read only where the cell starts with a team flag, and a margin only where it says runs, wickets or an innings. A margin disagreement where Cricsheet's own innings totals give its margin (cricsheet_margin_follows_from_totals) most likely points at an error on the Wikipedia page, not in Cricsheet; the report does not decide which source is right.
+
+| column | type | description |
+|---|---|---|
+| `match_id` **key** | VARCHAR | Cricsheet match identifier. |
+| `segment` required | VARCHAR | 'Test', 'ODI' or 'T20I'. |
+| `reference_number` required | INTEGER | Official match number in the reference list (e.g. ODI 4787). |
+| `reference_result_text` | VARCHAR | Wikipedia's result cell as plain text, e.g. 'New Zealand by 7 wickets'. |
+| `reference_result_class` required | VARCHAR | Wikipedia's result class: 'result', 'draw', 'tie', 'no_result', 'abandoned' or 'unknown'. |
+| `reference_winner` | VARCHAR | The winner named by the result cell, in Cricsheet team naming; NULL when the cell names none. |
+| `reference_by_innings` | BOOLEAN | The result cell says the match was won by an innings. |
+| `reference_runs` | INTEGER | Runs margin read from the result cell (for an innings win, the runs after 'an innings and'). |
+| `reference_wickets` | INTEGER | Wickets margin read from the result cell. |
+| `cricsheet_result_class` required | VARCHAR | Cricsheet's result in the same classes: 'result' (a winner, awards included), 'tie', 'draw' or 'no_result'. |
+| `winner` | VARCHAR | Cricsheet's winner (dim_match.winner). |
+| `win_by_runs` | SMALLINT | Cricsheet's runs margin (dim_match.win_by_runs). |
+| `win_by_wickets` | SMALLINT | Cricsheet's wickets margin (dim_match.win_by_wickets). |
+| `win_by_innings` | SMALLINT | Cricsheet's innings margin (dim_match.win_by_innings). |
+| `method` | VARCHAR | Cricsheet's result method, e.g. 'D/L' or 'Awarded' (dim_match.method). |
+| `class_agrees` | BOOLEAN | The two result classes agree. Wikipedia's 'abandoned' agrees with Cricsheet's no result or draw (a match abandoned after play started; Cricsheet holds no match without a ball). NULL when Wikipedia's class is 'unknown'. |
+| `winner_agrees` | BOOLEAN | Both sources name a winner and it is the same team. NULL when either has no winner or Wikipedia's cell names none. |
+| `margin_agrees` | BOOLEAN | Both sources have a winner and the margin (innings, runs or wickets) is the same. NULL when either has no winner, the match was awarded, or Wikipedia's cell gives no readable margin. |
+| `cricsheet_margin_follows_from_totals` | BOOLEAN | Cricsheet's stated margin follows from its own innings totals (int_match_quality.result_consistent); NULL where that is not checkable (rain rule, innings win, no winner). |
+| `status` required | VARCHAR | 'agrees', 'margin_differs', 'winner_differs', 'class_differs' (the first failing check in that order of severity, worst last) or 'not_checkable' (Wikipedia's class is unknown). |
+| `page_title` required | VARCHAR | Title of the Wikipedia season page the reference row came from (CC BY-SA 4.0 source). |
+| `page_revid` required | BIGINT | Pinned revision id of that page. |
 
 ## Models
 

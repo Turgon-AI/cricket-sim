@@ -142,6 +142,12 @@ schema:
     type: sql
     query: SELECT count(*) FROM ${table} WHERE is_retirement <> (kind IN ('retired hurt', 'retired not out'))
     mustBe: 0
+  - name: reconcile_rows_with_silver
+    description: 'cross-layer: exactly as many dismissals as the silver wickets of the in-scope matches'
+    type: sql
+    query: SELECT abs((SELECT count(*) FROM ${table}) - (SELECT count(*) FROM ${table:wickets} WHERE match_id IN (SELECT
+      match_id FROM ${table:dim_match})))
+    mustBe: 0
 customProperties:
 - property: layer
   value: gold

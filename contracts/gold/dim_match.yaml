@@ -376,6 +376,12 @@ schema:
     query: SELECT count(*) FROM ${table} WHERE (match_type = 'T20' AND scheduled_overs IS DISTINCT FROM 20) OR
       (match_type = 'ODI' AND scheduled_overs IS DISTINCT FROM 50) OR (match_type = 'Test' AND scheduled_overs IS NOT NULL)
     mustBe: 0
+  - name: reconcile_innings_with_fact_innings
+    description: 'cross-table: n_innings equals the match''s rows in fact_innings (super overs included)'
+    type: sql
+    query: SELECT count(*) FROM ${table} d LEFT JOIN (SELECT match_id, count(*) AS n FROM ${table:fact_innings} GROUP BY
+      ALL) i USING (match_id) WHERE d.n_innings <> coalesce(i.n, 0)
+    mustBe: 0
 customProperties:
 - property: layer
   value: gold

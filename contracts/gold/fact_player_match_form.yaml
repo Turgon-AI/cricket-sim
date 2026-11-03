@@ -404,6 +404,13 @@ schema:
     type: sql
     query: SELECT count(*) FROM ${table} WHERE prior_365d_matches > prior_matches OR prior_365d_bat_balls > prior_bat_balls
     mustBe: 0
+  - name: reconcile_rows_with_team_sheets
+    description: 'cross-layer: one row per player on an in-scope team sheet (silver match_players)'
+    type: sql
+    query: SELECT count(*) FROM ${table} g FULL JOIN (SELECT DISTINCT match_id, player_id FROM ${table:match_players}
+      WHERE match_id IN (SELECT match_id FROM ${table:dim_match})) s USING (match_id, player_id) WHERE g.team IS NULL OR
+      s.match_id IS NULL
+    mustBe: 0
 customProperties:
 - property: layer
   value: gold

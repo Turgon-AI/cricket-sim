@@ -108,6 +108,11 @@ schema:
         - abandoned
         - unknown
       mustBe: 0
+  - name: winner
+    logicalType: string
+    physicalType: VARCHAR
+    description: The team the result cell names first (its flag template), mapped to Cricsheet's team naming, when
+      result_class is 'result'. NULL when the cell names no team (e.g. 'by 7 wickets'), or for any other result class.
   - name: is_abandoned_no_ball
     logicalType: boolean
     physicalType: BOOLEAN

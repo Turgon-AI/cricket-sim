@@ -44,16 +44,19 @@ Restriction is never a suffix: `cricinfo_` and `hawkeye_` tables are restricted 
 `contracts/<layer>/<table>.yaml` is one [Open Data Contract Standard](https://bitol-io.github.io/open-data-contract-standard/) v3.1.0 file per table: what one row is, the key, every column's meaning, type and unit, the upstream sources and tables, and the checks the data must pass. It is the single source of truth:
 
 - **Build:** every table must match its contract exactly (column names, order, types), keys must be unique and non-null, required columns non-null, foreign keys must resolve, and every quality rule must hold. Any failure stops the build. A table without a contract, or a contract without a table, also stops it.
+- **Reconciled across tables and layers:** rules named `reconcile_*` compare one table with another: each innings' totals with its balls plus penalties, every ball's wicket count with `fact_dismissal`, players' runs, balls and wickets with the silver balls outside super overs, and the row counts of `fact_delivery`, `fact_innings`, `fact_dismissal` and `fact_player_match_form` with the silver rows of the in-scope matches. `tests/test_reconciliation.py` tampers one value per rule to prove each one fires.
+- **Checked against an outside source:** `report_result_check` compares every linked international's result, winner and margin with the pinned Wikipedia season page. A class or winner disagreement stops the build; a margin disagreement is allowed only where Cricsheet's own innings totals give its margin.
 - **Generated from contracts:** licence lineage (`lineage.py`), the per-ball timing registry (`ball_layers.LAYERS`), [DATA_DICTIONARY.md](DATA_DICTIONARY.md), [LINEAGE.md](LINEAGE.md) and the export's README and `croissant.json`.
 - **Validated:** `cricket contracts` checks every file against the official ODCS JSON schema (vendored in `contracts/_schema/`) and the project's own rules, then enforces them against the built data.
 
 ## Timing labels: what a model may see
 
-Per-ball columns carry a timing class in their contract. In `fact_delivery`:
-- **`pre_ball`:** knowable before the ball is bowled. Safe as a model input.
+Per-ball columns carry a timing class in their contract:
+- **`pre_ball`:** knowable before the ball is bowled. Safe as a model input. In `fact_delivery`.
+- **`outcome`:** what happened on the ball. In `fact_delivery`.
 - **`hindsight`:** computed from earlier balls, but blanked or flagged using how the innings ended (rain
-  revision, a shortened innings, absentees). Use it to choose training rows, never as an input.
-- **`outcome`:** what happened on the ball.
+  revision, a shortened innings, absentees). Use it to choose training rows, never as an input. It lives in its
+  own table, `fact_delivery_hindsight` (same ball key), so `SELECT *` on `fact_delivery` never returns it.
 
 `tests/test_leakage.py` checks the labels on the committed fixture. It cuts each fixture match off at hundreds
 of points, as if it were live, and recomputes: no tested `pre_ball` value may change, and every `hindsight`

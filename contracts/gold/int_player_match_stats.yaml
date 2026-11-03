@@ -159,6 +159,26 @@ schema:
     type: sql
     query: SELECT count(*) FROM ${table} WHERE bat_death_balls > bat_balls OR bowl_death_balls > bowl_balls
     mustBe: 0
+  - name: reconcile_with_balls
+    description: 'cross-layer: per match, players'' batting runs and balls faced, and bowling balls and runs conceded,
+      add up to the silver balls outside super overs'
+    type: sql
+    query: SELECT count(*) FROM (SELECT match_id, sum(bat_runs) AS r, sum(bat_balls) AS bb, sum(bowl_balls) AS lb, sum(bowl_runs)
+      AS br FROM ${table} GROUP BY ALL) p FULL JOIN (SELECT match_id, sum(runs_batter) AS r, count(*) FILTER (wides = 0)
+      AS bb, count(*) FILTER (is_legal) AS lb, sum(runs_batter + wides + noballs) AS br FROM ${table:balls} WHERE NOT is_super_over
+      GROUP BY ALL) b USING (match_id) WHERE p.r IS DISTINCT FROM coalesce(b.r, 0) OR p.bb IS DISTINCT FROM coalesce(b.bb,
+      0) OR p.lb IS DISTINCT FROM coalesce(b.lb, 0) OR p.br IS DISTINCT FROM coalesce(b.br, 0)
+    mustBe: 0
+  - name: reconcile_with_wickets
+    description: 'cross-layer: per match, players'' outs (retirements excluded) and bowler wickets add up to the silver
+      wickets outside super overs'
+    type: sql
+    query: SELECT count(*) FROM (SELECT match_id, sum(bat_outs) AS o, sum(bowl_wickets) AS bw FROM ${table} GROUP BY ALL)
+      p FULL JOIN (SELECT w.match_id, count(*) FILTER (NOT w.is_retirement) AS o, count(*) FILTER (w.kind IN ('caught',
+      'bowled', 'lbw', 'caught and bowled', 'stumped', 'hit wicket')) AS bw FROM ${table:wickets} w JOIN ${table:balls}
+      b USING (match_id, innings, delivery_number) WHERE NOT b.is_super_over GROUP BY ALL) b USING (match_id) WHERE p.o
+      IS DISTINCT FROM coalesce(b.o, 0) OR p.bw IS DISTINCT FROM coalesce(b.bw, 0)
+    mustBe: 0
 customProperties:
 - property: layer
   value: gold

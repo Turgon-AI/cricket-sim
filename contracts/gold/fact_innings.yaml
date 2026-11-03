@@ -324,6 +324,22 @@ schema:
     query: SELECT count(*) FROM ${table} WHERE target_status = 'set' AND final_target_runs IS NOT NULL AND target_runs
       <> final_target_runs
     mustBe: 0
+  - name: reconcile_with_fact_delivery
+    description: 'cross-table: each innings'' deliveries, legal balls, dismissals and runs equal the sum of its balls in
+      fact_delivery, plus the penalty runs awarded before and after it'
+    type: sql
+    query: SELECT count(*) FROM ${table} i LEFT JOIN (SELECT match_id, innings, count(*) AS d, count(*) FILTER (is_legal)
+      AS l, sum(runs_total) AS r, sum(dismissal_count) AS w FROM ${table:fact_delivery} GROUP BY ALL) f USING (match_id,
+      innings) WHERE i.deliveries <> coalesce(f.d, 0) OR i.legal_balls <> coalesce(f.l, 0) OR i.dismissals <> coalesce(f.w,
+      0) OR i.runs <> coalesce(f.r, 0) + i.penalty_runs_pre + i.penalty_runs_post
+    mustBe: 0
+  - name: reconcile_rows_with_silver
+    description: 'cross-layer: exactly the silver innings of the in-scope matches'
+    type: sql
+    query: SELECT count(*) FROM ${table} g FULL JOIN (SELECT match_id, innings FROM ${table:innings} WHERE match_id IN
+      (SELECT match_id FROM ${table:dim_match})) s USING (match_id, innings) WHERE g.batting_team IS NULL OR s.match_id IS
+      NULL
+    mustBe: 0
 customProperties:
 - property: layer
   value: gold

@@ -8,6 +8,10 @@ files:
     table: fact_delivery
     licence: ODC-BY-1.0
     description: One row per delivery. The match state before the ball (built only from earlier balls), then what happened on it.
+  - file: fact_delivery_hindsight
+    table: fact_delivery_hindsight
+    licence: ODC-BY-1.0
+    description: Per delivery, the target and ball limit as cross-checked against how the innings went. For choosing training rows only, never a model input; join to fact_delivery on the ball key.
   - file: fact_innings
     table: fact_innings
     licence: ODC-BY-1.0
@@ -28,6 +32,10 @@ files:
     table: dim_player
     licence: ODC-BY-1.0
     description: One row per player who appears in a match in scope. Identifiers, birth date and nationality (Wikidata) and career spans.
+  - file: dim_player_team
+    table: dim_player_team
+    licence: ODC-BY-1.0
+    description: Each player's spells with one national side (valid_from to valid_to), so nationality can be taken as of any match date.
   - file: dim_venue
     table: dim_venue
     licence: ODbL-1.0
@@ -60,6 +68,10 @@ files:
     table: report_international_coverage
     licence: CC-BY-SA-4.0
     description: Every numbered men's Test, ODI and full-member T20I since 2001, with whether Cricsheet holds it and, if not, why.
+  - file: report_result_check
+    table: report_result_check
+    licence: CC-BY-SA-4.0
+    description: Every linked international's Cricsheet result against the Wikipedia season page (kind of result, winner, margin), with a status.
   - file: model_ball_win_probability
     table: model_ball_win_probability
     licence: ODbL-1.0
