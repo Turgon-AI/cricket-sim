@@ -2,7 +2,7 @@
 
 Structured after *Datasheets for Datasets* (Gebru et al., 2021). Describes the dataset export
 (`cricket export` → `data/export/<build fingerprint>/`). Every number here comes from `data/gold/headline.json`
-of build `7ea456db4e50d1f3` unless stated; the column-level documentation is the export's README.md (generated from
+of build `0240fb4ce447d1eb` unless stated; the column-level documentation is the export's README.md (generated from
 the data contracts) and `croissant.json` (MLCommons Croissant 1.0).
 
 ## Motivation

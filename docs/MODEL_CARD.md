@@ -1,6 +1,6 @@
 # Model card: ODI ball-by-ball win probability and expected runs
 
-> **Status (2026-10-30):** Every number below was regenerated from the current code (build `7ea456db4e50d1f3`,
+> **Status (2026-11-03):** Every number below was regenerated from the current code (build `0240fb4ce447d1eb`,
 > model run `92243fb5ccdc6861`), except the recalibration audit in Calibration, which is from the 2026-10-23 run.
 > **What the code guarantees:**
 > - Venue home status is the home team of the latest `dim_venue_version` whose inputs end before the match date
@@ -31,7 +31,7 @@
 > down.
 
 Structured after *Model Cards for Model Reporting* (Mitchell et al., 2019). Numbers are from model run
-`92243fb5ccdc6861` (model fingerprint), built on data build `7ea456db4e50d1f3`. They are in
+`92243fb5ccdc6861` (model fingerprint), built on data build `0240fb4ce447d1eb`. They are in
 `data/models/report_model_*.parquet`, which also ships with the dataset.
 
 ## Model details
