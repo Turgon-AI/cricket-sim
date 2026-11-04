@@ -251,4 +251,4 @@ reported to Cricsheet (cricsheet.org), so everyone downstream benefits.
 **Can others contribute?** Yes, through pull requests. Every change must pass the contracts, the fixture build
 and the leakage test in CI.
 
-<!-- cricket-sim card stamp: build_fingerprint=7ea456db4e50d1f3 matches_in_scope=5871 balls_in_scope=3657877 pct_matches_with_weather=99.97 pct_in_scope_players_with_dob_wikidata=90.5 afghanistan_withheld_odis=188 -->
+<!-- cricket-sim card stamp: build_fingerprint=0240fb4ce447d1eb matches_in_scope=5871 balls_in_scope=3657877 pct_matches_with_weather=99.97 pct_in_scope_players_with_dob_wikidata=90.5 afghanistan_withheld_odis=188 -->
