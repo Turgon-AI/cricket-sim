@@ -28,6 +28,10 @@ files:
     table: dim_match
     licence: ODC-BY-1.0
     description: One row per match. Teams, toss, result, officials, canonical venue id, the venue version valid that day and whether the match passes every quality check.
+  - file: dim_match_schedule
+    table: dim_match_schedule
+    licence: CC-BY-SA-4.0
+    description: Scheduled local start time and day/night mark of ODIs, T20Is and IPL matches, from Wikipedia series pages (so it stays CC BY-SA). Join to dim_match on match_id.
   - file: dim_player
     table: dim_player
     licence: ODC-BY-1.0

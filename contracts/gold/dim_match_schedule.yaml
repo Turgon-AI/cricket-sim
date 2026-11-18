@@ -1,0 +1,118 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.dim_match_schedule
+name: dim_match_schedule
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: The scheduled local start time and day/night mark of in-scope ODIs, T20Is and IPL matches, from Wikipedia
+    series pages. Kept apart from dim_match because it carries Wikipedia's share-alike licence.
+  limitations: 'Only matches whose Wikipedia template links a Cricinfo scorecard and that Cricsheet holds; coverage
+    by segment is in headline.json (scheduled_start_coverage_pct). Few matches before about 2009 have a time. The
+    time is the scheduled start, not the first ball. Licence CC BY-SA 4.0: anything built from this table must stay
+    CC BY-SA.'
+schema:
+- name: dim_match_schedule
+  physicalName: data/gold/dim_match_schedule.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per in-scope limited-overs match found on a Wikipedia series page.
+  dataGranularityDescription: One row per match.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match identifier.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    unique: true
+    relationships:
+    - to: dim_match.match_id
+  - name: segment
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''ODI'', ''T20I'' or ''IPL''.'
+    required: true
+    quality:
+    - name: valid_segment
+      metric: invalidValues
+      arguments:
+        validValues:
+        - ODI
+        - T20I
+        - IPL
+      mustBe: 0
+  - name: start_date
+    logicalType: date
+    physicalType: DATE
+    description: The match's start date (dim_match).
+    required: true
+  - name: scheduled_start_stated
+    logicalType: string
+    physicalType: TIME
+    description: Scheduled start as the page states it, in the zone time_zone_assumed names. NULL when the page gives
+      none.
+  - name: time_zone_assumed
+    logicalType: string
+    physicalType: VARCHAR
+    description: 'Zone the stated time is read in: the zone the time field names (''UTC'', ''Asia/Kolkata''), else
+      ''Asia/Kolkata'' for the IPL (its pages give Indian time even for matches in the UAE or South Africa), else
+      ''ground_local'' (the time zone of the ground: see dim_venue_version.timezone). NULL when there is no time.'
+  - name: wikipedia_day_night_flag
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: The page's day/night mark; NULL when the page says nothing.
+  - name: wikipedia_time_text
+    logicalType: string
+    physicalType: VARCHAR
+    description: The page's time field as plain text.
+  - name: duplicate_conflict
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: TRUE when two Wikipedia pages gave this match different times or marks (the first page with a time
+      is kept).
+    required: true
+  - name: page_title
+    logicalType: string
+    physicalType: VARCHAR
+    description: Wikipedia page the row came from.
+    required: true
+  - name: page_revid
+    logicalType: integer
+    physicalType: BIGINT
+    description: Revision id of that page.
+    required: true
+  quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, about 95% of the 4,749 rows of the 2026-11-18 real build, so a snapshot
+      or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 4500
+    customProperties:
+    - property: fullDataOnly
+      value: true
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 1
+  - name: zone_iff_time
+    description: a zone is assumed exactly when there is a time
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE (time_zone_assumed IS NULL) <> (scheduled_start_stated IS NULL)
+    mustBe: 0
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: dim
+- property: sources
+  value:
+  - wiki_series
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - dim_match
+  - wikipedia_match_schedule

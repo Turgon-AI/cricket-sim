@@ -1,0 +1,97 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.gold.report_start_time_check
+name: report_start_time_check
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: Checks Wikipedia's scheduled start times against the first ball of day 1, where Cricinfo-derived ball
+    timestamps give it, so a page that states another time zone, or a parse error, shows up.
+  limitations: Internal only (the first-ball times are Cricinfo-derived and never exported). Covers only matches with
+    both a scheduled time and ball timestamps (mostly from late 2019). 'late' is usually a rain delay, not an error.
+schema:
+- name: report_start_time_check
+  physicalName: data/gold/report_start_time_check.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per match with a scheduled start and a timed first ball.
+  dataGranularityDescription: One row per match.
+  properties:
+  - name: match_id
+    logicalType: string
+    physicalType: VARCHAR
+    description: Cricsheet match identifier.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    unique: true
+    relationships:
+    - to: dim_match.match_id
+  - name: segment
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''ODI'', ''T20I'' or ''IPL''.'
+    required: true
+  - name: scheduled_start_stated
+    logicalType: string
+    physicalType: TIME
+    description: Wikipedia's scheduled start as the page states it.
+    required: true
+  - name: time_zone_assumed
+    logicalType: string
+    physicalType: VARCHAR
+    description: Zone the stated time was read in (dim_match_schedule.time_zone_assumed).
+    required: true
+  - name: first_ball_local
+    logicalType: string
+    physicalType: TIME
+    description: First ball of day 1, local time (Cricinfo-derived).
+    required: true
+  - name: minutes_late
+    logicalType: integer
+    physicalType: BIGINT
+    description: First ball minus scheduled start, both in UTC, in minutes (negative = first ball before the
+      scheduled time).
+    required: true
+  - name: status
+    logicalType: string
+    physicalType: VARCHAR
+    description: '''on_time'' (within 15 minutes), ''late'' (16 to 240 minutes late), ''very_late'' (more) or
+      ''early'' (more than 15 minutes early: points at a time zone or parse error).'
+    required: true
+    quality:
+    - name: valid_status
+      metric: invalidValues
+      arguments:
+        validValues:
+        - on_time
+        - late
+        - very_late
+        - early
+      mustBe: 0
+  quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, about 95% of the 1,581 rows of the 2026-11-18 real build, so a snapshot
+      or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 1500
+    customProperties:
+    - property: fullDataOnly
+      value: true
+customProperties:
+- property: layer
+  value: gold
+- property: kind
+  value: report
+- property: sources
+  value:
+  - wiki_series
+  - ari
+  - cricsheet
+  - derived
+- property: upstream
+  value:
+  - dim_match_schedule
+  - int_match_play_windows

@@ -12,6 +12,7 @@ flowchart LR
     src_venues_geo[(venues_geo)]
     src_weather[(weather)]
     src_wiki_fixtures[(wiki_fixtures)]
+    src_wiki_series[(wiki_series)]
     src_wikidata_players[(wikidata_players)]
   end
   subgraph staging["staging"]
@@ -48,9 +49,11 @@ flowchart LR
     venues[venues]
     wickets[wickets]
     wikipedia_fixtures[wikipedia_fixtures]
+    wikipedia_match_schedule[wikipedia_match_schedule]
   end
   subgraph gold["gold"]
     dim_match[dim_match]
+    dim_match_schedule[dim_match_schedule]
     dim_player[dim_player]
     dim_player_team[dim_player_team]
     dim_venue[dim_venue]
@@ -79,6 +82,7 @@ flowchart LR
     report_match_quality[report_match_quality]
     report_player_careers[report_player_careers]
     report_result_check[report_result_check]
+    report_start_time_check[report_start_time_check]
   end
   subgraph models["models"]
     model_ball_outcome[model_ball_outcome]
@@ -135,9 +139,12 @@ flowchart LR
   matches --> venues
   src_cricsheet --> wickets
   src_wiki_fixtures --> wikipedia_fixtures
+  src_wiki_series --> wikipedia_match_schedule
   matches --> dim_match
   int_match_quality --> dim_match
   match_venues --> dim_match
+  dim_match --> dim_match_schedule
+  wikipedia_match_schedule --> dim_match_schedule
   players --> dim_player
   match_players --> dim_player
   matches --> dim_player
@@ -172,12 +179,14 @@ flowchart LR
   matches --> int_match_play_windows
   venues --> int_match_play_windows
   stg_ari_tracking --> int_match_play_windows
+  wikipedia_match_schedule --> int_match_play_windows
   matches --> int_match_quality
   innings --> int_match_quality
   balls --> int_match_quality
   matches --> int_match_weather_daily
   venues --> int_match_weather_daily
   stg_ari_tracking --> int_match_weather_daily
+  wikipedia_match_schedule --> int_match_weather_daily
   match_players --> int_player_match_stats
   matches --> int_player_match_stats
   balls --> int_player_match_stats
@@ -212,6 +221,8 @@ flowchart LR
   wikipedia_fixtures --> report_result_check
   dim_match --> report_result_check
   int_match_quality --> report_result_check
+  dim_match_schedule --> report_start_time_check
+  int_match_play_windows --> report_start_time_check
   fact_delivery --> model_ball_outcome
   fact_innings --> model_ball_outcome
   dim_match --> model_ball_outcome

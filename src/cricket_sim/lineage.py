@@ -19,6 +19,7 @@ SOURCE_LICENCE = {
     "venues_geo": "ODbL-1.0",  # Wikidata (CC0) mixed with OpenStreetMap (ODbL): treat as ODbL
     "weather": "CC-BY-4.0",
     "wiki_fixtures": "CC-BY-SA-4.0",
+    "wiki_series": "CC-BY-SA-4.0",
     "derived": "CC0-1.0",    # our own computations from the other sources
 }
 

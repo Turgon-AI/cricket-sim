@@ -89,7 +89,7 @@ only the checks that need complete data, such as stale venue overrides. `cricket
 
 The same locked snapshots and the same `uv.lock` give the same `build_fingerprint` in `data/gold/run.json`.
 
-1. **Pinned snapshots:** builds read only `config/snapshots.lock.yml`, which is committed. For `cricsheet`, `cricsheet_missing`, `ari`, `hawkeye` and `wiki_fixtures` a new snapshot never moves the lock on its own: `cricket lock <source> <id>` does. The `venues_geo`, `weather` and `wikidata_players` ingesters lock the snapshot they just wrote on every run, so after running them the lock file has changed and needs reviewing before it is committed.
+1. **Pinned snapshots:** builds read only `config/snapshots.lock.yml`, which is committed. For `cricsheet`, `cricsheet_missing`, `ari`, `hawkeye`, `wiki_fixtures` and `wiki_series` a new snapshot never moves the lock on its own: `cricket lock <source> <id>` does. The `venues_geo`, `weather` and `wikidata_players` ingesters lock the snapshot they just wrote on every run, so after running them the lock file has changed and needs reviewing before it is committed.
 2. **Pinned software:** `uv.lock` pins every package, and Python is pinned to 3.12.
 3. **Determinism:** inputs are sorted, outputs are written with `ORDER BY`, and nothing uses wall-clock time or randomness.
 4. **Proof:** every table gets a fingerprint (row count plus an order-independent content hash). Run `cricket build` twice and compare.

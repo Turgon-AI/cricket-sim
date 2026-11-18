@@ -1,6 +1,7 @@
 """Offline, deterministic build of the venue context. Scope-free: covers every match and venue in silver.
 
-Inputs: silver view `matches` (all matches) and, when present, the staging view `stg_ari_tracking` (per-ball UTC timestamps); the
+Inputs: silver view `matches` (all matches), the silver view `wikipedia_match_schedule` (scheduled start times,
+when present) and, when present, the staging view `stg_ari_tracking` (per-ball UTC timestamps); the
 locked, strictly verified bronze snapshots venues_geo and weather (only manifest-listed files are read);
 config/venue_overrides.yml and config/venue_reference.yml. It never reads config/scope.yml.
 
@@ -30,8 +31,8 @@ from . import asof, checks
 from . import geocode as gc
 from . import store
 from .canonical import canonicalize, era_for, load_overrides
-from .weather import (DEFAULT_WINDOWS, WX_COLS, aggregate, ball_clusters, day_windows, local_to_utc, match_class,
-                      parse_response, series_grid, to_local, window_hours)
+from .weather import (DEFAULT_WINDOWS, WX_COLS, aggregate, ball_clusters, day_windows, innings_windows, local_to_utc,
+                      match_class, parse_response, scheduled_start_utc, series_grid, sunset_utc, to_local, window_hours)
 
 GEO_SOURCE = "venues_geo"
 WX_SOURCE = "weather"
@@ -118,6 +119,16 @@ def _match_dates(matches: list[dict], dates_loader) -> dict[str, list[date]]:
             raise SystemExit(f"{len(gaps)} matches have non-consecutive dates and no dates loader was given")
         out.update(dates_loader(gaps))
     return out
+
+
+def _schedule(con) -> dict:
+    """match_id -> (scheduled start as the page states it, the zone the page names or None), where a time is given."""
+    have = {r[0] for r in con.execute("SELECT table_name FROM information_schema.tables").fetchall()}
+    if "wikipedia_match_schedule" not in have:
+        return {}
+    rows = con.execute("""SELECT CAST(cricinfo_match_id AS VARCHAR), scheduled_start_stated, stated_time_zone
+                          FROM wikipedia_match_schedule WHERE scheduled_start_stated IS NOT NULL""").fetchall()
+    return {mid: (t, zone) for mid, t, zone in rows}
 
 
 def _ball_times(con) -> dict[str, list[datetime]]:
@@ -216,6 +227,11 @@ def _weather_files(wx: store.Snapshot, alias_id: dict, geo: dict, versions: dict
     return series, site, dict(counts)
 
 
+# per-innings weather (ODI and T20 day 1, timed or scheduled windows only): (column suffix, aggregate key)
+INNINGS_COLS = {"temperature_c": "window_temperature_c", "humidity_pct": "window_humidity_pct",
+                "dew_point_depression_c": "window_dew_point_depression_c", "wind_speed_kmh": "window_wind_speed_kmh"}
+
+
 VENUE_SCHEMA = pa.schema([
     ("venue_id", pa.string()), ("name", pa.string()), ("city", pa.string()), ("country", pa.string()),
     ("home_team", pa.string()), ("lat", pa.float64()), ("lon", pa.float64()),
@@ -248,6 +264,8 @@ DAILY_SCHEMA = pa.schema([
     ("window_precipitation_mm", pa.float64()), ("window_precip_hours_present", pa.int16()),
     ("window_max_hourly_precipitation_mm", pa.float64()), ("window_hours_with_rain", pa.int16()),
     ("pre_match_12h_precipitation_mm", pa.float64()), ("pre_match_hours_present", pa.int16()),
+    *[(f"innings{i}_{c}", pa.float64()) for i in (1, 2) for c in INNINGS_COLS],
+    ("innings2_minutes_after_sunset", pa.int16()),
 ])
 HOURLY_SCHEMA = pa.schema([
     ("match_id", pa.string()), ("match_day_number", pa.int16()), ("venue_id", pa.string()), ("venue_version", pa.int16()),
@@ -257,11 +275,30 @@ HOURLY_SCHEMA = pa.schema([
 WINDOW_SCHEMA = pa.schema([
     ("match_id", pa.string()), ("match_day_number", pa.int16()), ("match_date", pa.date32()), ("venue_id", pa.string()),
     ("window_source", pa.string()), ("window_start_utc", pa.timestamp("us")), ("window_end_utc", pa.timestamp("us")),
-    ("window_start_local", pa.timestamp("us")), ("window_end_local", pa.timestamp("us")), ("n_balls_timed", pa.int32()),
+    ("window_start_local", pa.timestamp("us")), ("window_end_local", pa.timestamp("us")),
+    ("scheduled_start_utc", pa.timestamp("us")), ("n_balls_timed", pa.int32()),
     ("internal_note", pa.string()),
 ])
 
 INTERNAL_TIMING = "internal-only: windows from Cricinfo-derived ball timestamps (Ari) are not redistributable"
+
+
+def _innings_weather(klass: str, day: dict, s: dict, grid: int, lat: float, lon: float) -> dict:
+    """innings1_* / innings2_* weather and how far into the evening innings 2 starts, or {} when the day window is
+    a format default (its hours do not say when either innings was played)."""
+    if day["window_source"] not in ("ball_timestamps", "scheduled_start"):
+        return {}
+    split = innings_windows(klass, day["window_start_utc"], day["window_end_utc"])
+    if split is None:
+        return {}
+    out = {}
+    for i, (start, end) in enumerate(split, start=1):
+        agg = aggregate(s, start, end, grid)
+        out.update({f"innings{i}_{c}": agg[k] for c, k in INNINGS_COLS.items()})
+    sunset = sunset_utc(lat, lon, day["match_date"])
+    if sunset is not None:
+        out["innings2_minutes_after_sunset"] = round((split[1][0] - sunset).total_seconds() / 60)
+    return out
 
 
 def _location_quality(row: dict) -> str | None:
@@ -371,7 +408,8 @@ def _build(con, *, geo: store.Snapshot, wx: store.Snapshot, out_dir: Path, overr
                          "the check there with a note):\n  " + "\n  ".join(failures))
 
     by_key = {(r["venue_id"], r["venue_version"]): r for r in version_rows}
-    daily, hourly, windows = _weather_rows(matches, alias_id, versions, by_key, series, wx, dates, _ball_times(con))
+    daily, hourly, windows = _weather_rows(matches, alias_id, versions, by_key, series, wx, dates, _ball_times(con),
+                                           _schedule(con))
 
     match_rows = [{"match_id": m["match_id"], "venue_id": alias_id[(m["venue"], m["city"])],
                    "venue_version": asof.version_for(versions[alias_id[(m["venue"], m["city"])]], m["start_date"])["venue_version"],
@@ -398,7 +436,8 @@ def _build(con, *, geo: store.Snapshot, wx: store.Snapshot, out_dir: Path, overr
     return stats
 
 
-def _weather_rows(matches, alias_id, versions, venues, series, wx: store.Snapshot, dates, ball_times):
+def _weather_rows(matches, alias_id, versions, venues, series, wx: store.Snapshot, dates, ball_times, schedule=None):
+    schedule = schedule or {}
     last_available = date.fromisoformat(wx.plan["last_available"])
     failed_days = defaultdict(set)
     for f in wx.plan["files"]:
@@ -419,7 +458,9 @@ def _weather_rows(matches, alias_id, versions, venues, series, wx: store.Snapsho
         clusters = ball_clusters(ball_times.get(m["match_id"], []))
         s = series.get((vid, ver), {})
         grid = series_grid(s)
-        for day in day_windows(dates[m["match_id"]], klass, tz, clusters):
+        stated, zone = schedule.get(m["match_id"], (None, None))
+        scheduled = scheduled_start_utc(min(dates[m["match_id"]]), stated, zone, klass, tz)
+        for day in day_windows(dates[m["match_id"]], klass, tz, clusters, scheduled):
             base = {"match_id": m["match_id"], "match_day_number": day["match_day_number"], "match_date": day["match_date"],
                     "venue_id": vid, "venue_version": ver, "timezone": tz, "window_source": day["window_source"],
                     "geocode_confidence": v["geocode_confidence"], "weather_location_quality": None}
@@ -440,6 +481,8 @@ def _weather_rows(matches, alias_id, versions, venues, series, wx: store.Snapsho
                     agg = {}
                 elif agg["window_hours_present"] < agg["window_hours_expected"] or agg["window_precipitation_mm"] is None:
                     reason = "partial_hours"
+                if agg:
+                    agg.update(_innings_weather(klass, day, s, grid, v["lat"], v["lon"]))
             available = bool(agg)
             daily.append({**base, **agg, "weather_available": available, "weather_missing_reason": reason,
                           "weather_location_quality": v["weather_location_quality"] if available else None})
@@ -449,6 +492,7 @@ def _weather_rows(matches, alias_id, versions, venues, series, wx: store.Snapsho
                                 "window_start_utc": day["window_start_utc"], "window_end_utc": day["window_end_utc"],
                                 "window_start_local": to_local(day["window_start_utc"], tz),
                                 "window_end_local": to_local(day["window_end_utc"], tz),
+                                "scheduled_start_utc": scheduled if day["match_day_number"] == 1 else None,
                                 "n_balls_timed": day["n_balls_timed"], "internal_note": INTERNAL_TIMING
                                 if day["window_source"] == "ball_timestamps" else None})
             # This is the redistributable hourly product. Use a format-default window for every day, regardless

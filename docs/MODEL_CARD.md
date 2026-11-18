@@ -234,4 +234,4 @@ The full tables are in `report_model_calibration`.
   - as-of player features;
   - T20 versions.
 
-<!-- cricket-sim card stamp: build_fingerprint=0240fb4ce447d1eb model_fingerprint=92243fb5ccdc6861 innings_1_brier=0.1887 innings_2_brier=0.1194 -->
+<!-- cricket-sim card stamp: build_fingerprint=b8ec53879c7dc43e model_fingerprint=92243fb5ccdc6861 innings_1_brier=0.1887 innings_2_brier=0.1194 -->

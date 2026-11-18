@@ -184,7 +184,7 @@ def read_lock() -> dict:
 
 # every source a build reads; a lock that lacks one is cut off or the wrong file
 REQUIRED_SOURCES = ("cricsheet", "ari", "hawkeye", "cricsheet_missing", "wikidata_players",
-                    "venues_geo", "weather", "wiki_fixtures")
+                    "venues_geo", "weather", "wiki_fixtures", "wiki_series")
 
 
 def _strict_yaml(path: Path, what: str) -> tuple[dict, list[str]]:

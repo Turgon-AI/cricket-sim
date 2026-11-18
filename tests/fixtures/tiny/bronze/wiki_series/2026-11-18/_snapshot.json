@@ -1,0 +1,130 @@
+{
+  "source": "wiki_series",
+  "snapshot_id": "2026-11-18",
+  "ingested_at_utc": "2026-10-16T00:00:00Z",
+  "upstream": {
+    "endpoint": "https://en.wikipedia.org/w/api.php",
+    "pages": 942,
+    "missing_pages": 1,
+    "page_list_from": "wiki_fixtures/2026-10-20",
+    "licence": "CC BY-SA 4.0",
+    "fixture_subset_of": "2026-11-18"
+  },
+  "files": [
+    {
+      "name": "2011_Cricket_World_Cup__5d2ad1d6.wiki",
+      "title": "2011 Cricket World Cup",
+      "revid": 1378960772,
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378960772",
+      "stored_as": "2011_Cricket_World_Cup__5d2ad1d6.wiki.zst",
+      "compressed": true,
+      "raw_bytes": 99032,
+      "raw_sha256": "50f4e1ac8f1f4d39784411612d9cbba137c6646f3659bc636862529da484c311",
+      "stored_bytes": 24281,
+      "stored_sha256": "94b8c5f9cad533418aee555252c41eb76c6c9585981c7d9156db7a98e7c22dc6"
+    },
+    {
+      "name": "2011_Cricket_World_Cup_final__334deb8b.wiki",
+      "title": "2011 Cricket World Cup final",
+      "revid": 1375645803,
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1375645803",
+      "stored_as": "2011_Cricket_World_Cup_final__334deb8b.wiki.zst",
+      "compressed": true,
+      "raw_bytes": 51577,
+      "raw_sha256": "b011adf4c01f44990e9217ab38a9594f4597aab1df3b6283a9d78c45859731a4",
+      "stored_bytes": 16703,
+      "stored_sha256": "4109fc9cfa4626852b6a9a94c0defd040d70f554785b16f9e3902acdeaa706f1"
+    },
+    {
+      "name": "2017_Champions_Trophy__6299207f.wiki",
+      "title": "2017 Champions Trophy",
+      "revid": 1376412528,
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1376412528",
+      "stored_as": "2017_Champions_Trophy__6299207f.wiki.zst",
+      "compressed": true,
+      "raw_bytes": 55837,
+      "raw_sha256": "50afcaaa0b05f0c7b36bbe2f953f78d4bff0775e97ccf734a9ae887b9b6c061a",
+      "stored_bytes": 13067,
+      "stored_sha256": "81ad8c028deabf7392fbb814c015466ad94e853b60512d1e97e177a4fd56a7fc"
+    },
+    {
+      "name": "2019_Cricket_World_Cup__8b0e97ba.wiki",
+      "title": "2019 Cricket World Cup",
+      "revid": 1385466017,
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1385466017",
+      "stored_as": "2019_Cricket_World_Cup__8b0e97ba.wiki.zst",
+      "compressed": true,
+      "raw_bytes": 145057,
+      "raw_sha256": "a2247375beb43b9a643518413c2cf13527e9b666a6f35882a17de43e319b1df2",
+      "stored_bytes": 32513,
+      "stored_sha256": "b960f01b4ebcfc0a197db98d52dd6f4a12dfff0916e191766b965e923e2c99e8"
+    },
+    {
+      "name": "2019_Cricket_World_Cup_final__eefadc89.wiki",
+      "title": "2019 Cricket World Cup final",
+      "revid": 1386303879,
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1386303879",
+      "stored_as": "2019_Cricket_World_Cup_final__eefadc89.wiki.zst",
+      "compressed": true,
+      "raw_bytes": 48325,
+      "raw_sha256": "8ab5830f34ee413004cfd17eb8a3f1c8e05d77b9610d101445ddeeb38ffa5cbf",
+      "stored_bytes": 15270,
+      "stored_sha256": "a55ae5f7053e5276b57ffd3fba026d16aac6c01c9876b8caab18f23a363ae112"
+    },
+    {
+      "name": "2019_Indian_Premier_League__5180e1da.wiki",
+      "title": "2019 Indian Premier League",
+      "revid": 1374753864,
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1374753864",
+      "stored_as": "2019_Indian_Premier_League__5180e1da.wiki.zst",
+      "compressed": true,
+      "raw_bytes": 80924,
+      "raw_sha256": "1b7035ee6e60c9e7cdb2e025e80b4572b4a2a964a923445e6fd3740a1e97f31f",
+      "stored_bytes": 15096,
+      "stored_sha256": "eb7a7f24df388c077af6f3f551ef2e78b18386b9144b48c9aa973b17affa9fc2"
+    },
+    {
+      "name": "2023_Cricket_World_Cup__85b10358.wiki",
+      "title": "2023 Cricket World Cup",
+      "revid": 1378830607,
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378830607",
+      "stored_as": "2023_Cricket_World_Cup__85b10358.wiki.zst",
+      "compressed": true,
+      "raw_bytes": 80517,
+      "raw_sha256": "ba6603be1977f12b8651b0bfd23ad28a34681427b3588fa6fb3e42c8f5e54b4d",
+      "stored_bytes": 18634,
+      "stored_sha256": "bf463e4a5f562a1bb27adc8af5bf00e19bcaf9c411533d0b883766304d0ea83d"
+    },
+    {
+      "name": "2023_Cricket_World_Cup_final__d13f24bb.wiki",
+      "title": "2023 Cricket World Cup final",
+      "revid": 1377039281,
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1377039281",
+      "stored_as": "2023_Cricket_World_Cup_final__d13f24bb.wiki.zst",
+      "compressed": true,
+      "raw_bytes": 39149,
+      "raw_sha256": "ea776ca9a55bf9aae40d1920fae2c641043427f16718a791f822fe569b7e529e",
+      "stored_bytes": 10556,
+      "stored_sha256": "d5a36863651f750f411953391d52ef961245fa4c99ea5af1ae2facd6714d54d0"
+    },
+    {
+      "name": "English_cricket_team_in_New_Zealand_in_2019_20__063d3efe.wiki",
+      "title": "English cricket team in New Zealand in 2019\u201320",
+      "revid": 1370735790,
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1370735790",
+      "stored_as": "English_cricket_team_in_New_Zealand_in_2019_20__063d3efe.wiki.zst",
+      "compressed": true,
+      "raw_bytes": 28364,
+      "raw_sha256": "0564329d59d74b02347abfed57eafeb824c294fc1d436db81704628d60547b3f",
+      "stored_bytes": 7272,
+      "stored_sha256": "66ac19b7c00ec56e99a7d300aa2bfa3b821fabb55587916f6581c97e01d9a115"
+    },
+    {
+      "name": "index.json",
+      "stored_as": "index.json",
+      "compressed": false,
+      "stored_bytes": 3325,
+      "stored_sha256": "bb971b85ee5fe2c99e3327a5684fd51bb4a6912fd320b207f09bc401c2ea454c"
+    }
+  ]
+}

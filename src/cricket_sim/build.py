@@ -19,6 +19,7 @@ from .context_players import build_player_context
 from .context_venues import build_venue_context
 from .missing import build_cricsheet_missing
 from .wiki_fixtures import build_wiki_fixtures
+from .wiki_series import build_wiki_series
 from .paths import DATA, GOLD, ROOT, SILVER, STAGING, load_yaml, snapshot_dir
 from .staging import build_staging
 
@@ -63,8 +64,9 @@ def build_silver(con, lock: dict) -> None:
 
     build_cricsheet_missing(snapshot_dir("cricsheet_missing", lock["cricsheet_missing"]))
     build_wiki_fixtures(snapshot_dir("wiki_fixtures", lock["wiki_fixtures"]))
+    build_wiki_series(snapshot_dir("wiki_series", lock["wiki_series"]))
     for table in ["balls", "wickets", "innings", "matches", "match_players", "powerplays", "reviews", "replacements",
-                  "people", "cricsheet_missing", "wikipedia_fixtures"]:
+                  "people", "cricsheet_missing", "wikipedia_fixtures", "wikipedia_match_schedule"]:
         con.execute(f"CREATE VIEW {table} AS SELECT * FROM read_parquet('{SILVER / table}.parquet')")
 
     build_hawkeye_link(con)

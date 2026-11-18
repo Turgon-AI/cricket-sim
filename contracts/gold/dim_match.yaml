@@ -335,7 +335,32 @@ schema:
     physicalType: SMALLINT
     description: Cricsheet's revision number of the match file (1 = original; higher = corrected since).
     required: true
+  - name: venue_days_since_last_match
+    logicalType: integer
+    physicalType: BIGINT
+    description: Days from the end of the last earlier Cricsheet match at this ground (any format, either gender) to
+      this match's start date. A rough sign of how fresh the ground is; it is ground use, not strip use, and Cricsheet
+      lacks most domestic cricket, so the true gap may be shorter. NULL when Cricsheet has no earlier match there.
+      Matches starting the same day at the ground are not counted.
+  - name: venue_matches_prior_14d
+    logicalType: integer
+    physicalType: BIGINT
+    description: Earlier Cricsheet matches (any format, either gender) that started at this ground in the 14 days
+      before this match's start date. Same caveats as venue_days_since_last_match.
+    required: true
+  - name: venue_matches_prior_365d
+    logicalType: integer
+    physicalType: BIGINT
+    description: The same count over the 365 days before the match.
+    required: true
   quality:
+  - name: venue_use_counts_consistent
+    description: the 14-day count never exceeds the 365-day count, a gap is never negative, and a match with an
+      earlier match there in the last 14 days has a gap of at most 14 days
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE venue_matches_prior_14d > venue_matches_prior_365d OR
+      venue_days_since_last_match < 0 OR (venue_matches_prior_14d > 0 AND venue_days_since_last_match > 14)
+    mustBe: 0
   - name: venue_version_exists
     description: every (venue_id, venue_version) is a row of dim_venue_version valid on the match's start date
     type: sql

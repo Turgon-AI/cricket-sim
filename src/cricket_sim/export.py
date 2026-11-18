@@ -18,7 +18,7 @@ CSV_MAX_ROWS = 2_000_000  # larger tables ship as Parquet only
 
 ATTRIBUTION = {
     "ODC-BY-1.0": "Contains data from Cricsheet (https://cricsheet.org), Open Data Commons Attribution License 1.0.",
-    "CC-BY-SA-4.0": "Contains data from Wikipedia season pages (CC BY-SA 4.0). This file must stay CC BY-SA 4.0.",
+    "CC-BY-SA-4.0": "Contains data from Wikipedia season and series pages (CC BY-SA 4.0). This file must stay CC BY-SA 4.0.",
     "ODbL-1.0": "Contains data © OpenStreetMap contributors (ODbL 1.0) and Wikidata (CC0). This file must stay ODbL.",
     "CC-BY-4.0": "Weather data by Open-Meteo.com (CC BY 4.0), from ECMWF ERA5 reanalysis.",
     "CC0-1.0": "Public domain (CC0 1.0).",
@@ -28,15 +28,17 @@ ATTRIBUTION = {
 # its own credit (the `attribution` string in config) to that file's row, so no file loses a credit it needs.
 NAMED_BY_LICENCE_LINE = {
     "ODC-BY-1.0": {"cricsheet", "cricsheet_missing"},
-    "CC-BY-SA-4.0": {"wiki_fixtures"},
+    "CC-BY-SA-4.0": {"wiki_fixtures", "wiki_series"},
     "ODbL-1.0": {"venues_geo", "wikidata_players"},
     "CC-BY-4.0": {"weather"},
     "CC0-1.0": set(),
 }
 OWN_WORK = {"derived"}  # our own computations: no third-party credit
 CC_BY_SA_URI = "https://creativecommons.org/licenses/by-sa/4.0/"
+WIKIPEDIA = {"wiki_fixtures", "wiki_series"}
 WIKIPEDIA_CHANGE_NOTE = ("Licence: CC BY-SA 4.0 (" + CC_BY_SA_URI + "). Changes made: this file is modified from the "
-                         "original: Wikipedia match tables were parsed, de-duplicated and linked to Cricsheet matches. "
+                         "original: Wikipedia match tables and match templates were parsed, de-duplicated and linked "
+                         "to Cricsheet matches. "
                          "The Wikipedia pages and revisions used are listed in the 'Wikipedia sources' section below.")
 
 
@@ -94,15 +96,15 @@ def credit_text(f: dict) -> str:
             raise SystemExit(f"{f['file']}: built from '{source}', which has no attribution in config; cannot credit it")
         text = attributions[source]
         parts.append(text if text.endswith(".") else text + ".")
-    if "wiki_fixtures" in f["sources"]:
+    if WIKIPEDIA & set(f["sources"]):
         parts.append(WIKIPEDIA_CHANGE_NOTE)
     return " ".join(parts)
 
 
 def wikipedia_sources() -> list[tuple[str, int]]:
     """Every Wikipedia page and revision the CC BY-SA files were built from (from the silver snapshot)."""
-    path = contracts.get("wikipedia_fixtures").data_path
-    return duckdb.sql(f"SELECT DISTINCT page_title, page_revid FROM read_parquet('{path}') "
+    paths = ", ".join(f"'{contracts.get(t).data_path}'" for t in ("wikipedia_fixtures", "wikipedia_match_schedule"))
+    return duckdb.sql(f"SELECT DISTINCT page_title, page_revid FROM read_parquet([{paths}], union_by_name=true) "
                       "WHERE page_title IS NOT NULL ORDER BY page_title, page_revid").fetchall()
 
 
@@ -297,7 +299,7 @@ def _write_export(allow_dirty: bool, out, skip_full_check: bool = False) -> None
     licences = ["# Licences", "", "| file | licence | attribution |", "|---|---|---|"]
     credit = {f["file"]: credit_text(f) for f in files}
     licences += [f"| {m['file']} | {m['licence']} | {credit[m['file'].rsplit('.', 1)[0]]} |" for m in manifest]
-    if any("wiki_fixtures" in f["sources"] for f in files):
+    if any(WIKIPEDIA & set(f["sources"]) for f in files):
         licences += wikipedia_sources_md()
     (out / "LICENSES.md").write_text("\n".join(licences) + "\n")
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
