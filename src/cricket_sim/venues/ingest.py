@@ -61,7 +61,18 @@ def selected(match: dict, selection: dict) -> bool:
         return False
     if selection.get("from_date") and match["dates"][0] < date.fromisoformat(str(selection["from_date"])):
         return False
-    return any(all(match.get(k) == v for k, v in rule.items()) for rule in selection["any_of"])
+    return any(_rule_matches(match, rule) for rule in selection["any_of"])
+
+
+def _rule_matches(match: dict, rule: dict) -> bool:
+    """Every key equals the match's Cricsheet value; a rule's own from_date drops matches that start before it."""
+    for key, value in rule.items():
+        if key == "from_date":
+            if match["dates"][0] < date.fromisoformat(str(value)):
+                return False
+        elif match.get(key) != value:
+            return False
+    return True
 
 
 def pairs_of(matches: list[dict]) -> list[tuple]:

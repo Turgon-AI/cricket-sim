@@ -1,8 +1,8 @@
 # cricket-sim
 
 A reproducible, contract-checked pipeline that turns open ball-by-ball cricket data into an analysis-ready
-dataset: every delivery of men's Tests, ODIs, full-member T20Is and the IPL since 2001 (5,871 matches,
-3.66M deliveries), with match state computed from earlier balls and checked for pre-ball invariance on the
+dataset: every delivery of men's Tests, ODIs, full-member T20Is and the IPL since 2001, and nine more franchise
+T20 leagues (T20 Blast, BBL, BPL, CPL, PSL, LPL, ILT20, SA20, MLC) since 2015 (9,540 matches, 4.51M deliveries), with match state computed from earlier balls and checked for pre-ball invariance on the
 committed fixture, plus venue, weather and player context, and per-match quality checks. On top of it sits an open ODI ball-by-ball
 win-probability and expected-runs model in which **every published probability comes from a model trained
 only on earlier seasons** (1,740 held-out matches, scored

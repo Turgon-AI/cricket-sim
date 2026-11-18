@@ -282,6 +282,11 @@ def test_segment_without_match_type_is_refused_by_name():
     (lambda s: s.pop("from_date"), "missing top-level key 'from_date'"),
     (lambda s: s.update(segments=[]), "'segments' must be a non-empty list"),
     (lambda s: s["segments"].append(dict(s["segments"][0])), "duplicate segment name 'Test'"),
+    (lambda s: s["segments"][4].update(event_name_in="NatWest T20 Blast"),
+     "segment 'T20 Blast': 'event_name_in' must be a non-empty list of text"),
+    (lambda s: s["segments"][4].update(event_name="Vitality Blast"),
+     "segment 'T20 Blast': use 'event_name' or 'event_name_in', not both"),
+    (lambda s: s["segments"][5].update(from_date="April 2015"), "segment 'BBL': 'from_date' must be a date"),
 ])
 def test_other_scope_mistakes_are_refused(break_it, message):
     # Each mistake is refused for ITS OWN reason (a bare SystemExit would also pass on an unrelated one)

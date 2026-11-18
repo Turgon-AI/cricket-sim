@@ -946,7 +946,7 @@ Everything derived. int_ = building blocks over all matches; dim_/fact_/map_/rep
 | [`report_cricsheet_not_in_reference`](#report_cricsheet_not_in_reference) | One row per unlinked in-scope Cricsheet international. | match_id |
 | [`report_hawkeye_summary`](#report_hawkeye_summary) | One row per Hawk-Eye competition file. | competition |
 | [`report_international_coverage`](#report_international_coverage) | One row per reference international, keyed by (segment, match_number). | segment, match_number |
-| [`report_ipl_seasons`](#report_ipl_seasons) | One row per IPL season (calendar year of match start). | season_year |
+| [`report_league_seasons`](#report_league_seasons) | One row per league segment and calendar year of match start. | segment, season_year |
 | [`report_match_quality`](#report_match_quality) | One row per match in scope (same rows as dim_match). | match_id |
 | [`report_player_careers`](#report_player_careers) | One row per (player, format family, gender) for every in-scope player. | player_id, format_family, gender |
 | [`report_result_check`](#report_result_check) | One row per Cricsheet match linked to a reference match (the rows of map_match_ids). | match_id |
@@ -960,16 +960,16 @@ Every in-scope match from Cricsheet with its segment, competition, dates, venue 
 - **Key:** `match_id`
 - **Kind:** dim · **Sources:** cricsheet, derived · **Built from:** `matches`, `int_match_quality`, `match_venues`
 
-- **Limitations:** Scope (config/scope.yml): men's matches from 2001-01-01 in four segments: Tests, ODIs, T20Is where both teams are ICC full members, and the IPL. Cricsheet is incomplete: it withholds Afghanistan's matches and lacks some internationals (see report_international_coverage and report_cricsheet_known_missing). Team, venue and official names are Cricsheet's spellings and change over time (e.g. 'Delhi Daredevils' and 'Delhi Capitals'); use venue_id for grounds. match_type_number is not unique (2 ODI numbers repeat in scope), so never use it as a key. 3 matches fail passes_quality.
+- **Limitations:** Scope (config/scope.yml): men's matches from 2001-01-01 in thirteen segments: Tests, ODIs, T20Is where both teams are ICC full members, the IPL, and from 2015-04-01 nine franchise T20 leagues (T20 Blast, BBL, BPL, CPL, PSL, LPL, ILT20, SA20, MLC). League coverage is checked only against Cricsheet's own missing list, a weaker claim than the internationals have. Cricsheet is incomplete: it withholds Afghanistan's matches and lacks some internationals (see report_international_coverage and report_cricsheet_known_missing). Team, venue and official names are Cricsheet's spellings and change over time (e.g. 'Delhi Daredevils' and 'Delhi Capitals'); use venue_id for grounds. match_type_number is not unique (2 ODI numbers repeat in scope), so never use it as a key. 4 matches fail passes_quality.
 
 | column | type | description |
 |---|---|---|
 | `match_id` **key** | VARCHAR | Cricsheet match identifier (the name of the match's file in Cricsheet's download, e.g. '1000851'). For most internationals it equals the ESPNcricinfo match id, but do not rely on that; use map_match_ids. |
-| `segment` required | VARCHAR | Which part of the scope the match belongs to: 'Test', 'ODI', 'T20I' (both teams ICC full members) or 'IPL' (Indian Premier League). |
-| `match_type` required | VARCHAR | Cricsheet match type: 'Test', 'ODI' or 'T20' (T20Is and IPL matches are both 'T20'). |
-| `match_type_number` | INTEGER | Official international match number (Test No., ODI No., T20I No.) as Cricsheet gives it. NULL for IPL matches. Not unique: a handful of numbers are shared by two matches. |
+| `segment` required | VARCHAR | Which part of the scope the match belongs to: 'Test', 'ODI', 'T20I' (both teams ICC full members), 'IPL' (Indian Premier League), or one of the leagues 'T20 Blast' (England), 'BBL' (Big Bash League), 'BPL' (Bangladesh Premier League), 'CPL' (Caribbean Premier League), 'PSL' (Pakistan Super League), 'LPL' (Lanka Premier League), 'ILT20' (International League T20), 'SA20' or 'MLC' (Major League Cricket). |
+| `match_type` required | VARCHAR | Cricsheet match type: 'Test', 'ODI' or 'T20' (T20Is and league matches are all 'T20'). |
+| `match_type_number` | INTEGER | Official international match number (Test No., ODI No., T20I No.) as Cricsheet gives it. NULL for league matches. Not unique: a handful of numbers are shared by two matches. |
 | `gender` required | VARCHAR | 'male' for every row in the current scope. |
-| `team_type` required | VARCHAR | 'international' for Tests, ODIs and T20Is; 'club' for IPL. |
+| `team_type` required | VARCHAR | 'international' for Tests, ODIs and T20Is; 'club' for the IPL and the other leagues. |
 | `event_name` | VARCHAR | Competition or series name as Cricsheet gives it (e.g. 'Indian Premier League', 'ICC Cricket World Cup'). NULL when Cricsheet records none. |
 | `event_match_number` | INTEGER | Match number within the event or series. NULL when Cricsheet gives none or a non-numeric one. |
 | `event_stage` | VARCHAR | Knockout stage when given, e.g. 'Final', 'Semi Final', 'Qualifier 1'; NULL otherwise. |
@@ -1194,7 +1194,7 @@ Every delivery of every in-scope match, with the batting side, over and ball pos
 - **Key:** `match_id`, `innings`, `delivery_number`
 - **Kind:** fact · **Sources:** cricsheet, derived · **Built from:** `balls`, `matches`, `int_ball_state_pre`
 
-- **Limitations:** Scope: men's Tests, ODIs, T20Is between two ICC full members, and the IPL, from 2001 (config/scope.yml); Cricsheet coverage is incomplete (see report_international_coverage; e.g. Afghanistan matches are withheld by Cricsheet). The '_before' columns never include the ball itself; the build checks that the next ball's state equals this state plus this ball. The target and ball limit as cross-checked against how the innings went (NULL for rain-revised chases and innings of unknown length) are hindsight, so they live in fact_delivery_hindsight, not here; the nominal_ and scheduled_ columns are their pre-ball counterparts. Before late 2017 Cricsheet folded byes off a no-ball into the no-ball count (see noball_includes_byes). A wicket on the ball is in dismissal_count; who was out and how is in fact_dismissal. 3 matches in scope fail the quality checks (dim_match.passes_quality).
+- **Limitations:** Scope: men's Tests, ODIs, T20Is between two ICC full members, and the IPL, from 2001, and nine other franchise T20 leagues from 2015-04-01 (config/scope.yml); Cricsheet coverage is incomplete (see report_international_coverage; e.g. Afghanistan matches are withheld by Cricsheet). The '_before' columns never include the ball itself; the build checks that the next ball's state equals this state plus this ball. The target and ball limit as cross-checked against how the innings went (NULL for rain-revised chases and innings of unknown length) are hindsight, so they live in fact_delivery_hindsight, not here; the nominal_ and scheduled_ columns are their pre-ball counterparts. Before late 2017 Cricsheet folded byes off a no-ball into the no-ball count (see noball_includes_byes). A wicket on the ball is in dismissal_count; who was out and how is in fact_dismissal. 3 matches in scope fail the quality checks (dim_match.passes_quality).
 
 | column | type | description | timing |
 |---|---|---|---|
@@ -1647,7 +1647,7 @@ Per segment and calendar year: matches, matches passing quality, balls, and the 
 
 | column | type | description |
 |---|---|---|
-| `segment` **key** | VARCHAR | 'Test', 'ODI', 'T20I' or 'IPL'. |
+| `segment` **key** | VARCHAR | The dim_match segment ('Test', 'ODI', 'T20I', 'IPL' or one of the nine other leagues). |
 | `year` **key** | BIGINT | Calendar year of the matches' start dates. |
 | `matches` required | BIGINT | In-scope matches with at least one ball. (matches) |
 | `matches_passing_quality` required | BIGINT | Of those, matches with dim_match.passes_quality = true. (matches) |
@@ -1685,17 +1685,17 @@ Per match with Cricinfo tracking: how many tracking rows land on a Cricsheet bal
 
 ### report_cricsheet_known_missing
 
-Men's Tests and ODIs (and IPL matches, if any) since 2001 on Cricsheet's list of matches it knows it lacks.
+Men's Tests and ODIs since 2001, and in-scope league matches, on Cricsheet's list of matches it knows it lacks.
 
 - **One row is:** One row per entry on Cricsheet's missing list in scope.
 - **Key:** none
 - **Kind:** report · **Sources:** cricsheet_missing · **Built from:** `cricsheet_missing`
 
-- **Limitations:** Copied from Cricsheet's 'missing' web page: entries have only a date and a teams string, no match number or id. Only men's Test and ODI lists and the IPL competition list are kept (currently no IPL entries); T20Is are not covered.
+- **Limitations:** Copied from Cricsheet's 'missing' web page: entries have only a date and a teams string, no match number or id. Only men's Test and ODI lists and the competition lists of the league segments are kept (each league from its own scope start date). A league with no gaps has no list at all, so absence cannot be told apart from a league Cricsheet does not track. T20Is are not covered.
 
 | column | type | description |
 |---|---|---|
-| `list_name` required | VARCHAR | Cricsheet list the entry is on, as Cricsheet titles it: 'Test', 'Odi', or the IPL competition. |
+| `list_name` required | VARCHAR | Cricsheet list the entry is on, as Cricsheet titles it: 'Test', 'Odi', or a league's competition name (e.g. 'T20 blast', 'Big bash league'). |
 | `start_date` required | DATE | Date of the missing match as listed by Cricsheet. |
 | `teams` required | VARCHAR | Teams as Cricsheet writes them, 'Team A vs Team B'. |
 
@@ -1761,20 +1761,21 @@ Every numbered men's Test, ODI and full-member T20I from 2001 in the Wikipedia r
 | `page_title` | VARCHAR | Title of the English Wikipedia season page this row was taken from (CC BY-SA 4.0 source). |
 | `page_revid` | BIGINT | Wikipedia revision id of that page, the pinned version (oldid in the page URL). Together with page_title it identifies the exact source page revision. |
 
-### report_ipl_seasons
+### report_league_seasons
 
-Number of IPL matches per season in scope and how many pass the quality checks.
+Number of matches per league and season in scope and how many pass the quality checks.
 
-- **One row is:** One row per IPL season (calendar year of match start).
-- **Key:** `season_year`
+- **One row is:** One row per league segment and calendar year of match start.
+- **Key:** `segment`, `season_year`
 - **Kind:** report · **Sources:** cricsheet, derived · **Built from:** `dim_match`
 
-- **Limitations:** Counts only matches Cricsheet holds; compare against the official number of matches per season. The current season may be partial.
+- **Limitations:** Counts only matches Cricsheet holds; compare against the official number of matches per season. The current season may be partial. A season is the calendar year of the match start, so a league played across New Year (BBL, BPL, SA20, ILT20) shows one season over two rows. Leagues other than the IPL start at 2015-04-01.
 
 | column | type | description |
 |---|---|---|
-| `season_year` **key** | BIGINT | Calendar year of the IPL season (year of match start dates). |
-| `matches` required | BIGINT | IPL matches in scope that season. (matches) |
+| `segment` **key** | VARCHAR | The league's segment in dim_match (every segment whose matches have team_type 'club'). |
+| `season_year` **key** | BIGINT | Calendar year of the match start dates. |
+| `matches` required | BIGINT | Matches of that league in scope with a start date in that year. (matches) |
 | `matches_passing_quality` required | BIGINT | Of those, matches with dim_match.passes_quality = true. (matches) |
 
 ### report_match_quality

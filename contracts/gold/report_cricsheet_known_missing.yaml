@@ -11,22 +11,24 @@ description:
     Lists the in-scope matches Cricsheet itself says it is missing, which explains part of the coverage gap in report_international_coverage.
   limitations: >-
     Copied from Cricsheet's 'missing' web page: entries have only a date and a teams string, no match number or
-    id. Only men's Test and ODI lists and the IPL competition list are kept (currently no IPL entries); T20Is are
-    not covered.
+    id. Only men's Test and ODI lists and the competition lists of the league segments are kept (each league from
+    its own scope start date). A league with no gaps has no list at all, so absence cannot be told apart from a
+    league Cricsheet does not track. T20Is are not covered.
 schema:
 - name: report_cricsheet_known_missing
   physicalName: data/gold/report_cricsheet_known_missing.parquet
   physicalType: table
   logicalType: object
   description: >-
-    Men's Tests and ODIs (and IPL matches, if any) since 2001 on Cricsheet's list of matches it knows it lacks.
+    Men's Tests and ODIs since 2001, and in-scope league matches, on Cricsheet's list of matches it knows it lacks.
   dataGranularityDescription: One row per entry on Cricsheet's missing list in scope.
   properties:
   - name: list_name
     logicalType: string
     physicalType: VARCHAR
     description: >-
-      Cricsheet list the entry is on, as Cricsheet titles it: 'Test', 'Odi', or the IPL competition.
+      Cricsheet list the entry is on, as Cricsheet titles it: 'Test', 'Odi', or a league's competition name
+      (e.g. 'T20 blast', 'Big bash league').
     required: true
   - name: start_date
     logicalType: date

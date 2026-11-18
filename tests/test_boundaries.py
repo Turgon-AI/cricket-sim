@@ -95,14 +95,48 @@ def test_a_t20i_needs_two_full_member_teams_not_one():
     from cricket_sim.paths import load_yaml
     scope = load_yaml("scope.yml")
     con = duckdb.connect()
-    con.execute("CREATE TABLE m (id VARCHAR, match_type VARCHAR, team_type VARCHAR, event_name VARCHAR, team1 VARCHAR, team2 VARCHAR)")
-    con.executemany("INSERT INTO m VALUES (?, ?, ?, ?, ?, ?)", [
+    con.execute("CREATE TABLE m (id VARCHAR, match_type VARCHAR, team_type VARCHAR, event_name VARCHAR, team1 VARCHAR, "
+                "team2 VARCHAR, start_date DATE)")
+    con.executemany("INSERT INTO m VALUES (?, ?, ?, ?, ?, ?, DATE '2019-06-01')", [
         ("both", "T20", "international", None, "India", "England"),
         ("one_a", "T20", "international", None, "India", "Nepal"),            # an associate opponent
         ("one_b", "T20", "international", None, "Nepal", "India"),
         ("none", "T20", "international", None, "Nepal", "Oman"),
         ("ipl", "T20", "club", "Indian Premier League", "Mumbai Indians", "Chennai Super Kings"),
         ("odi", "ODI", "international", None, "India", "Nepal"),               # ODIs have no such rule
-        ("club", "T20", "club", "Big Bash League", "India", "England")])
+        ("club", "T20", "club", "Some Other League", "India", "England")])
     got = dict(con.execute(f"SELECT id, {gold._segment_case(scope)} FROM m").fetchall())
     assert got == {"both": "T20I", "one_a": None, "one_b": None, "none": None, "ipl": "IPL", "odi": "ODI", "club": None}
+
+
+# ---- league segments: every sponsor name, and each league's own start date --------------------
+
+def test_league_segments_take_every_sponsor_name_from_their_own_start_date():
+    from cricket_sim.paths import load_yaml
+    scope = load_yaml("scope.yml")
+    con = duckdb.connect()
+    con.execute("CREATE TABLE m (id VARCHAR, match_type VARCHAR, team_type VARCHAR, event_name VARCHAR, team1 VARCHAR, "
+                "team2 VARCHAR, start_date DATE)")
+    con.executemany("INSERT INTO m VALUES (?, 'T20', 'club', ?, 'A', 'B', ?)", [
+        ("natwest", "NatWest T20 Blast", "2015-05-15"),
+        ("vitality", "Vitality Blast", "2019-07-01"),
+        ("vitality_men", "Vitality Blast Men", "2025-06-01"),
+        ("blast_2014", "NatWest T20 Blast", "2014-06-01"),        # before the leagues' 2015-04-01 start
+        ("bbl_on_start", "Big Bash League", "2015-04-01"),        # the start date itself is kept
+        ("bbl_day_before", "Big Bash League", "2015-03-31"),
+        ("ipl_2008", "Indian Premier League", "2008-04-18"),      # the IPL keeps the global 2001 start
+        ("hundred", "The Hundred Men's Competition", "2023-08-01"),
+        ("smat", "Syed Mushtaq Ali Trophy", "2023-10-20")])
+    got = dict(con.execute(f"SELECT id, {gold._segment_case(scope)} FROM m").fetchall())
+    assert got == {"natwest": "T20 Blast", "vitality": "T20 Blast", "vitality_men": "T20 Blast", "blast_2014": None,
+                   "bbl_on_start": "BBL", "bbl_day_before": None, "ipl_2008": "IPL", "hundred": None, "smat": None}
+
+
+def test_missing_list_entries_follow_each_leagues_start_date():
+    from cricket_sim.paths import load_yaml
+    con = duckdb.connect()
+    con.execute("CREATE TABLE x (list_name VARCHAR, start_date DATE)")
+    con.executemany("INSERT INTO x VALUES (?, ?)", [("T20 blast", "2016-06-01"), ("T20 blast", "2014-06-01"),
+                                                   ("Big bash league", "2016-01-10"), ("Super smash", "2018-01-01")])
+    got = con.execute(f"SELECT list_name, start_date FROM x WHERE {gold._missing_list_sql(load_yaml('scope.yml'))}").fetchall()
+    assert [(n, str(d)) for n, d in got] == [("T20 blast", "2016-06-01"), ("Big bash league", "2016-01-10")]

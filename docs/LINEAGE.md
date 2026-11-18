@@ -78,7 +78,7 @@ flowchart LR
     report_cricsheet_not_in_reference[report_cricsheet_not_in_reference]
     report_hawkeye_summary[report_hawkeye_summary]
     report_international_coverage[report_international_coverage]
-    report_ipl_seasons[report_ipl_seasons]
+    report_league_seasons[report_league_seasons]
     report_match_quality[report_match_quality]
     report_player_careers[report_player_careers]
     report_result_check[report_result_check]
@@ -212,7 +212,7 @@ flowchart LR
   wikipedia_fixtures --> report_international_coverage
   dim_match --> report_international_coverage
   cricsheet_missing --> report_international_coverage
-  dim_match --> report_ipl_seasons
+  dim_match --> report_league_seasons
   int_match_quality --> report_match_quality
   matches --> report_match_quality
   int_player_match_stats --> report_player_careers

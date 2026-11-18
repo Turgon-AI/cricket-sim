@@ -11,6 +11,8 @@ Scope (config/scope.yml) is applied here and only here: silver keeps every match
 scope never needs a re-ingest. The export (export.py) reads gold only.
 """
 
+from datetime import date
+
 import pyarrow as pa
 
 from . import ball_layers
@@ -21,7 +23,11 @@ from .wiki_fixtures import link_reference, load_link_overrides
 
 SCOPE_KEYS = {"gender", "from_date", "full_members", "segments"}
 SEGMENT_REQUIRED = ("name", "match_type")
-SEGMENT_KEYS = set(SEGMENT_REQUIRED) | {"team_type", "event_name", "both_teams_in"}
+# condition keys select matches; event_name_in is a list (a league renamed by its sponsors); from_date narrows the
+# global from_date for one segment. missing_list is not a condition: it names the segment on Cricsheet's missing list.
+SEGMENT_KEYS = set(SEGMENT_REQUIRED) | {"team_type", "event_name", "event_name_in", "both_teams_in", "from_date",
+                                        "missing_list"}
+SEGMENT_LIST_KEYS = {"event_name_in"}
 
 
 def validate_scope(scope) -> None:
@@ -55,7 +61,17 @@ def validate_scope(scope) -> None:
         problems += [f"{label}: unknown key '{key}' (allowed: {', '.join(sorted(SEGMENT_KEYS))})"
                      for key in sorted(seg.keys() - SEGMENT_KEYS)]
         problems += [f"{label}: '{key}' must be text" for key, value in seg.items()
-                     if key in SEGMENT_KEYS and value is not None and not isinstance(value, str)]
+                     if key in SEGMENT_KEYS - SEGMENT_LIST_KEYS and value is not None and not isinstance(value, str)]
+        problems += [f"{label}: '{key}' must be a non-empty list of text" for key, value in seg.items()
+                     if key in SEGMENT_LIST_KEYS and not (isinstance(value, list) and value
+                                                          and all(isinstance(v, str) for v in value))]
+        if seg.get("event_name") and seg.get("event_name_in"):
+            problems.append(f"{label}: use 'event_name' or 'event_name_in', not both")
+        if isinstance(seg.get("from_date"), str):
+            try:
+                date.fromisoformat(seg["from_date"])
+            except ValueError:
+                problems.append(f"{label}: 'from_date' must be a date like 2015-04-01")
         if isinstance(seg.get("both_teams_in"), str) and not isinstance(scope.get(seg["both_teams_in"]), list):
             problems.append(f"{label}: both_teams_in names '{seg['both_teams_in']}', which is not a list in scope.yml")
     problems += [f"duplicate segment name '{name}'" for name in sorted({n for n in names if names.count(n) > 1})]
@@ -68,19 +84,34 @@ def _segment_case(scope: dict, alias: str = "m") -> str:
     for seg in scope["segments"]:
         conds = []
         for key, value in seg.items():
-            if key == "name":
+            if key in ("name", "missing_list"):
                 continue
             if key == "both_teams_in":
-                teams = ", ".join("'" + t.replace("'", "''") + "'" for t in scope[value])
+                teams = _quoted(scope[value])
                 conds.append(f"{alias}.team1 IN ({teams}) AND {alias}.team2 IN ({teams})")
+            elif key == "event_name_in":
+                conds.append(f"{alias}.event_name IN ({_quoted(value)})")
+            elif key == "from_date":
+                conds.append(f"{alias}.start_date >= DATE '{value}'")
             else:
                 conds.append(f"{alias}.{key} = '{value}'")
         whens.append(f"WHEN {' AND '.join(conds)} THEN '{seg['name']}'")
     return "CASE " + " ".join(whens) + " END"
 
 
+def _quoted(values) -> str:
+    return ", ".join("'" + str(v).replace("'", "''") + "'" for v in values)
+
+
 def _full_members(scope: dict) -> str:
-    return ", ".join("'" + t.replace("'", "''") + "'" for t in scope["full_members"])
+    return _quoted(scope["full_members"])
+
+
+def _missing_list_sql(scope: dict) -> str:
+    """Competition entries of Cricsheet's missing list that belong to a segment, from that segment's own from_date."""
+    rules = [f"(lower(list_name) = {_quoted([seg['missing_list']])} AND start_date >= DATE '{seg.get('from_date', scope['from_date'])}')"
+             for seg in scope["segments"] if seg.get("missing_list")]
+    return " OR ".join(rules) or "false"
 
 
 def _pct(expr: str) -> str:
@@ -592,13 +623,13 @@ def build_gold(con) -> dict:
         SELECT list_name, start_date, teams FROM cricsheet_missing
         WHERE gender = '{scope['gender']}' AND start_date >= DATE '{scope['from_date']}'
           AND ((list_type = 'match_type' AND list_name IN ('Test', 'Odi'))
-               OR (list_type = 'competition' AND lower(list_name) = 'indian premier league'))""",
+               OR (list_type = 'competition' AND ({_missing_list_sql(scope)})))""",
           "list_name, start_date, teams")
 
-    write("report_ipl_seasons", """
-        SELECT year(start_date) AS season_year, count(*) AS matches,
+    write("report_league_seasons", """
+        SELECT segment, year(start_date) AS season_year, count(*) AS matches,
             count(*) FILTER (passes_quality) AS matches_passing_quality
-        FROM dim_match WHERE segment = 'IPL' GROUP BY ALL""", "season_year")
+        FROM dim_match WHERE team_type = 'club' GROUP BY ALL""", "segment, season_year")
 
     # Ari's Cricinfo tracking is joined to Cricsheet on (match_id, innings, delivery_number). Proof that those keys
     # mean the same ball: every row must land on a Cricsheet delivery, and Cricinfo's DRS-review events must sit on

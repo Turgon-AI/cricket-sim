@@ -49,10 +49,10 @@ def test_coverage_by_segment_year_counts_matches_and_balls(tiny_build):
     assert sum(r[2] for r in rows) == q(tiny_build, "SELECT count(*) FROM '{gold}/dim_match.parquet'")[0][0]
 
 
-def test_ipl_seasons_cover_ipl_matches_only(tiny_build):
-    # the fixture has one IPL match (the 2019 final); the other eight matches are not IPL
-    assert q(tiny_build, "SELECT season_year, matches, matches_passing_quality "
-                         "FROM '{gold}/report_ipl_seasons.parquet'") == [(2019, 1, 1)]
+def test_league_seasons_cover_league_matches_only(tiny_build):
+    # the fixture has one league match (the 2019 IPL final); the other matches are internationals
+    assert q(tiny_build, "SELECT segment, season_year, matches, matches_passing_quality "
+                         "FROM '{gold}/report_league_seasons.parquet'") == [("IPL", 2019, 1, 1)]
     assert q(tiny_build, "SELECT year(start_date), count(*) FROM '{gold}/dim_match.parquet' "
                          "WHERE segment = 'IPL' GROUP BY 1") == [(2019, 1)]
 

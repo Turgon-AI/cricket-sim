@@ -103,6 +103,10 @@ assign:
   "University Oval, Hobart | Hobart": "University Oval Hobart"
   # the 2020 Plunket Shield match without a city was in Invercargill, not Chesterfield
   "Queen's Park | ~": "Queen's Park|Invercargill"
+  # Sussex's ground in Hove: Cricsheet gives the city as Brighton for these spellings and Hove for plain
+  # "County Ground", which split one ground in two (county-ground-brighton, county-ground-hove).
+  "County Ground, Hove | Brighton": "County Ground|Hove"
+  "The County Ground, Hove | Brighton": "County Ground|Hove"
 
 # split_by_city: core names shared by different grounds in different places -> "<slug>-<city slug>".
 split_by_city:
@@ -175,6 +179,16 @@ venues:
   udayana-cricket-ground: {osm_ref: way/81124180, country: Indonesia, needs_review: true, acknowledge: [anchor], note: "Udayana University Jimbaran campus point (was the Bali centroid at 1268 m)"}
   # Arnos Vale was the St Vincent island centroid at 650 m; the playing field is by the old airport, near sea level.
   arnos-vale-ground: {osm_ref: way/569033614, note: "OSM 'Arnos Vale Playing Field', Kingstown (was the island centroid at 650 m)"}
+  # Kent's Beckenham ground (T20 Blast): the name search landed on the St Lawrence Ground, Canterbury, 70 km away.
+  kent-county-cricket-ground: {osm_ref: way/554155773, note: "OSM 'The County Ground', Worsley Bridge Road, Beckenham (was geocoded to Canterbury)"}
+  # League-only grounds the name search put in the wrong place (found 2026-11-18 after adding the leagues; a ground
+  # with no internationals has no home team, so the country check could not catch these).
+  county-ground-worcester: {osm_ref: relation/1343379, country: England, note: "OSM 'Worcestershire County Cricket Club', New Road (was Worcester, Massachusetts)"}
+  merchant-taylors-school-ground: {osm_ref: way/164191278, country: England, needs_review: true, note: "OSM school grounds, Northwood; the cricket field is on the campus (was Northwood, Iowa)"}
+  ted-summerton-reserve: {osm_ref: way/147105294, country: Australia, note: "OSM 'Ted Summerton Reserve', Moe, Victoria (was Monroe County, Ohio)"}
+  county-ground-derby: {osm_ref: way/107385079, country: England, note: "OSM 'Derbyshire County Cricket Club', Nottingham Road (was Derby County FC's training ground)"}
+  international-sports-stadium: {osm_ref: way/280925037, country: Australia, note: "OSM 'Coffs Harbour International Stadium' (was the Coffs Harbour centroid)"}
+  college-ground: {osm_ref: way/166337274, country: England, needs_review: true, note: "OSM Cheltenham College grounds; the cricket field is on the campus (was the Cheltenham centroid)"}
   sikh-union-club-ground: {osm_ref: way/226426594, note: "OSM pitch 'Sikh Union Club', Nairobi (pinned QID had no coordinates)"}
   kyambogo-cricket-oval: {osm_ref: way/1064904518, note: "OSM pitch 'Kyambogo Cricket Ground', Kampala"}
   entebbe-cricket-oval: {osm_ref: way/52597225, needs_review: true, note: "OSM pitch of the Entebbe Club, Golf Lane: probable, not confirmed as the cricket oval"}

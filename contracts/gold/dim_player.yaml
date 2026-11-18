@@ -213,10 +213,10 @@ schema:
       cleaning; lets rejected dates (conflicts, placeholders, impossible ages) be inspected. NULL when none exist.
   quality:
   - name: row_count_floor_full_data
-    description: on the complete snapshots, at least 90 to 95% of the 2,652 rows of the 2026-10-27 real
+    description: on the complete snapshots, at least 90 to 95% of the 3,693 rows of the 2026-11-18 real
       build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
     metric: rowCount
-    mustBeGreaterOrEqualTo: 2500
+    mustBeGreaterOrEqualTo: 3400
     customProperties:
     - property: fullDataOnly
       value: true

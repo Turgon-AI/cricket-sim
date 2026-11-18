@@ -9,7 +9,8 @@ user_agent: "cricket-sim/0.1 (non-commercial cricket research)"
 
 # Which matches ingest fetches geocodes and weather for. This is a network budget, NOT a scope: silver is built
 # over every Cricsheet match; matches outside the plan simply have null weather with a reason.
-# A rule matches when all its keys equal the match's Cricsheet values. `all: true` plans every match.
+# A rule matches when all its keys equal the match's Cricsheet values; a rule's own from_date also drops earlier
+# matches. `all: true` plans every match. The league rules follow the league segments of config/scope.yml.
 plan_selection:
   gender: male
   from_date: "2001-01-01"
@@ -18,6 +19,17 @@ plan_selection:
     - {match_type: ODI, team_type: international}
     - {match_type: T20, team_type: international}
     - {event_name: Indian Premier League}
+    - {event_name: NatWest T20 Blast, from_date: "2015-04-01"}
+    - {event_name: Vitality Blast, from_date: "2015-04-01"}
+    - {event_name: Vitality Blast Men, from_date: "2015-04-01"}
+    - {event_name: Big Bash League, from_date: "2015-04-01"}
+    - {event_name: Bangladesh Premier League, from_date: "2015-04-01"}
+    - {event_name: Caribbean Premier League, from_date: "2015-04-01"}
+    - {event_name: Pakistan Super League, from_date: "2015-04-01"}
+    - {event_name: Lanka Premier League, from_date: "2015-04-01"}
+    - {event_name: International League T20, from_date: "2015-04-01"}
+    - {event_name: SA20, from_date: "2015-04-01"}
+    - {event_name: Major League Cricket, from_date: "2015-04-01"}
 
 venues_geo:
   description: >-

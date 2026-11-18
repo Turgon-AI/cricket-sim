@@ -352,7 +352,7 @@ def croissant(title: str, run: dict, files: list[dict], manifest: list[dict]) ->
                      "repeated": "cr:repeated", "replace": "cr:replace", "separator": "cr:separator", "source": "cr:source",
                      "subField": "cr:subField", "transform": "cr:transform"},
         "@type": "sc:Dataset", "conformsTo": "http://mlcommons.org/croissant/1.0", "name": title,
-        "description": "Men's international and IPL ball-by-ball cricket from Cricsheet, with the match state before "
+        "description": "Men's international and franchise T20 league ball-by-ball cricket from Cricsheet, with the match state before "
                        "every ball, venue, weather and player context, and per-match quality checks.",
         "license": sorted({SPDX[f["licence"]] for f in files}),
         "version": run["build_fingerprint"][:12],

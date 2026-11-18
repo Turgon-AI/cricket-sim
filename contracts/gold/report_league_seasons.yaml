@@ -1,35 +1,43 @@
 apiVersion: v3.1.0
 kind: DataContract
-id: cricket-sim.gold.report_ipl_seasons
-name: report_ipl_seasons
+id: cricket-sim.gold.report_league_seasons
+name: report_league_seasons
 version: 1.0.0
 status: active
 domain: cricket
 dataProduct: cricket-sim
 description:
-  purpose: Shows IPL coverage season by season, to spot missing or incomplete seasons.
+  purpose: Shows each franchise league's coverage season by season, to spot missing or incomplete seasons.
   limitations: >-
     Counts only matches Cricsheet holds; compare against the official number of matches per season. The current
-    season may be partial.
+    season may be partial. A season is the calendar year of the match start, so a league played across New Year
+    (BBL, BPL, SA20, ILT20) shows one season over two rows. Leagues other than the IPL start at 2015-04-01.
 schema:
-- name: report_ipl_seasons
-  physicalName: data/gold/report_ipl_seasons.parquet
+- name: report_league_seasons
+  physicalName: data/gold/report_league_seasons.parquet
   physicalType: table
   logicalType: object
-  description: Number of IPL matches per season in scope and how many pass the quality checks.
-  dataGranularityDescription: One row per IPL season (calendar year of match start).
+  description: Number of matches per league and season in scope and how many pass the quality checks.
+  dataGranularityDescription: One row per league segment and calendar year of match start.
   properties:
+  - name: segment
+    logicalType: string
+    physicalType: VARCHAR
+    description: The league's segment in dim_match (every segment whose matches have team_type 'club').
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
   - name: season_year
     logicalType: integer
     physicalType: BIGINT
-    description: Calendar year of the IPL season (year of match start dates).
+    description: Calendar year of the match start dates.
     primaryKey: true
-    primaryKeyPosition: 1
+    primaryKeyPosition: 2
     required: true
   - name: matches
     logicalType: integer
     physicalType: BIGINT
-    description: IPL matches in scope that season.
+    description: Matches of that league in scope with a start date in that year.
     required: true
     customProperties:
     - property: unit
@@ -44,10 +52,10 @@ schema:
       value: matches
   quality:
   - name: row_count_floor_full_data
-    description: on the complete snapshots, at least 90 to 95% of the 19 rows of the 2026-10-27 real
+    description: on the complete snapshots, at least 90 to 95% of the 94 rows of the 2026-11-18 real
       build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
     metric: rowCount
-    mustBeGreaterOrEqualTo: 18
+    mustBeGreaterOrEqualTo: 87
     customProperties:
     - property: fullDataOnly
       value: true
