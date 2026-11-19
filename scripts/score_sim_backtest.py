@@ -240,6 +240,14 @@ def main():
             if (args.baseline, fmt, "raw") in tables:
                 compare(f"{variant} final vs {args.baseline}", (args.baseline, fmt, "raw"), (variant, fmt, "final"),
                         keys)
+    # when the baseline has its own "final" too, compare final against final: both as they would be used
+    for variant in runs:
+        if variant == args.baseline:
+            continue
+        for fmt in runs[variant]:
+            if (variant, fmt, "final") in tables and (args.baseline, fmt, "final") in tables:
+                compare(f"{variant} final vs {args.baseline} final", (args.baseline, fmt, "final"),
+                        (variant, fmt, "final"), keys)
 
     base = args.baseline
     for variant in runs:

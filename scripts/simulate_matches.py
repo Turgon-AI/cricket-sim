@@ -59,6 +59,7 @@ from cricket_sim.models.elo import expected, pre_match_ratings
 from cricket_sim.models.train import OUTCOME_FEATURES, OUTCOME_SEASONS, SEED
 from cricket_sim.paths import GOLD
 import measure_explained_share as mes  # scripts/ is on sys.path
+import player_ratings as pr
 from measure_explained_share import add_level_and_venue, add_xi, first_innings
 
 BIG_TOTAL = {"ODI": 300, "T20I": 180}
@@ -73,7 +74,12 @@ RECENT = ["last6_runs", "last6_boundaries", "striker_balls"]
 BOUNDARY = [CLASSES.index("4"), CLASSES.index("6")]
 # Leagues whose balls also train the T20I ball model (one segment each in config/scope.yml)
 T20_LEAGUES = ["IPL", "T20 Blast", "BBL", "BPL", "CPL", "PSL", "LPL", "ILT20", "SA20", "MLC"]
-
+assert T20_LEAGUES == pr.T20_LEAGUES
+# Player ratings (added 2026-11-19, sims/2026-11-19-player-ratings/REPORT.md): the batter on strike, the bowler of
+# the over and the ground, as of the match date. With ratings on, they replace the six XI-average inputs.
+RATING_BAT, RATING_BOWL, RATING_VENUE = (pr.rating_cols(e) for e in ("bat", "bowl", "venue"))
+CONTEXT_NO_XI = [c for c in CONTEXT if c not in pr.XI]
+SLOTS = 11  # batting order length the simulator carries
 
 def load(con: duckdb.DuckDBPyConnection, segment: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     """(balls, matches) for one format: every delivery of the first two innings, and one row per match."""
@@ -181,6 +187,97 @@ def league_data(con) -> tuple[pd.DataFrame, pd.DataFrame]:
     return pd.concat(balls, ignore_index=True), pd.concat(matches, ignore_index=True)
 
 
+def add_ratings(con, balls: pd.DataFrame, matches: pd.DataFrame, family: str) -> tuple[pd.DataFrame, dict]:
+    """Rating columns on every training ball (striker, bowler, ground, as of the match date), and each match's
+    line-ups for the simulator: {match_id: {innings: (order, plan, venue)}}.
+
+    order (SLOTS x 9): the batting side's ratings in the real batting order (who came in, in that order), then the
+    rest of the playing XI by balls faced per innings in earlier matches (most first), padded with average.
+    plan (overs x 9): the bowler of each over of the real innings (most balls in that over). Overs the real innings
+    never reached go to the real bowlers with overs left, most-used first, never the bowler of the over before.
+    venue (9): the ground's ratings. family: "T20" (T20I, IPL and the nine leagues) or "ODI"."""
+    allb = pr.all_balls(con, family)
+    exp, prior = pr.expected_probs(allb)
+    ids = list(matches.match_id.astype(str).unique())
+    con.execute("CREATE OR REPLACE TEMP TABLE want (match_id VARCHAR)")
+    con.executemany("INSERT INTO want VALUES (?)", [(m,) for m in ids])
+    xi = con.execute(f"""
+        SELECT x.match_id, x.player_id, x.team, x.prior_bat_balls / nullif(x.prior_batting_matches, 0) AS bpi
+        FROM read_parquet('{GOLD / 'fact_player_match_form'}.parquet') x JOIN want USING (match_id)""").df()
+    dl = con.execute(f"""
+        SELECT f.match_id, f.innings, f.delivery_number, f.batting_team, f.batter_id, f.non_striker_id,
+            f.bowler_id, f.over
+        FROM read_parquet('{GOLD / 'fact_delivery'}.parquet') f JOIN want USING (match_id)
+        WHERE NOT f.is_super_over AND f.innings <= 2 ORDER BY f.match_id, f.innings, f.delivery_number""").df()
+    date = dict(zip(matches.match_id.astype(str), pd.to_datetime(matches.start_date)))
+    xi["start_date"] = xi.match_id.map(date)
+    tables = {"bat": pr.ratings(allb, exp, prior, "batter_id", "bat", xi.rename(columns={"player_id": "batter_id"})),
+              "bowl": pr.ratings(allb, exp, prior, "bowler_id", "bowl", xi.rename(columns={"player_id": "bowler_id"})),
+              "venue": pr.ratings(allb, exp, prior, "venue_id", "venue")}
+    balls = balls.copy()
+    balls["start_date"] = pd.to_datetime(balls.start_date)
+    balls = balls.merge(allb[["match_id", "innings", "delivery_number", "bowler_id", "venue_id"]],
+                        on=["match_id", "innings", "delivery_number"], how="left")
+    for e, col in pr.ENTITIES.items():
+        balls = balls.merge(tables[e], on=[col, "start_date"], how="left")
+    look = {e: tables[e].set_index([col, "start_date"]) for e, col in pr.ENTITIES.items()}
+    cols = {"bat": RATING_BAT, "bowl": RATING_BOWL, "venue": RATING_VENUE}
+
+    def vec(e, key, d):
+        try:
+            return look[e].loc[(key, d), cols[e]].to_numpy(float)
+        except KeyError:
+            return np.r_[np.zeros(8), 0.0]  # never seen: average, no evidence
+
+    lineups = {}
+    xi_by = {k: g.sort_values("bpi", ascending=False, na_position="last").player_id.tolist()
+             for k, g in xi.groupby(["match_id", "team"])}
+    for (mid, inn), g in dl.groupby(["match_id", "innings"], sort=False):
+        d = date[mid]
+        seen = list(dict.fromkeys(x for pair in zip(g.batter_id, g.non_striker_id) for x in pair if x))
+        team = g.batting_team.iloc[0]
+        order = (seen + [p for p in xi_by.get((mid, team), []) if p not in seen])[:SLOTS]
+        order_m = np.array([vec("bat", p, d) for p in order] + [vec("bat", None, d)] * (SLOTS - len(order)))
+        lineups.setdefault(mid, {})[inn] = (order_m, g, d)
+    sched = dict(zip(matches.match_id.astype(str), matches.scheduled_overs))
+    ground = dict(zip(matches.match_id.astype(str), matches.venue_id))
+    for mid, ms in lineups.items():
+        overs, venue_id = int(sched[mid]), ground[mid]
+        for inn, (order_m, g, d) in ms.items():
+            real = g.groupby("over").bowler_id.agg(lambda s: s.value_counts().index[0])
+            plan = [real.get(o) for o in range(overs)]
+            quota = max(1, overs // 5)
+            used = pd.Series([b for b in plan if b is not None]).value_counts().to_dict()
+            ranked = list(used)  # most overs first
+            for o in range(overs):
+                if plan[o] is None:
+                    prev = plan[o - 1] if o else None
+                    pick = next((b for b in ranked if used[b] < quota and b != prev), None) \
+                        or next((b for b in ranked if b != prev), ranked[0] if ranked else None)
+                    plan[o] = pick
+                    if pick is not None:
+                        used[pick] = used.get(pick, 0) + 1
+            plan_m = np.array([vec("bowl", b, d) for b in plan])
+            ms[inn] = (order_m, plan_m, vec("venue", venue_id, d))
+    return balls, lineups
+
+
+def lineup_arrays(lineups: dict, ms: pd.DataFrame, inn: int, n: int) -> dict:
+    """Per-row (match x n plays) arrays for play_innings: order (rows x SLOTS x 9), plan (rows x overs x 9) and
+    the ground's rating columns. A match without a line-up gets average players."""
+    overs = int(ms.scheduled_overs.max())
+    avg = np.r_[np.zeros(8), 0.0]
+    order = np.tile(avg, (len(ms), SLOTS, 1))
+    plan = np.tile(avg, (len(ms), overs, 1))
+    venue = np.tile(avg, (len(ms), 1))
+    for k, mid in enumerate(ms.match_id.astype(str)):
+        if mid in lineups and inn in lineups[mid]:
+            o, p, v = lineups[mid][inn]
+            order[k], plan[k, :len(p)], venue[k] = o, p[:overs], v
+    rep = lambda a: np.repeat(a, n, axis=0)
+    return {"order": rep(order), "plan": rep(plan), "venue": rep(venue)}
+
+
 def league_balls(con) -> pd.DataFrame:
     """Every clean ball of the T20 leagues, with is_international = 0, to train the T20I ball model."""
     return league_data(con)[0]
@@ -193,9 +290,11 @@ class BallModel:
     so recent seasons count more. None: every ball counts the same (what `cricket model` does)."""
 
     def __init__(self, train: pd.DataFrame, half_life: float | None = None, as_of: pd.Timestamp | None = None,
-                 context: bool = False, recent: bool = False):
-        self.recent = recent
-        self.features = OUTCOME_FEATURES + (CONTEXT if context else []) + (RECENT if recent else [])
+                 context: bool = False, recent: bool = False, ratings: bool = False):
+        self.recent, self.ratings = recent, ratings
+        ctx = (CONTEXT_NO_XI if ratings else CONTEXT) if context else []
+        self.features = (OUTCOME_FEATURES + ctx + (RECENT if recent else [])
+                         + (RATING_BAT + RATING_BOWL + RATING_VENUE if ratings else []))
         y = train["outcome_class"].map(CLASSES.index).to_numpy()
         weight = None
         if half_life:
@@ -222,18 +321,26 @@ class BallModel:
 
 
 def play_innings(model: BallModel, rng, innings: int, limit: np.ndarray, static: dict,
-                 target: np.ndarray | None = None, tilt: np.ndarray | None = None) -> np.ndarray:
+                 target: np.ndarray | None = None, tilt: np.ndarray | None = None,
+                 lineup: dict | None = None) -> np.ndarray:
     """Play one innings to the end for every row at once (a row is one play of one match); returns the totals.
     limit, target and tilt are per row; static maps each fixed input (elo_diff as batting minus bowling, year,
     and the CONTEXT columns) to a per-row array. tilt is the play's pitch factor:
     each class's chance is multiplied by exp(tilt * that class's mean runs), then renormalised, so a positive
-    tilt means more boundaries and fewer dots on every ball of the match. Wickets are not tilted."""
+    tilt means more boundaries and fewer dots on every ball of the match. Wickets are not tilted.
+    lineup (lineup_arrays, needed when the model takes ratings): each ball sees the striker's ratings (batting order
+    slot of whoever is on strike; a wicket is always the striker's, and the next batter in the order takes his
+    place) and the ratings of the bowler planned for that over."""
     n = len(limit)
     runs = np.zeros(n, int)
     wkts = np.zeros(n, int)
     legal = np.zeros(n, int)
     live = np.ones(n, bool)
-    recent = getattr(model, "recent", False)
+    recent = getattr(model, "recent", False) or lineup is not None  # the lineup needs the strike tracking too
+    if lineup is not None:
+        slot = np.tile([0, 1], (n, 1))  # batting-order slot of the two batters at the crease
+        next_in = np.full(n, 2)
+        last_over = lineup["plan"].shape[1] - 1
     if recent:  # last 6 deliveries (ring buffer), balls faced by the two batters, which of them is on strike
         ring_runs, ring_bnd, pos = np.zeros((n, 6)), np.zeros((n, 6)), np.zeros(n, int)
         faced, striker = np.zeros((n, 2)), np.zeros(n, int)
@@ -254,6 +361,11 @@ def play_innings(model: BallModel, rng, innings: int, limit: np.ndarray, static:
             x["last6_runs"] = ring_runs[i].sum(1)
             x["last6_boundaries"] = ring_bnd[i].sum(1)
             x["striker_balls"] = faced[i, striker[i]]
+        if lineup is not None:
+            bat = lineup["order"][i, slot[i, striker[i]]]
+            bowl = lineup["plan"][i, np.minimum(legal[i] // 6, last_over)]
+            x = pd.concat([x, pd.DataFrame(np.hstack([bat, bowl, lineup["venue"][i]]),
+                                           columns=RATING_BAT + RATING_BOWL + RATING_VENUE)], axis=1)
         p = model.proba(x)
         if tilt is not None:
             p *= np.exp(tilt[i][:, None] * model.class_runs[None, :])
@@ -277,6 +389,10 @@ def play_innings(model: BallModel, rng, innings: int, limit: np.ndarray, static:
             faced[i, s] += drawn_legal[i]
             out = cls == WICKET
             faced[i[out], s[out]] = 0  # the new batter takes the striker's place
+            if lineup is not None:
+                gone = i[out]
+                slot[gone, s[out]] = np.minimum(next_in[gone], SLOTS - 1)
+                next_in[gone] += 1
             ran = drawn_runs[i] - (1 - drawn_legal[i])  # a wide or no-ball's own run is not run
             swap = (ran % 2 == 1) ^ ((drawn_legal[i] == 1) & (legal[i] % 6 == 0))  # odd runs, end of over
             striker[i] = np.where(swap, 1 - s, s)
@@ -288,7 +404,7 @@ def play_innings(model: BallModel, rng, innings: int, limit: np.ndarray, static:
 
 
 def simulate(model: BallModel, ms: pd.DataFrame, n: int, rng, elo_scale: float = 1.0, pitch_sd: float = 0.0,
-             innings_sd: float = 0.0) -> dict:
+             innings_sd: float = 0.0, lineups: dict | None = None) -> dict:
     """n plays of every match in ms at once. Returns (matches x n) arrays: first-innings totals and the
     batting-first side's result (1 win, 0.5 tie, 0 loss). elo_scale multiplies the Elo gap the ball model sees.
     pitch_sd: each play draws one pitch factor from Normal(0, pitch_sd), shared by both innings.
@@ -305,9 +421,10 @@ def simulate(model: BallModel, ms: pd.DataFrame, n: int, rng, elo_scale: float =
     if innings_sd:
         base = np.zeros(len(limit)) if tilt is None else tilt
         tilts = [base + rng.normal(0.0, innings_sd, len(limit)) for _ in (1, 2)]
-    first = play_innings(model, rng, 1, limit, static[1], tilt=tilts[0])
+    lu = {inn: lineup_arrays(lineups, ms, inn, n) if getattr(model, "ratings", False) else None for inn in (1, 2)}
+    first = play_innings(model, rng, 1, limit, static[1], tilt=tilts[0], lineup=lu[1])
     target = first + 1
-    second = play_innings(model, rng, 2, limit, static[2], target, tilts[1])
+    second = play_innings(model, rng, 2, limit, static[2], target, tilts[1], lineup=lu[2])
     result = np.where(second >= target, 0.0, np.where(second == first, 0.5, 1.0))
     return {"first": first.reshape(len(ms), n), "result": result.reshape(len(ms), n)}
 
@@ -370,10 +487,10 @@ def score(ms: pd.DataFrame, s: dict) -> dict:
 
 
 def fit(balls: pd.DataFrame, cutoff: pd.Timestamp, half_life: float | None, context: bool = True,
-        recent: bool = False) -> BallModel:
+        recent: bool = False, ratings: bool = False) -> BallModel:
     when = pd.to_datetime(balls.start_date)
     train = balls[(when < cutoff) & (when >= cutoff - pd.DateOffset(years=OUTCOME_SEASONS))]
-    return BallModel(train, half_life, cutoff, context, recent)
+    return BallModel(train, half_life, cutoff, context, recent, ratings)
 
 
 def full_length(matches: pd.DataFrame) -> pd.DataFrame:

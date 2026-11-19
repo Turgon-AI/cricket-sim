@@ -56,6 +56,10 @@ VARIANTS = {
     # off, and ODI totals stretched after the sim (done by score_sim_backtest.py, fitted on earlier years)
     "combined": {"leagues": True, "score_leagues": True, "recent": True, "spread": False,
                  "fixed_spread": {"T20I": [0.025, 0.0], "ODI": [0.0, 0.0]}, "post_stretch": ["ODI"]},
+    # combined plus player ratings (2026-11-19): the striker, the bowler of the over and the ground, as of the match
+    # date, in place of the six XI averages; real batting order and real bowler per over (simulate_matches.add_ratings)
+    "ratings": {"leagues": True, "score_leagues": True, "recent": True, "spread": False, "ratings": True,
+                "fixed_spread": {"T20I": [0.025, 0.0], "ODI": [0.0, 0.0]}, "post_stretch": ["ODI"]},
 }
 
 
@@ -116,6 +120,10 @@ def main():
                 balls = pd.concat([balls, lb], ignore_index=True)
             if v["score_leagues"]:
                 tests.append(("league", lm))
+        lineups = None
+        if v.get("ratings"):
+            balls, lineups = sm.add_ratings(con, balls, pd.concat([ms for _, ms in tests], ignore_index=True),
+                                            "T20" if fmt == "T20I" else "ODI")
         print(f"{fmt}: {len(balls):,} training balls in the pool, loaded at {time.time() - started:.0f}s", flush=True)
         pitch_sd, innings_sd = v.get("fixed_spread", {}).get(fmt, [0.0, 0.0])
         if v.get("fixed_spread"):
@@ -129,13 +137,13 @@ def main():
             print(f"  {fmt}: chosen pitch sd {pitch_sd}, innings sd {innings_sd}", flush=True)
         for year in range(args.first_year, args.last_year + 1):
             cutoff = pd.Timestamp(f"{year}-01-01")
-            model = sm.fit(balls, cutoff, None, recent=v["recent"])
+            model = sm.fit(balls, cutoff, None, recent=v["recent"], ratings=v.get("ratings", False))
             for group, ms in tests:
                 test = sm.full_length(ms[pd.to_datetime(ms.start_date).dt.year == year]).reset_index(drop=True)
                 if test.empty:
                     continue
                 rng = np.random.default_rng([SEED, year, FORMAT_CODE[group]])
-                s = sm.simulate(model, test, sims[group], rng, 1.0, pitch_sd, innings_sd)
+                s = sm.simulate(model, test, sims[group], rng, 1.0, pitch_sd, innings_sd, lineups)
                 np.savez_compressed(out / f"plays_{group}_{year}.npz", first=s["first"].astype(np.int16),
                                     result=(2 * s["result"]).astype(np.int8))
                 elo = [expected(a, b) for a, b in zip(test.elo_bat_first, test.elo_bat_second)]
