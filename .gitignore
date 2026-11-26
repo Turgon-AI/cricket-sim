@@ -5,3 +5,8 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .DS_Store
+# Simulator runs: keep the reports and the CSV/JSON numbers behind them; the plays (.npz), rating tables (.parquet)
+# and run logs are large and come back from the committed scripts and seeds.
+sims/**/*.npz
+sims/**/*.parquet
+sims/**/*.log

@@ -1,0 +1,31 @@
+segment,match_id,start_date,match,venue,elo_gap_bat_first,event,sim_pct,history_pct,happened,note
+ODI,1554415,2026-10-09,Oman (batted first) v Canada,Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1),92,Oman wins,54.3,47.4,yes,Elo alone says 63.0%
+ODI,1554415,2026-10-09,Oman (batted first) v Canada,Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1),92,First innings 300+,8.1,26.1,no,"sim median 209, 80% range 111 to 291, actual 263"
+ODI,1554415,2026-10-09,Oman (batted first) v Canada,Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1),92,First innings 263+ (the actual score),19.9,49.0,yes,how surprising the real score was
+ODI,1554413,2026-10-11,United Arab Emirates (batted first) v United States of America,"Grand Prairie Stadium, Dallas",-180,United Arab Emirates wins,17.4,47.4,no,Elo alone says 26.2%
+ODI,1554413,2026-10-11,United Arab Emirates (batted first) v United States of America,"Grand Prairie Stadium, Dallas",-180,First innings 300+,12.6,26.1,no,"sim median 221, 80% range 107 to 308, actual 213"
+ODI,1554413,2026-10-11,United Arab Emirates (batted first) v United States of America,"Grand Prairie Stadium, Dallas",-180,First innings 213+ (the actual score),54.0,73.3,yes,how surprising the real score was
+ODI,1554416,2026-10-11,Nepal (batted first) v Canada,Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1),135,Nepal wins,67.5,47.4,yes,Elo alone says 68.5%
+ODI,1554416,2026-10-11,Nepal (batted first) v Canada,Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1),135,First innings 300+,10.8,26.1,no,"sim median 220, 80% range 132 to 303, actual 235"
+ODI,1554416,2026-10-11,Nepal (batted first) v Canada,Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1),135,First innings 235+ (the actual score),41.0,62.8,yes,how surprising the real score was
+ODI,1554414,2026-10-13,United States of America (batted first) v Namibia,"Grand Prairie Stadium, Dallas",100,United States of America wins,66.3,47.4,no,Elo alone says 64.0%
+ODI,1554414,2026-10-13,United States of America (batted first) v Namibia,"Grand Prairie Stadium, Dallas",100,First innings 300+,35.3,26.1,no,"sim median 274, 80% range 160 to 356, actual 277"
+ODI,1554414,2026-10-13,United States of America (batted first) v Namibia,"Grand Prairie Stadium, Dallas",100,First innings 277+ (the actual score),48.3,40.1,yes,how surprising the real score was
+ODI,1554417,2026-10-13,Nepal (batted first) v Oman,Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1),33,Nepal wins,51.9,47.4,yes,Elo alone says 54.7%
+ODI,1554417,2026-10-13,Nepal (batted first) v Oman,Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1),33,First innings 300+,7.0,26.1,no,"sim median 211, 80% range 125 to 288, actual 263"
+ODI,1554417,2026-10-13,Nepal (batted first) v Oman,Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1),33,First innings 263+ (the actual score),19.7,49.0,yes,how surprising the real score was
+T20I,1529231,2026-10-09,India (batted first) v West Indies,"JSCA International Stadium Complex, Ranchi",217,India wins,74.6,48.8,no,Elo alone says 77.7%
+T20I,1529231,2026-10-09,India (batted first) v West Indies,"JSCA International Stadium Complex, Ranchi",217,First innings 180+,69.3,35.6,yes,"sim median 199, 80% range 154 to 251, actual 249"
+T20I,1529231,2026-10-09,India (batted first) v West Indies,"JSCA International Stadium Complex, Ranchi",217,First innings 249+ (the actual score),11.2,1.2,yes,how surprising the real score was
+T20I,1550708,2026-10-09,Sri Lanka (batted first) v Pakistan,Rawalpindi Cricket Stadium,-150,Sri Lanka wins,37.6,48.8,no,Elo alone says 29.6%
+T20I,1550708,2026-10-09,Sri Lanka (batted first) v Pakistan,Rawalpindi Cricket Stadium,-150,First innings 180+,31.2,35.6,yes,"sim median 163, 80% range 114 to 210, actual 182"
+T20I,1550708,2026-10-09,Sri Lanka (batted first) v Pakistan,Rawalpindi Cricket Stadium,-150,First innings 182+ (the actual score),29.3,33.1,yes,how surprising the real score was
+T20I,1529232,2026-10-11,India (batted first) v West Indies,"Holkar Cricket Stadium, Indore",179,India wins,75.9,48.8,yes,Elo alone says 73.7%
+T20I,1529232,2026-10-11,India (batted first) v West Indies,"Holkar Cricket Stadium, Indore",179,First innings 180+,72.9,35.6,yes,"sim median 204, 80% range 152 to 259, actual 223"
+T20I,1529232,2026-10-11,India (batted first) v West Indies,"Holkar Cricket Stadium, Indore",179,First innings 223+ (the actual score),33.3,5.7,yes,how surprising the real score was
+T20I,1550709,2026-10-11,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,164,Pakistan wins,57.6,48.8,yes,Elo alone says 72.0%
+T20I,1550709,2026-10-11,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,164,First innings 180+,47.2,35.6,yes,"sim median 177, 80% range 129 to 224, actual 215"
+T20I,1550709,2026-10-11,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,164,First innings 215+ (the actual score),14.2,8.5,yes,how surprising the real score was
+T20I,1550710,2026-10-13,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,178,Pakistan wins,59.0,48.8,no,Elo alone says 73.6%
+T20I,1550710,2026-10-13,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,178,First innings 180+,41.4,35.6,no,"sim median 172, 80% range 130 to 219, actual 168"
+T20I,1550710,2026-10-13,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,178,First innings 168+ (the actual score),56.6,50.4,yes,how surprising the real score was

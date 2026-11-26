@@ -1,0 +1,139 @@
+{
+  "venue_six": {
+    "ground_years": 553,
+    "years": "2016-2026, T20 family, grounds with 600+ balls that year and 600+ weighted balls of history",
+    "correlation_rating_vs_that_year": 0.582,
+    "slope": 0.8,
+    "rating_spread_sd": 0.206
+  },
+  "dhoni_odi_death_overs": [
+    {
+      "y": 2004,
+      "balls": 3,
+      "runs": 7,
+      "runs_vs_expected": 1.9,
+      "sixes_vs_expected": 14.44,
+      "dots_vs_expected": 0.0
+    },
+    {
+      "y": 2005,
+      "balls": 117,
+      "runs": 145,
+      "runs_vs_expected": 1.07,
+      "sixes_vs_expected": 3.19,
+      "dots_vs_expected": 1.01
+    },
+    {
+      "y": 2006,
+      "balls": 217,
+      "runs": 270,
+      "runs_vs_expected": 1.05,
+      "sixes_vs_expected": 1.53,
+      "dots_vs_expected": 1.15
+    },
+    {
+      "y": 2007,
+      "balls": 338,
+      "runs": 418,
+      "runs_vs_expected": 1.15,
+      "sixes_vs_expected": 1.66,
+      "dots_vs_expected": 0.79
+    },
+    {
+      "y": 2008,
+      "balls": 285,
+      "runs": 344,
+      "runs_vs_expected": 1.04,
+      "sixes_vs_expected": 1.36,
+      "dots_vs_expected": 1.0
+    },
+    {
+      "y": 2009,
+      "balls": 224,
+      "runs": 265,
+      "runs_vs_expected": 1.02,
+      "sixes_vs_expected": 0.95,
+      "dots_vs_expected": 0.93
+    },
+    {
+      "y": 2010,
+      "balls": 93,
+      "runs": 105,
+      "runs_vs_expected": 1.04,
+      "sixes_vs_expected": 2.2,
+      "dots_vs_expected": 1.29
+    },
+    {
+      "y": 2011,
+      "balls": 290,
+      "runs": 370,
+      "runs_vs_expected": 1.06,
+      "sixes_vs_expected": 1.41,
+      "dots_vs_expected": 0.92
+    },
+    {
+      "y": 2012,
+      "balls": 207,
+      "runs": 282,
+      "runs_vs_expected": 1.19,
+      "sixes_vs_expected": 1.28,
+      "dots_vs_expected": 0.87
+    },
+    {
+      "y": 2013,
+      "balls": 265,
+      "runs": 388,
+      "runs_vs_expected": 1.34,
+      "sixes_vs_expected": 2.92,
+      "dots_vs_expected": 1.03
+    },
+    {
+      "y": 2014,
+      "balls": 112,
+      "runs": 141,
+      "runs_vs_expected": 1.04,
+      "sixes_vs_expected": 0.88,
+      "dots_vs_expected": 0.81
+    },
+    {
+      "y": 2015,
+      "balls": 209,
+      "runs": 236,
+      "runs_vs_expected": 0.99,
+      "sixes_vs_expected": 1.43,
+      "dots_vs_expected": 0.88
+    },
+    {
+      "y": 2016,
+      "balls": 59,
+      "runs": 80,
+      "runs_vs_expected": 1.09,
+      "sixes_vs_expected": 2.01,
+      "dots_vs_expected": 0.54
+    },
+    {
+      "y": 2017,
+      "balls": 289,
+      "runs": 356,
+      "runs_vs_expected": 1.01,
+      "sixes_vs_expected": 1.43,
+      "dots_vs_expected": 0.93
+    },
+    {
+      "y": 2018,
+      "balls": 117,
+      "runs": 102,
+      "runs_vs_expected": 0.73,
+      "sixes_vs_expected": 0.0,
+      "dots_vs_expected": 1.25
+    },
+    {
+      "y": 2019,
+      "balls": 273,
+      "runs": 328,
+      "runs_vs_expected": 1.03,
+      "sixes_vs_expected": 1.05,
+      "dots_vs_expected": 0.84
+    }
+  ]
+}

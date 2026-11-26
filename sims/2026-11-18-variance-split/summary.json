@@ -1,0 +1,235 @@
+{
+  "ODI": {
+    "all_hindsight_luck": {
+      "matches": 732,
+      "spread_sd_runs": 69.49513238070296,
+      "explained": 0.12796438917873276,
+      "explained_band": [
+        0.05716531117631583,
+        0.17586056461762192
+      ],
+      "persistent": -0.006296285916741287,
+      "persistent_band": [
+        -0.018453471466288014,
+        0.00573571519628897
+      ],
+      "shared_day": 0.07251682750851439,
+      "shared_day_band": [
+        0.025373823545534947,
+        0.1320297466248077
+      ],
+      "luck": 0.5127157356031724,
+      "luck_band": [
+        0.47061928517231993,
+        0.5704574707802295
+      ],
+      "side_on_the_day": 0.2930993336263217,
+      "side_on_the_day_band": [
+        0.2062962816582593,
+        0.38181423031512024
+      ]
+    },
+    "all_model_luck_2023_on": {
+      "matches": 403,
+      "spread_sd_runs": 71.72253517728622,
+      "explained": 0.12268524907622658,
+      "explained_band": [
+        0.051462160718723955,
+        0.18515159643970233
+      ],
+      "persistent": 0.0015436411342488513,
+      "persistent_band": [
+        -0.01329288523454499,
+        0.017333061695607936
+      ],
+      "shared_day": -0.0001289676204818482,
+      "shared_day_band": [
+        -0.06496962245259069,
+        0.06655843965696429
+      ],
+      "luck": 0.588185301859013,
+      "luck_band": [
+        0.5371609056882971,
+        0.6652429852453691
+      ],
+      "side_on_the_day": 0.28771477555099345,
+      "side_on_the_day_band": [
+        0.1756902660859393,
+        0.4024212914527171
+      ]
+    },
+    "full_members_hindsight_luck": {
+      "matches": 422,
+      "spread_sd_runs": 69.05472654197924,
+      "explained": 0.053296947603858835,
+      "explained_band": [
+        -0.0437268917814862,
+        0.1052192636244866
+      ],
+      "persistent": -0.012505427919868093,
+      "persistent_band": [
+        -0.03042573604280316,
+        0.0034028923348914364
+      ],
+      "shared_day": 0.06908813956580068,
+      "shared_day_band": [
+        0.001440651216771661,
+        0.1508483870371691
+      ],
+      "luck": 0.5272238024281577,
+      "luck_band": [
+        0.48277575900821224,
+        0.6049453362608831
+      ],
+      "side_on_the_day": 0.3628965383220508,
+      "side_on_the_day_band": [
+        0.22409723810947632,
+        0.48956045773386136
+      ]
+    },
+    "full_members_model_luck_2023_on": {
+      "matches": 220,
+      "spread_sd_runs": 73.16053776401158,
+      "explained": 0.08462252186594832,
+      "explained_band": [
+        -0.004741455854117216,
+        0.15476054982078374
+      ],
+      "persistent": -0.00726474760924318,
+      "persistent_band": [
+        -0.030128907841806354,
+        0.015417350227109114
+      ],
+      "shared_day": -0.02397792869865759,
+      "shared_day_band": [
+        -0.11303280847929854,
+        0.06321728123526703
+      ],
+      "luck": 0.621113683632993,
+      "luck_band": [
+        0.5521309949471265,
+        0.7368655942899882
+      ],
+      "side_on_the_day": 0.32550647080895945,
+      "side_on_the_day_band": [
+        0.16627941286108236,
+        0.48728518877483773
+      ]
+    },
+    "second_innings_projection_check": {
+      "corr_first_total_vs_second_proj": 0.11522824252542341,
+      "mean_second_proj_minus_first_total": 2.559464109545973
+    }
+  },
+  "T20I": {
+    "all_hindsight_luck": {
+      "matches": 576,
+      "spread_sd_runs": 35.96029347458706,
+      "explained": 0.09923456168770428,
+      "explained_band": [
+        0.027804481944700955,
+        0.14335563185427008
+      ],
+      "persistent": -0.011059397592801341,
+      "persistent_band": [
+        -0.035055673940579776,
+        0.010703908977748212
+      ],
+      "shared_day": 0.21444264408208463,
+      "shared_day_band": [
+        0.15481298638894228,
+        0.28494128151095266
+      ],
+      "luck": 0.5646536707216,
+      "luck_band": [
+        0.5164571018404227,
+        0.632631134865975
+      ],
+      "side_on_the_day": 0.13272852110141242,
+      "side_on_the_day_band": [
+        0.0275544235811848,
+        0.23792101433075252
+      ]
+    },
+    "all_model_luck_2023_on": {
+      "matches": 298,
+      "spread_sd_runs": 39.253026110032536,
+      "explained": 0.1713263230225227,
+      "explained_band": [
+        0.09630308069585768,
+        0.22699490756800053
+      ],
+      "persistent": 0.008995127068275547,
+      "persistent_band": [
+        -0.018748457371431413,
+        0.03482100301136728
+      ],
+      "shared_day": 0.15129955953368476,
+      "shared_day_band": [
+        0.07533614038651079,
+        0.2275794503407671
+      ],
+      "luck": 0.510820895008907,
+      "luck_band": [
+        0.44857719819223146,
+        0.6113592880530409
+      ],
+      "side_on_the_day": 0.15755809536660992,
+      "side_on_the_day_band": [
+        0.026132070904415248,
+        0.2692617827704248
+      ]
+    },
+    "second_innings_projection_check": {
+      "corr_first_total_vs_second_proj": 0.21594828830598312,
+      "mean_second_proj_minus_first_total": -4.093082548607877
+    }
+  },
+  "run": {
+    "commit": "bdaea4d",
+    "build_fingerprint": "0240fb4ce447d1eb412313056600edf73c9897aafd3cc3b59c3008ad63d71dba",
+    "first_test_year": 2019,
+    "luck_file": "sims/2026-11-17-luck-share/per_match.csv",
+    "pre_match_inputs": [
+      "recent_level",
+      "year",
+      "elo_diff",
+      "venue_dev",
+      "venue_n",
+      "bat_first_home",
+      "bat_second_home",
+      "bf_bat_rpb",
+      "bf_bat_opb",
+      "bf_bat_rpb_365",
+      "bf_bowl_rpb",
+      "bf_bowl_wpb",
+      "bf_bowl_rpb_365",
+      "bf_caps",
+      "bs_bat_rpb",
+      "bs_bat_opb",
+      "bs_bat_rpb_365",
+      "bs_bowl_rpb",
+      "bs_bowl_wpb",
+      "bs_bowl_rpb_365",
+      "bs_caps",
+      "toss_winner_bats_first",
+      "toss_bat"
+    ],
+    "lag_inputs": [
+      "lag_venue",
+      "lag_venue_n",
+      "lag_bat",
+      "lag_bat_n",
+      "lag_bowl",
+      "lag_bowl_n",
+      "lag_format"
+    ],
+    "windows_days": {
+      "venue": 730,
+      "bat": 365,
+      "bowl": 365,
+      "format": 120
+    },
+    "seed": 20261016
+  }
+}

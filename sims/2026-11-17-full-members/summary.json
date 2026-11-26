@@ -1,0 +1,32 @@
+{
+  "ODI": {
+    "matches": 38,
+    "brier_simulator": 0.2976,
+    "brier_elo_only": 0.2881,
+    "brier_history_rate": 0.2493,
+    "first_total_inside_sim_80pct_range": 65.8,
+    "mean_actual_first_total": 265.5,
+    "mean_sim_first_median": 260.6,
+    "history_mean_first_total": 255.3
+  },
+  "T20I": {
+    "matches": 73,
+    "brier_simulator": 0.2228,
+    "brier_elo_only": 0.2213,
+    "brier_history_rate": 0.2517,
+    "first_total_inside_sim_80pct_range": 75.3,
+    "mean_actual_first_total": 182.8,
+    "mean_sim_first_median": 174.1,
+    "history_mean_first_total": 166.9
+  },
+  "run": {
+    "commit": "bdaea4d",
+    "build_fingerprint": "0240fb4ce447d1eb412313056600edf73c9897aafd3cc3b59c3008ad63d71dba",
+    "train_before": "2026-01-01",
+    "train_years": 10,
+    "sims_per_match": 5000,
+    "backtest_sims_per_match": 500,
+    "seed": 20261016,
+    "full_members_only": true
+  }
+}

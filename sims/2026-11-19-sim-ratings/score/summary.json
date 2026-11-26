@@ -1,0 +1,2593 @@
+{
+  "runs": {
+    "combined": {
+      "variant": "combined",
+      "leagues": true,
+      "score_leagues": true,
+      "recent": true,
+      "spread": {
+        "T20I": {
+          "pitch_sd": 0.025,
+          "innings_sd": 0.0,
+          "fixed": true
+        },
+        "ODI": {
+          "pitch_sd": 0.0,
+          "innings_sd": 0.0,
+          "fixed": true
+        }
+      },
+      "fixed_spread": {
+        "T20I": [
+          0.025,
+          0.0
+        ],
+        "ODI": [
+          0.0,
+          0.0
+        ]
+      },
+      "post_stretch": [
+        "ODI"
+      ],
+      "commit": "3bb1947",
+      "tree_dirty": true,
+      "build_fingerprint": "ca15e28ebb4af18d620ff6284fdb49d2371bc7875666463ea3924ec5cb80c419",
+      "seed": 20261016,
+      "first_year": 2016,
+      "last_year": 2026,
+      "plays": {
+        "T20I": 400,
+        "league": 200,
+        "ODI": 300
+      },
+      "minutes": 63.7
+    },
+    "ratings": {
+      "variant": "ratings",
+      "leagues": true,
+      "score_leagues": true,
+      "recent": true,
+      "spread": {
+        "T20I": {
+          "pitch_sd": 0.025,
+          "innings_sd": 0.0,
+          "fixed": true
+        },
+        "ODI": {
+          "pitch_sd": 0.0,
+          "innings_sd": 0.0,
+          "fixed": true
+        }
+      },
+      "ratings": true,
+      "fixed_spread": {
+        "T20I": [
+          0.025,
+          0.0
+        ],
+        "ODI": [
+          0.0,
+          0.0
+        ]
+      },
+      "post_stretch": [
+        "ODI"
+      ],
+      "commit": "5f9274a",
+      "tree_dirty": true,
+      "build_fingerprint": "ca15e28ebb4af18d620ff6284fdb49d2371bc7875666463ea3924ec5cb80c419",
+      "seed": 20261016,
+      "first_year": 2016,
+      "last_year": 2026,
+      "plays": {
+        "T20I": 400,
+        "league": 200,
+        "ODI": 300
+      },
+      "minutes": 100.7
+    }
+  },
+  "first_score_year": 2019,
+  "boot": 1000,
+  "splits": 20,
+  "clip": 0.01,
+  "scores": [
+    {
+      "variant": "combined",
+      "format": "T20I",
+      "method": "raw",
+      "plays": 400,
+      "matches": 576,
+      "log_loss": 0.6476289129100503,
+      "brier": 0.22358197428385415,
+      "crps_runs": 18.706238530815977,
+      "explained_share": 0.12335420873365421,
+      "inside_50": 0.484375,
+      "inside_80": 0.7934027777777778,
+      "outer_pit_share": 0.2065972222222222,
+      "elo_log_loss": 0.6508288119401655,
+      "elo_brier": 0.22524931725816108,
+      "clipped_share": 0.0,
+      "noise_log_loss": 0.002499933911436198,
+      "noise_brier": 0.00115697163537302,
+      "noise_crps_runs": 0.05424151446405034,
+      "noise_explained_share": 0.004324073575219753,
+      "noise_inside_50": 0.0052299896984000244,
+      "noise_inside_80": 0.005592056739030005,
+      "noise_outer_pit_share": 0.005592056739030002
+    },
+    {
+      "variant": "combined",
+      "format": "T20I",
+      "method": "scaled",
+      "plays": 400,
+      "matches": 576,
+      "log_loss": 0.6476289129100503,
+      "brier": 0.22358197428385415,
+      "crps_runs": 18.75413715745712,
+      "explained_share": 0.12335420873365421,
+      "inside_50": 0.5434027777777778,
+      "inside_80": 0.8402777777777778,
+      "outer_pit_share": 0.1597222222222222,
+      "elo_log_loss": 0.6508288119401655,
+      "elo_brier": 0.22524931725816108,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "T20I",
+      "method": "scaled_shifted",
+      "plays": 400,
+      "matches": 576,
+      "log_loss": 0.6476289129100503,
+      "brier": 0.22358197428385415,
+      "crps_runs": 18.87800614603624,
+      "explained_share": 0.11189116973020719,
+      "inside_50": 0.5416666666666666,
+      "inside_80": 0.8333333333333334,
+      "outer_pit_share": 0.16666666666666666,
+      "elo_log_loss": 0.6508288119401655,
+      "elo_brier": 0.22524931725816108,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "T20I",
+      "method": "conformal",
+      "plays": 400,
+      "matches": 576,
+      "log_loss": 0.6476289129100503,
+      "brier": 0.22358197428385415,
+      "crps_runs": 18.929171419270833,
+      "explained_share": 0.10910831023754186,
+      "inside_50": 0.5520833333333334,
+      "inside_80": 0.8246527777777778,
+      "outer_pit_share": 0.1753472222222222,
+      "elo_log_loss": 0.6508288119401655,
+      "elo_brier": 0.22524931725816108,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "league",
+      "method": "raw",
+      "plays": 200,
+      "matches": 3066,
+      "log_loss": 0.6988209041959985,
+      "brier": 0.2493939008480104,
+      "crps_runs": 18.375407061317677,
+      "explained_share": 0.014691221313224201,
+      "inside_50": 0.4977168949771689,
+      "inside_80": 0.7834311806914547,
+      "outer_pit_share": 0.21656881930854532,
+      "elo_log_loss": 0.6918467206745981,
+      "elo_brier": 0.24591476278751226,
+      "clipped_share": 0.0,
+      "noise_log_loss": 0.0013513644802003845,
+      "noise_brier": 0.0006273377293720965,
+      "noise_crps_runs": 0.02370423654984509,
+      "noise_explained_share": 0.0023120888435894577,
+      "noise_inside_50": 0.002292404878122061,
+      "noise_inside_80": 0.0018718591459962455,
+      "noise_outer_pit_share": 0.0018718591459962485
+    },
+    {
+      "variant": "combined",
+      "format": "league",
+      "method": "scaled",
+      "plays": 200,
+      "matches": 3066,
+      "log_loss": 0.6988209041959985,
+      "brier": 0.2493939008480104,
+      "crps_runs": 18.37540682785497,
+      "explained_share": 0.014691221313224201,
+      "inside_50": 0.5088062622309197,
+      "inside_80": 0.7922374429223744,
+      "outer_pit_share": 0.20776255707762556,
+      "elo_log_loss": 0.6918467206745981,
+      "elo_brier": 0.24591476278751226,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "league",
+      "method": "scaled_shifted",
+      "plays": 200,
+      "matches": 3066,
+      "log_loss": 0.6988209041959985,
+      "brier": 0.2493939008480104,
+      "crps_runs": 18.375394638575365,
+      "explained_share": 0.014693486389104504,
+      "inside_50": 0.50293542074364,
+      "inside_80": 0.7876712328767124,
+      "outer_pit_share": 0.21232876712328766,
+      "elo_log_loss": 0.6918467206745981,
+      "elo_brier": 0.24591476278751226,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "league",
+      "method": "conformal",
+      "plays": 200,
+      "matches": 3066,
+      "log_loss": 0.6988209041959985,
+      "brier": 0.2493939008480104,
+      "crps_runs": 18.36870224233529,
+      "explained_share": 0.013708972670439357,
+      "inside_50": 0.49151989562948467,
+      "inside_80": 0.7981082844096543,
+      "outer_pit_share": 0.20189171559034572,
+      "elo_log_loss": 0.6918467206745981,
+      "elo_brier": 0.24591476278751226,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "ODI",
+      "method": "raw",
+      "plays": 300,
+      "matches": 732,
+      "log_loss": 0.6377052155547913,
+      "brier": 0.2197542805100182,
+      "crps_runs": 37.49576706132362,
+      "explained_share": 0.08545704106716823,
+      "inside_50": 0.42349726775956287,
+      "inside_80": 0.7062841530054644,
+      "outer_pit_share": 0.2937158469945355,
+      "elo_log_loss": 0.6498100524999458,
+      "elo_brier": 0.2260640052841519,
+      "clipped_share": 0.0,
+      "noise_log_loss": 0.0030134341844901646,
+      "noise_brier": 0.00121093556449566,
+      "noise_crps_runs": 0.07670337044162762,
+      "noise_explained_share": 0.0034687744310793276,
+      "noise_inside_50": 0.004043923528856729,
+      "noise_inside_80": 0.004951596912415136,
+      "noise_outer_pit_share": 0.004951596912415151
+    },
+    {
+      "variant": "combined",
+      "format": "ODI",
+      "method": "scaled",
+      "plays": 300,
+      "matches": 732,
+      "log_loss": 0.6377052155547913,
+      "brier": 0.2197542805100182,
+      "crps_runs": 37.20235391781521,
+      "explained_share": 0.08545704106716823,
+      "inside_50": 0.4931693989071038,
+      "inside_80": 0.7718579234972678,
+      "outer_pit_share": 0.22814207650273224,
+      "elo_log_loss": 0.6498100524999458,
+      "elo_brier": 0.2260640052841519,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "ODI",
+      "method": "scaled_shifted",
+      "plays": 300,
+      "matches": 732,
+      "log_loss": 0.6377052155547913,
+      "brier": 0.2197542805100182,
+      "crps_runs": 37.20284800014702,
+      "explained_share": 0.08546690850646121,
+      "inside_50": 0.4931693989071038,
+      "inside_80": 0.7718579234972678,
+      "outer_pit_share": 0.22814207650273224,
+      "elo_log_loss": 0.6498100524999458,
+      "elo_brier": 0.2260640052841519,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "ODI",
+      "method": "conformal",
+      "plays": 300,
+      "matches": 732,
+      "log_loss": 0.6377052155547913,
+      "brier": 0.2197542805100182,
+      "crps_runs": 37.22255312689739,
+      "explained_share": 0.08473478750200047,
+      "inside_50": 0.47540983606557374,
+      "inside_80": 0.7718579234972678,
+      "outer_pit_share": 0.22814207650273224,
+      "elo_log_loss": 0.6498100524999458,
+      "elo_brier": 0.2260640052841519,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "T20I",
+      "method": "raw",
+      "plays": 400,
+      "matches": 576,
+      "log_loss": 0.6511701655211266,
+      "brier": 0.2246939425998264,
+      "crps_runs": 18.12614392361111,
+      "explained_share": 0.18165709068692137,
+      "inside_50": 0.5260416666666666,
+      "inside_80": 0.8003472222222222,
+      "outer_pit_share": 0.1996527777777778,
+      "elo_log_loss": 0.6508288119401655,
+      "elo_brier": 0.22524931725816108,
+      "clipped_share": 0.0,
+      "noise_log_loss": 0.0017766225386403433,
+      "noise_brier": 0.0008039589033069643,
+      "noise_crps_runs": 0.03609513655654085,
+      "noise_explained_share": 0.0027299145637602095,
+      "noise_inside_50": 0.004746605248087603,
+      "noise_inside_80": 0.004670590643164799,
+      "noise_outer_pit_share": 0.004670590643164793
+    },
+    {
+      "variant": "ratings",
+      "format": "T20I",
+      "method": "scaled",
+      "plays": 400,
+      "matches": 576,
+      "log_loss": 0.6511701655211266,
+      "brier": 0.2246939425998264,
+      "crps_runs": 18.164928461573535,
+      "explained_share": 0.18165709068692137,
+      "inside_50": 0.5555555555555556,
+      "inside_80": 0.8315972222222222,
+      "outer_pit_share": 0.1684027777777778,
+      "elo_log_loss": 0.6508288119401655,
+      "elo_brier": 0.22524931725816108,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "T20I",
+      "method": "scaled_shifted",
+      "plays": 400,
+      "matches": 576,
+      "log_loss": 0.6511701655211266,
+      "brier": 0.2246939425998264,
+      "crps_runs": 18.294429192692444,
+      "explained_share": 0.17037042809713843,
+      "inside_50": 0.5555555555555556,
+      "inside_80": 0.828125,
+      "outer_pit_share": 0.171875,
+      "elo_log_loss": 0.6508288119401655,
+      "elo_brier": 0.22524931725816108,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "T20I",
+      "method": "conformal",
+      "plays": 400,
+      "matches": 576,
+      "log_loss": 0.6511701655211266,
+      "brier": 0.2246939425998264,
+      "crps_runs": 18.326399924045138,
+      "explained_share": 0.17271385508497117,
+      "inside_50": 0.5364583333333334,
+      "inside_80": 0.8263888888888888,
+      "outer_pit_share": 0.1736111111111111,
+      "elo_log_loss": 0.6508288119401655,
+      "elo_brier": 0.22524931725816108,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "league",
+      "method": "raw",
+      "plays": 200,
+      "matches": 3066,
+      "log_loss": 0.687234345807555,
+      "brier": 0.2438962919928245,
+      "crps_runs": 17.821439196020876,
+      "explained_share": 0.07308048974316139,
+      "inside_50": 0.5068493150684932,
+      "inside_80": 0.8007175472928898,
+      "outer_pit_share": 0.19928245270711023,
+      "elo_log_loss": 0.6918467206745981,
+      "elo_brier": 0.24591476278751226,
+      "clipped_share": 0.0,
+      "noise_log_loss": 0.0011566166641929724,
+      "noise_brier": 0.0005418485752139467,
+      "noise_crps_runs": 0.02535945833690607,
+      "noise_explained_share": 0.0021284007019216253,
+      "noise_inside_50": 0.0029966169439448877,
+      "noise_inside_80": 0.0021375162919518476,
+      "noise_outer_pit_share": 0.0021375162919518515
+    },
+    {
+      "variant": "ratings",
+      "format": "league",
+      "method": "scaled",
+      "plays": 200,
+      "matches": 3066,
+      "log_loss": 0.687234345807555,
+      "brier": 0.2438962919928245,
+      "crps_runs": 17.822626897801637,
+      "explained_share": 0.07308048974316139,
+      "inside_50": 0.5061969993476843,
+      "inside_80": 0.8010437051532941,
+      "outer_pit_share": 0.1989562948467058,
+      "elo_log_loss": 0.6918467206745981,
+      "elo_brier": 0.24591476278751226,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "league",
+      "method": "scaled_shifted",
+      "plays": 200,
+      "matches": 3066,
+      "log_loss": 0.687234345807555,
+      "brier": 0.2438962919928245,
+      "crps_runs": 17.800156861350054,
+      "explained_share": 0.07501739411115416,
+      "inside_50": 0.5035877364644488,
+      "inside_80": 0.7977821265492498,
+      "outer_pit_share": 0.20221787345075015,
+      "elo_log_loss": 0.6918467206745981,
+      "elo_brier": 0.24591476278751226,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "league",
+      "method": "conformal",
+      "plays": 200,
+      "matches": 3066,
+      "log_loss": 0.687234345807555,
+      "brier": 0.2438962919928245,
+      "crps_runs": 17.80308891063275,
+      "explained_share": 0.07422438407825227,
+      "inside_50": 0.5009784735812133,
+      "inside_80": 0.8010437051532941,
+      "outer_pit_share": 0.1989562948467058,
+      "elo_log_loss": 0.6918467206745981,
+      "elo_brier": 0.24591476278751226,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "ODI",
+      "method": "raw",
+      "plays": 300,
+      "matches": 732,
+      "log_loss": 0.6429826407516829,
+      "brier": 0.22215181390406802,
+      "crps_runs": 37.57602053734062,
+      "explained_share": 0.07675391660519548,
+      "inside_50": 0.412568306010929,
+      "inside_80": 0.7226775956284153,
+      "outer_pit_share": 0.2773224043715847,
+      "elo_log_loss": 0.6498100524999458,
+      "elo_brier": 0.2260640052841519,
+      "clipped_share": 0.0,
+      "noise_log_loss": 0.002089348177484269,
+      "noise_brier": 0.0007743578990629573,
+      "noise_crps_runs": 0.0785186122566802,
+      "noise_explained_share": 0.0034154801488431516,
+      "noise_inside_50": 0.0038245266882976593,
+      "noise_inside_80": 0.004072665351301602,
+      "noise_outer_pit_share": 0.004072665351301588
+    },
+    {
+      "variant": "ratings",
+      "format": "ODI",
+      "method": "scaled",
+      "plays": 300,
+      "matches": 732,
+      "log_loss": 0.6429826407516829,
+      "brier": 0.22215181390406802,
+      "crps_runs": 37.34601165777095,
+      "explained_share": 0.07675391660519548,
+      "inside_50": 0.4603825136612022,
+      "inside_80": 0.7622950819672131,
+      "outer_pit_share": 0.23770491803278687,
+      "elo_log_loss": 0.6498100524999458,
+      "elo_brier": 0.2260640052841519,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "ODI",
+      "method": "scaled_shifted",
+      "plays": 300,
+      "matches": 732,
+      "log_loss": 0.6429826407516829,
+      "brier": 0.22215181390406802,
+      "crps_runs": 37.49127567933081,
+      "explained_share": 0.07078688455731053,
+      "inside_50": 0.4521857923497268,
+      "inside_80": 0.76775956284153,
+      "outer_pit_share": 0.23224043715846995,
+      "elo_log_loss": 0.6498100524999458,
+      "elo_brier": 0.2260640052841519,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "ODI",
+      "method": "conformal",
+      "plays": 300,
+      "matches": 732,
+      "log_loss": 0.6429826407516829,
+      "brier": 0.22215181390406802,
+      "crps_runs": 37.00262744383728,
+      "explained_share": 0.09048575499988021,
+      "inside_50": 0.47950819672131145,
+      "inside_80": 0.7718579234972678,
+      "outer_pit_share": 0.22814207650273224,
+      "elo_log_loss": 0.6498100524999458,
+      "elo_brier": 0.2260640052841519,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "T20 pooled",
+      "method": "raw",
+      "matches": 3642,
+      "log_loss": 0.6907246419827349,
+      "brier": 0.24531161921677647,
+      "crps_runs": 18.427729666048876,
+      "explained_share": 0.034429655805004566,
+      "inside_50": 0.4956068094453597,
+      "inside_80": 0.78500823723229,
+      "outer_pit_share": 0.21499176276771004,
+      "elo_log_loss": 0.6853595390625625,
+      "elo_brier": 0.24264642214366097,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "T20 pooled",
+      "method": "scaled",
+      "matches": 3642,
+      "log_loss": 0.6907246419827349,
+      "brier": 0.24531161921677647,
+      "crps_runs": 18.435304870098474,
+      "explained_share": 0.034429655805004566,
+      "inside_50": 0.514277869302581,
+      "inside_80": 0.799835255354201,
+      "outer_pit_share": 0.200164744645799,
+      "elo_log_loss": 0.6853595390625625,
+      "elo_brier": 0.24264642214366097,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "T20 pooled",
+      "method": "scaled_shifted",
+      "matches": 3642,
+      "log_loss": 0.6907246419827349,
+      "brier": 0.24531161921677647,
+      "crps_runs": 18.454885091155667,
+      "explained_share": 0.03234926919910719,
+      "inside_50": 0.5090609555189456,
+      "inside_80": 0.7948929159802306,
+      "outer_pit_share": 0.20510708401976935,
+      "elo_log_loss": 0.6853595390625625,
+      "elo_brier": 0.24264642214366097,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "T20 pooled",
+      "method": "conformal",
+      "matches": 3642,
+      "log_loss": 0.6907246419827349,
+      "brier": 0.24531161921677647,
+      "crps_runs": 18.45734316652938,
+      "explained_share": 0.031038089233762056,
+      "inside_50": 0.5010982976386601,
+      "inside_80": 0.8023064250411862,
+      "outer_pit_share": 0.19769357495881384,
+      "elo_log_loss": 0.6853595390625625,
+      "elo_brier": 0.24264642214366097,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "T20 pooled",
+      "method": "raw",
+      "matches": 3642,
+      "log_loss": 0.6815306204245285,
+      "brier": 0.24085934711353651,
+      "crps_runs": 17.869629729544208,
+      "explained_share": 0.0928032322882063,
+      "inside_50": 0.5098846787479407,
+      "inside_80": 0.800658978583196,
+      "outer_pit_share": 0.19934102141680396,
+      "elo_log_loss": 0.6853595390625625,
+      "elo_brier": 0.24264642214366097,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "T20 pooled",
+      "method": "scaled",
+      "matches": 3642,
+      "log_loss": 0.6815306204245285,
+      "brier": 0.24085934711353651,
+      "crps_runs": 17.876763553686487,
+      "explained_share": 0.0928032322882063,
+      "inside_50": 0.514003294892916,
+      "inside_80": 0.8058758923668314,
+      "outer_pit_share": 0.1941241076331686,
+      "elo_log_loss": 0.6853595390625625,
+      "elo_brier": 0.24264642214366097,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "T20 pooled",
+      "method": "scaled_shifted",
+      "matches": 3642,
+      "log_loss": 0.6815306204245285,
+      "brier": 0.24085934711353651,
+      "crps_runs": 17.8783284326991,
+      "explained_share": 0.09233809971298623,
+      "inside_50": 0.5118066996155958,
+      "inside_80": 0.8025809994508512,
+      "outer_pit_share": 0.19741900054914882,
+      "elo_log_loss": 0.6853595390625625,
+      "elo_brier": 0.24264642214366097,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "T20 pooled",
+      "method": "conformal",
+      "matches": 3642,
+      "log_loss": 0.6815306204245285,
+      "brier": 0.24085934711353651,
+      "crps_runs": 17.885853090678197,
+      "explained_share": 0.092114817773716,
+      "inside_50": 0.5065897858319605,
+      "inside_80": 0.8050521691378364,
+      "outer_pit_share": 0.19494783086216363,
+      "elo_log_loss": 0.6853595390625625,
+      "elo_brier": 0.24264642214366097,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "T20I",
+      "method": "final",
+      "matches": 576,
+      "log_loss": 0.6476289129100503,
+      "brier": 0.22358197428385415,
+      "crps_runs": 18.706238530815977,
+      "explained_share": 0.12335420873365421,
+      "inside_50": 0.484375,
+      "inside_80": 0.7934027777777778,
+      "outer_pit_share": 0.2065972222222222,
+      "elo_log_loss": 0.6508288119401655,
+      "elo_brier": 0.22524931725816108,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "league",
+      "method": "final",
+      "matches": 3066,
+      "log_loss": 0.6988209041959985,
+      "brier": 0.2493939008480104,
+      "crps_runs": 18.375407061317677,
+      "explained_share": 0.014691221313224201,
+      "inside_50": 0.4977168949771689,
+      "inside_80": 0.7834311806914547,
+      "outer_pit_share": 0.21656881930854532,
+      "elo_log_loss": 0.6918467206745981,
+      "elo_brier": 0.24591476278751226,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "ODI",
+      "method": "final",
+      "matches": 732,
+      "log_loss": 0.6377052155547913,
+      "brier": 0.2197542805100182,
+      "crps_runs": 37.20235391781521,
+      "explained_share": 0.08545704106716823,
+      "inside_50": 0.4931693989071038,
+      "inside_80": 0.7718579234972678,
+      "outer_pit_share": 0.22814207650273224,
+      "elo_log_loss": 0.6498100524999458,
+      "elo_brier": 0.2260640052841519,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "combined",
+      "format": "T20 pooled",
+      "method": "final",
+      "matches": 3642,
+      "log_loss": 0.6907246419827349,
+      "brier": 0.24531161921677647,
+      "crps_runs": 18.427729666048876,
+      "explained_share": 0.034429655805004566,
+      "inside_50": 0.4956068094453597,
+      "inside_80": 0.78500823723229,
+      "outer_pit_share": 0.21499176276771004,
+      "elo_log_loss": 0.6853595390625625,
+      "elo_brier": 0.24264642214366097,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "T20I",
+      "method": "final",
+      "matches": 576,
+      "log_loss": 0.6511701655211266,
+      "brier": 0.2246939425998264,
+      "crps_runs": 18.12614392361111,
+      "explained_share": 0.18165709068692137,
+      "inside_50": 0.5260416666666666,
+      "inside_80": 0.8003472222222222,
+      "outer_pit_share": 0.1996527777777778,
+      "elo_log_loss": 0.6508288119401655,
+      "elo_brier": 0.22524931725816108,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "league",
+      "method": "final",
+      "matches": 3066,
+      "log_loss": 0.687234345807555,
+      "brier": 0.2438962919928245,
+      "crps_runs": 17.821439196020876,
+      "explained_share": 0.07308048974316139,
+      "inside_50": 0.5068493150684932,
+      "inside_80": 0.8007175472928898,
+      "outer_pit_share": 0.19928245270711023,
+      "elo_log_loss": 0.6918467206745981,
+      "elo_brier": 0.24591476278751226,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "ODI",
+      "method": "final",
+      "matches": 732,
+      "log_loss": 0.6429826407516829,
+      "brier": 0.22215181390406802,
+      "crps_runs": 37.34601165777095,
+      "explained_share": 0.07675391660519548,
+      "inside_50": 0.4603825136612022,
+      "inside_80": 0.7622950819672131,
+      "outer_pit_share": 0.23770491803278687,
+      "elo_log_loss": 0.6498100524999458,
+      "elo_brier": 0.2260640052841519,
+      "clipped_share": 0.0
+    },
+    {
+      "variant": "ratings",
+      "format": "T20 pooled",
+      "method": "final",
+      "matches": 3642,
+      "log_loss": 0.6815306204245285,
+      "brier": 0.24085934711353651,
+      "crps_runs": 17.869629729544208,
+      "explained_share": 0.0928032322882063,
+      "inside_50": 0.5098846787479407,
+      "inside_80": 0.800658978583196,
+      "outer_pit_share": 0.19934102141680396,
+      "elo_log_loss": 0.6853595390625625,
+      "elo_brier": 0.24264642214366097,
+      "clipped_share": 0.0
+    }
+  ],
+  "gains": [
+    {
+      "comparison": "combined final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "log_loss",
+      "a": 0.6476289129100503,
+      "b": 0.6476289129100503,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.0027953890415151955,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "brier",
+      "a": 0.22358197428385415,
+      "b": 0.22358197428385415,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.0012745401462034463,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "crps_runs",
+      "a": 18.706238530815977,
+      "b": 18.706238530815977,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.05581415777020651,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "explained_share",
+      "a": 0.12335420873365421,
+      "b": 0.12335420873365421,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.004804897948639396,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_50",
+      "a": 0.484375,
+      "b": 0.484375,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.007492481120500029,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_80",
+      "a": 0.7934027777777778,
+      "b": 0.7934027777777778,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.005031728036871342,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "outer_pit_share",
+      "a": 0.2065972222222222,
+      "b": 0.2065972222222222,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.0050317280368713324,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "log_loss",
+      "a": 0.6988209041959985,
+      "b": 0.6988209041959985,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.0018175993996005315,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "brier",
+      "a": 0.2493939008480104,
+      "b": 0.2493939008480104,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.0008689570703182016,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "crps_runs",
+      "a": 18.375407061317677,
+      "b": 18.375407061317677,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.03940532293863661,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "explained_share",
+      "a": 0.014691221313224201,
+      "b": 0.014691221313224201,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.004059567542134938,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_50",
+      "a": 0.4977168949771689,
+      "b": 0.4977168949771689,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.0036332214281767816,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_80",
+      "a": 0.7834311806914547,
+      "b": 0.7834311806914547,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.0035751127018483642,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "outer_pit_share",
+      "a": 0.21656881930854532,
+      "b": 0.21656881930854532,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.003575112701848358,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "log_loss",
+      "a": 0.6377052155547913,
+      "b": 0.6377052155547913,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.0031487751055340324,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "brier",
+      "a": 0.2197542805100182,
+      "b": 0.2197542805100182,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        0.0
+      ],
+      "mc_noise": 0.0012458350326843809,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "crps_runs",
+      "a": 37.49576706132362,
+      "b": 37.20235391781521,
+      "gain": -0.29341314350840975,
+      "band": [
+        -0.43589932879127424,
+        -0.14420009735844203
+      ],
+      "mc_noise": 0.1136741246406234,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "explained_share",
+      "a": 0.08545704106716823,
+      "b": 0.08545704106716823,
+      "gain": 0.0,
+      "band": [
+        -1.1102230246251565e-16,
+        1.1102230246251565e-16
+      ],
+      "mc_noise": 0.004601735320117237,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_50",
+      "a": 0.42349726775956287,
+      "b": 0.4931693989071038,
+      "gain": 0.06967213114754095,
+      "band": [
+        0.05464480874316935,
+        0.08606557377049179
+      ],
+      "mc_noise": 0.007032534249308051,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_80",
+      "a": 0.7062841530054644,
+      "b": 0.7718579234972678,
+      "gain": 0.06557377049180335,
+      "band": [
+        0.050546448087431695,
+        0.08196721311475408
+      ],
+      "mc_noise": 0.006787775585502655,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "combined final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "outer_pit_share",
+      "a": 0.2937158469945355,
+      "b": 0.22814207650273224,
+      "gain": -0.06557377049180327,
+      "band": [
+        -0.0819672131147541,
+        -0.050546448087431695
+      ],
+      "mc_noise": 0.006787775585502667,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "log_loss",
+      "a": 0.6476289129100503,
+      "b": 0.6511701655211266,
+      "gain": 0.0035412526110762954,
+      "band": [
+        -0.012528927196239265,
+        0.019265579140761567
+      ],
+      "mc_noise": 0.002552488271103197,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "brier",
+      "a": 0.22358197428385415,
+      "b": 0.2246939425998264,
+      "gain": 0.0011119683159722393,
+      "band": [
+        -0.006046959499782975,
+        0.008040604654947894
+      ],
+      "mc_noise": 0.0010939251281903146,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "crps_runs",
+      "a": 18.706238530815977,
+      "b": 18.12614392361111,
+      "gain": -0.5800946072048667,
+      "band": [
+        -0.9945713650173585,
+        -0.21851067437065433
+      ],
+      "mc_noise": 0.06414736507677529,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "explained_share",
+      "a": 0.12335420873365421,
+      "b": 0.18165709068692137,
+      "gain": 0.05830288195326716,
+      "band": [
+        0.02283278425778512,
+        0.09565483477689639
+      ],
+      "mc_noise": 0.005432229776269909,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_50",
+      "a": 0.484375,
+      "b": 0.5260416666666666,
+      "gain": 0.04166666666666663,
+      "band": [
+        0.015625,
+        0.07118055555555558
+      ],
+      "mc_noise": 0.011837108059757007,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_80",
+      "a": 0.7934027777777778,
+      "b": 0.8003472222222222,
+      "gain": 0.00694444444444442,
+      "band": [
+        -0.01215277777777779,
+        0.026128472222222213
+      ],
+      "mc_noise": 0.0063135751895722955,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "outer_pit_share",
+      "a": 0.2065972222222222,
+      "b": 0.1996527777777778,
+      "gain": -0.00694444444444442,
+      "band": [
+        -0.026128472222222233,
+        0.01215277777777779
+      ],
+      "mc_noise": 0.006313575189572285,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "log_loss",
+      "a": 0.6988209041959985,
+      "b": 0.687234345807555,
+      "gain": -0.011586558388443469,
+      "band": [
+        -0.017662343354443926,
+        -0.0058157428980178585
+      ],
+      "mc_noise": 0.0017836609339072554,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "brier",
+      "a": 0.2493939008480104,
+      "b": 0.2438962919928245,
+      "gain": -0.005497608855185909,
+      "band": [
+        -0.008425653029191132,
+        -0.0027289858529028366
+      ],
+      "mc_noise": 0.0008507394498494939,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "crps_runs",
+      "a": 18.375407061317677,
+      "b": 17.821439196020876,
+      "gain": -0.5539678652968014,
+      "band": [
+        -0.695566816291589,
+        -0.413470870026092
+      ],
+      "mc_noise": 0.027822688218443737,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "explained_share",
+      "a": 0.014691221313224201,
+      "b": 0.07308048974316139,
+      "gain": 0.05838926842993719,
+      "band": [
+        0.043984773158814175,
+        0.0720268732046015
+      ],
+      "mc_noise": 0.0025771837355454213,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_50",
+      "a": 0.4977168949771689,
+      "b": 0.5068493150684932,
+      "gain": 0.009132420091324256,
+      "band": [
+        -0.00229941291585135,
+        0.020564253098499737
+      ],
+      "mc_noise": 0.00435896893653266,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_80",
+      "a": 0.7834311806914547,
+      "b": 0.8007175472928898,
+      "gain": 0.01728636660143512,
+      "band": [
+        0.008806262230919737,
+        0.027071102413568138
+      ],
+      "mc_noise": 0.0025105682189074945,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "outer_pit_share",
+      "a": 0.21656881930854532,
+      "b": 0.19928245270711023,
+      "gain": -0.017286366601435094,
+      "band": [
+        -0.027071102413568165,
+        -0.008806262230919765
+      ],
+      "mc_noise": 0.0025105682189074776,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "log_loss",
+      "a": 0.6377052155547913,
+      "b": 0.6429826407516829,
+      "gain": 0.005277425196891561,
+      "band": [
+        -0.012126513985979541,
+        0.023321246819502185
+      ],
+      "mc_noise": 0.0025687899121459175,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "brier",
+      "a": 0.2197542805100182,
+      "b": 0.22215181390406802,
+      "gain": 0.002397533394049828,
+      "band": [
+        -0.005048145491803283,
+        0.01016818590619308
+      ],
+      "mc_noise": 0.0009490799234952654,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "crps_runs",
+      "a": 37.49576706132362,
+      "b": 37.34601165777095,
+      "gain": -0.1497554035526676,
+      "band": [
+        -1.0113723163552446,
+        0.7201499535651138
+      ],
+      "mc_noise": 0.0866427514644931,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "explained_share",
+      "a": 0.08545704106716823,
+      "b": 0.07675391660519548,
+      "gain": -0.008703124461972744,
+      "band": [
+        -0.04683815000258828,
+        0.03197108924024968
+      ],
+      "mc_noise": 0.003324509683061446,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_50",
+      "a": 0.42349726775956287,
+      "b": 0.4603825136612022,
+      "gain": 0.03688524590163933,
+      "band": [
+        0.009562841530054655,
+        0.061475409836065587
+      ],
+      "mc_noise": 0.004858857716879436,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_80",
+      "a": 0.7062841530054644,
+      "b": 0.7622950819672131,
+      "gain": 0.05601092896174864,
+      "band": [
+        0.031420765027322495,
+        0.0792349726775956
+      ],
+      "mc_noise": 0.005003153026565557,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings final vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "outer_pit_share",
+      "a": 0.2937158469945355,
+      "b": 0.23770491803278687,
+      "gain": -0.05601092896174864,
+      "band": [
+        -0.07923497267759563,
+        -0.03142076502732241
+      ],
+      "mc_noise": 0.005003153026565574,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "log_loss",
+      "a": 0.6476289129100503,
+      "b": 0.6511701655211266,
+      "gain": 0.0035412526110762954,
+      "band": [
+        -0.013107566392853225,
+        0.02059853499012079
+      ],
+      "mc_noise": 0.0030997292517096044,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "brier",
+      "a": 0.22358197428385415,
+      "b": 0.2246939425998264,
+      "gain": 0.0011119683159722393,
+      "band": [
+        -0.0063932463921441045,
+        0.008962743598090296
+      ],
+      "mc_noise": 0.001334788531564837,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "crps_runs",
+      "a": 18.706238530815977,
+      "b": 18.12614392361111,
+      "gain": -0.5800946072048667,
+      "band": [
+        -0.9504505908203097,
+        -0.17223096679687322
+      ],
+      "mc_noise": 0.06006424913940051,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "explained_share",
+      "a": 0.12335420873365421,
+      "b": 0.18165709068692137,
+      "gain": 0.05830288195326716,
+      "band": [
+        0.019666998215730303,
+        0.09475167102612835
+      ],
+      "mc_noise": 0.004514963909352132,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_50",
+      "a": 0.484375,
+      "b": 0.5260416666666666,
+      "gain": 0.04166666666666663,
+      "band": [
+        0.015625,
+        0.06779513888888884
+      ],
+      "mc_noise": 0.008762632800899225,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_80",
+      "a": 0.7934027777777778,
+      "b": 0.8003472222222222,
+      "gain": 0.00694444444444442,
+      "band": [
+        -0.01215277777777779,
+        0.02604166666666674
+      ],
+      "mc_noise": 0.007280807886752438,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "T20I",
+      "matches": 576,
+      "score": "outer_pit_share",
+      "a": 0.2065972222222222,
+      "b": 0.1996527777777778,
+      "gain": -0.00694444444444442,
+      "band": [
+        -0.026041666666666685,
+        0.01215277777777779
+      ],
+      "mc_noise": 0.007280807886752423,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "log_loss",
+      "a": 0.6988209041959985,
+      "b": 0.687234345807555,
+      "gain": -0.011586558388443469,
+      "band": [
+        -0.01765063053817368,
+        -0.005660899276844135
+      ],
+      "mc_noise": 0.0017093880017126895,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "brier",
+      "a": 0.2493939008480104,
+      "b": 0.2438962919928245,
+      "gain": -0.005497608855185909,
+      "band": [
+        -0.008398856816699237,
+        -0.0026374389473255437
+      ],
+      "mc_noise": 0.0008350135881596139,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "crps_runs",
+      "a": 18.375407061317677,
+      "b": 17.821439196020876,
+      "gain": -0.5539678652968014,
+      "band": [
+        -0.7091358912263542,
+        -0.40352765737116864
+      ],
+      "mc_noise": 0.03707689897175039,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "explained_share",
+      "a": 0.014691221313224201,
+      "b": 0.07308048974316139,
+      "gain": 0.05838926842993719,
+      "band": [
+        0.043675398047826886,
+        0.07278188461316701
+      ],
+      "mc_noise": 0.003260931505438384,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_50",
+      "a": 0.4977168949771689,
+      "b": 0.5068493150684932,
+      "gain": 0.009132420091324256,
+      "band": [
+        -0.0016470971950424287,
+        0.02054794520547948
+      ],
+      "mc_noise": 0.004384518899999676,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_80",
+      "a": 0.7834311806914547,
+      "b": 0.8007175472928898,
+      "gain": 0.01728636660143512,
+      "band": [
+        0.00878995433789952,
+        0.02609262883235486
+      ],
+      "mc_noise": 0.003931690623366331,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "league",
+      "matches": 3066,
+      "score": "outer_pit_share",
+      "a": 0.21656881930854532,
+      "b": 0.19928245270711023,
+      "gain": -0.017286366601435094,
+      "band": [
+        -0.02609262883235486,
+        -0.008789954337899558
+      ],
+      "mc_noise": 0.003931690623366338,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "log_loss",
+      "a": 0.6377052155547913,
+      "b": 0.6429826407516829,
+      "gain": 0.005277425196891561,
+      "band": [
+        -0.011568142527505465,
+        0.02347185895067164
+      ],
+      "mc_noise": 0.004018623508877257,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "brier",
+      "a": 0.2197542805100182,
+      "b": 0.22215181390406802,
+      "gain": 0.002397533394049828,
+      "band": [
+        -0.005094035746812377,
+        0.010297310830297488
+      ],
+      "mc_noise": 0.0016286349327501698,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "crps_runs",
+      "a": 37.49576706132362,
+      "b": 37.57602053734062,
+      "gain": 0.08025347601699906,
+      "band": [
+        -0.8287454303278651,
+        1.0080808265027255
+      ],
+      "mc_noise": 0.10032760730483553,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "explained_share",
+      "a": 0.08545704106716823,
+      "b": 0.07675391660519548,
+      "gain": -0.008703124461972744,
+      "band": [
+        -0.04808373843423111,
+        0.032230281398529854
+      ],
+      "mc_noise": 0.003782203655654194,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_50",
+      "a": 0.42349726775956287,
+      "b": 0.412568306010929,
+      "gain": -0.010928961748633892,
+      "band": [
+        -0.038251366120218566,
+        0.016393442622950786
+      ],
+      "mc_noise": 0.0069373489386016915,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_80",
+      "a": 0.7062841530054644,
+      "b": 0.7226775956284153,
+      "gain": 0.016393442622950838,
+      "band": [
+        -0.004166666666666714,
+        0.040983606557376984
+      ],
+      "mc_noise": 0.0036273000129376275,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "ratings vs combined",
+      "format": "ODI",
+      "matches": 732,
+      "score": "outer_pit_share",
+      "a": 0.2937158469945355,
+      "b": 0.2773224043715847,
+      "gain": -0.016393442622950838,
+      "band": [
+        -0.04098360655737704,
+        0.004166666666666609
+      ],
+      "mc_noise": 0.003627300012937641,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "combined sim vs Elo alone",
+      "format": "T20I",
+      "matches": 576,
+      "score": "log_loss",
+      "a": 0.6508288119401655,
+      "b": 0.6476289129100503,
+      "gain": -0.0031998990301150576,
+      "band": [
+        -0.018271075187123682,
+        0.012130761305326027
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined sim vs Elo alone",
+      "format": "T20I",
+      "matches": 576,
+      "score": "brier",
+      "a": 0.22524931725816108,
+      "b": 0.22358197428385415,
+      "gain": -0.0016673429743069125,
+      "band": [
+        -0.008108436712151012,
+        0.004789314835376079
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined sim vs Elo alone",
+      "format": "league",
+      "matches": 3066,
+      "score": "log_loss",
+      "a": 0.6918467206745981,
+      "b": 0.6988209041959985,
+      "gain": 0.0069741835214005244,
+      "band": [
+        0.0013712446991124263,
+        0.012797208614491499
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined sim vs Elo alone",
+      "format": "league",
+      "matches": 3066,
+      "score": "brier",
+      "a": 0.24591476278751226,
+      "b": 0.2493939008480104,
+      "gain": 0.0034791380604981747,
+      "band": [
+        0.0009015177041726574,
+        0.006181508614970045
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined sim vs Elo alone",
+      "format": "ODI",
+      "matches": 732,
+      "score": "log_loss",
+      "a": 0.6498100524999458,
+      "b": 0.6377052155547913,
+      "gain": -0.01210483694515456,
+      "band": [
+        -0.030465700261693953,
+        0.004937961084279605
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "combined sim vs Elo alone",
+      "format": "ODI",
+      "matches": 732,
+      "score": "brier",
+      "a": 0.2260640052841519,
+      "b": 0.2197542805100182,
+      "gain": -0.006309724774133678,
+      "band": [
+        -0.01359550659921156,
+        0.0006745492970040121
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings sim vs Elo alone",
+      "format": "T20I",
+      "matches": 576,
+      "score": "log_loss",
+      "a": 0.6508288119401655,
+      "b": 0.6511701655211266,
+      "gain": 0.0003413535809611367,
+      "band": [
+        -0.017974644779677966,
+        0.017758323087851607
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings sim vs Elo alone",
+      "format": "T20I",
+      "matches": 576,
+      "score": "brier",
+      "a": 0.22524931725816108,
+      "b": 0.2246939425998264,
+      "gain": -0.0005553746583346887,
+      "band": [
+        -0.00825657666581517,
+        0.007686351947143536
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings sim vs Elo alone",
+      "format": "league",
+      "matches": 3066,
+      "score": "log_loss",
+      "a": 0.6918467206745981,
+      "b": 0.687234345807555,
+      "gain": -0.0046123748670429485,
+      "band": [
+        -0.01102398782251371,
+        0.0017031959250907718
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings sim vs Elo alone",
+      "format": "league",
+      "matches": 3066,
+      "score": "brier",
+      "a": 0.24591476278751226,
+      "b": 0.2438962919928245,
+      "gain": -0.002018470794687734,
+      "band": [
+        -0.005082530915790668,
+        0.0009816790515404655
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings sim vs Elo alone",
+      "format": "ODI",
+      "matches": 732,
+      "score": "log_loss",
+      "a": 0.6498100524999458,
+      "b": 0.6429826407516829,
+      "gain": -0.006827411748263015,
+      "band": [
+        -0.020657156983433754,
+        0.010072834497015286
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "ratings sim vs Elo alone",
+      "format": "ODI",
+      "matches": 732,
+      "score": "brier",
+      "a": 0.2260640052841519,
+      "b": 0.22215181390406802,
+      "gain": -0.003912191380083888,
+      "band": [
+        -0.01057542695851466,
+        0.0028086061738878143
+      ],
+      "lower_is_better": true
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "crps_runs",
+      "a": 18.706238530815977,
+      "b": 18.75413715745712,
+      "gain": 0.04789862664114253,
+      "band": [
+        -0.010121204478576295,
+        0.11003848077900481
+      ],
+      "mc_noise": 0.055565870417191666,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "explained_share",
+      "a": 0.12335420873365421,
+      "b": 0.12335420873365421,
+      "gain": 0.0,
+      "band": [
+        0.0,
+        1.1102230246251565e-16
+      ],
+      "mc_noise": 0.004554826525932008,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_50",
+      "a": 0.484375,
+      "b": 0.5434027777777778,
+      "gain": 0.05902777777777779,
+      "band": [
+        0.045138888888888895,
+        0.07465277777777779
+      ],
+      "mc_noise": 0.007398868867138897,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_80",
+      "a": 0.7934027777777778,
+      "b": 0.8402777777777778,
+      "gain": 0.046875,
+      "band": [
+        0.03298611111111105,
+        0.0625
+      ],
+      "mc_noise": 0.005754756612488613,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "outer_pit_share",
+      "a": 0.2065972222222222,
+      "b": 0.1597222222222222,
+      "gain": -0.046875,
+      "band": [
+        -0.0625,
+        -0.032986111111111105
+      ],
+      "mc_noise": 0.005754756612488623,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "crps_runs",
+      "a": 18.706238530815977,
+      "b": 18.87800614603624,
+      "gain": 0.1717676152202614,
+      "band": [
+        0.07872742205740035,
+        0.26125867007330733
+      ],
+      "mc_noise": 0.05903968327801345,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "explained_share",
+      "a": 0.12335420873365421,
+      "b": 0.11189116973020719,
+      "gain": -0.011463039003447029,
+      "band": [
+        -0.018157604311026206,
+        -0.005055597636017134
+      ],
+      "mc_noise": 0.005810534307101554,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_50",
+      "a": 0.484375,
+      "b": 0.5416666666666666,
+      "gain": 0.05729166666666663,
+      "band": [
+        0.041666666666666685,
+        0.07465277777777773
+      ],
+      "mc_noise": 0.00703339302047037,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_80",
+      "a": 0.7934027777777778,
+      "b": 0.8333333333333334,
+      "gain": 0.03993055555555558,
+      "band": [
+        0.02777777777777779,
+        0.05381944444444442
+      ],
+      "mc_noise": 0.00634334232862677,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "outer_pit_share",
+      "a": 0.2065972222222222,
+      "b": 0.16666666666666666,
+      "gain": -0.03993055555555555,
+      "band": [
+        -0.05381944444444445,
+        -0.027777777777777762
+      ],
+      "mc_noise": 0.0063433423286267734,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "crps_runs",
+      "a": 18.706238530815977,
+      "b": 18.929171419270833,
+      "gain": 0.22293288845485648,
+      "band": [
+        0.13048395019531292,
+        0.3214145393880223
+      ],
+      "mc_noise": 0.058094874000047765,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "explained_share",
+      "a": 0.12335420873365421,
+      "b": 0.10910831023754186,
+      "gain": -0.014245898496112352,
+      "band": [
+        -0.021785199576413283,
+        -0.007488390431807746
+      ],
+      "mc_noise": 0.004143343133886646,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_50",
+      "a": 0.484375,
+      "b": 0.5520833333333334,
+      "gain": 0.06770833333333337,
+      "band": [
+        0.05034722222222221,
+        0.08506944444444442
+      ],
+      "mc_noise": 0.017735757971447375,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "inside_80",
+      "a": 0.7934027777777778,
+      "b": 0.8246527777777778,
+      "gain": 0.03125,
+      "band": [
+        0.01909722222222221,
+        0.04340277777777779
+      ],
+      "mc_noise": 0.014271530295227368,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "T20I",
+      "matches": 576,
+      "score": "outer_pit_share",
+      "a": 0.2065972222222222,
+      "b": 0.1753472222222222,
+      "gain": -0.03125,
+      "band": [
+        -0.04340277777777779,
+        -0.019097222222222238
+      ],
+      "mc_noise": 0.014271530295227368,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "crps_runs",
+      "a": 18.375407061317677,
+      "b": 18.37540682785497,
+      "gain": -2.3346270694446503e-07,
+      "band": [
+        -5.759342499800368e-07,
+        1.1438205635982963e-07
+      ],
+      "mc_noise": 0.03385513139771942,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "explained_share",
+      "a": 0.014691221313224201,
+      "b": 0.014691221313224201,
+      "gain": 0.0,
+      "band": [
+        -1.1102230246251565e-16,
+        1.1102230246251565e-16
+      ],
+      "mc_noise": 0.003581263720739408,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_50",
+      "a": 0.4977168949771689,
+      "b": 0.5088062622309197,
+      "gain": 0.011089367253750815,
+      "band": [
+        0.007827788649706457,
+        0.014350945857795228
+      ],
+      "mc_noise": 0.004207784033737992,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_80",
+      "a": 0.7834311806914547,
+      "b": 0.7922374429223744,
+      "gain": 0.008806262230919737,
+      "band": [
+        0.006180691454664034,
+        0.011741682974559686
+      ],
+      "mc_noise": 0.002489024727681687,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "outer_pit_share",
+      "a": 0.21656881930854532,
+      "b": 0.20776255707762556,
+      "gain": -0.008806262230919765,
+      "band": [
+        -0.011741682974559686,
+        -0.006180691454664072
+      ],
+      "mc_noise": 0.0024890247276816817,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "crps_runs",
+      "a": 18.375407061317677,
+      "b": 18.375394638575365,
+      "gain": -1.2422742312168111e-05,
+      "band": [
+        -6.206251646005967e-05,
+        4.2295412854720375e-05
+      ],
+      "mc_noise": 0.03619313670796708,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "explained_share",
+      "a": 0.014691221313224201,
+      "b": 0.014693486389104504,
+      "gain": 2.2650758803033355e-06,
+      "band": [
+        6.144141283637162e-07,
+        3.841814622412841e-06
+      ],
+      "mc_noise": 0.0033977059026836583,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_50",
+      "a": 0.4977168949771689,
+      "b": 0.50293542074364,
+      "gain": 0.005218525766471027,
+      "band": [
+        0.002609262883235486,
+        0.008153946510110921
+      ],
+      "mc_noise": 0.0040070653539809546,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_80",
+      "a": 0.7834311806914547,
+      "b": 0.7876712328767124,
+      "gain": 0.004240052185257692,
+      "band": [
+        0.0019569471624266642,
+        0.006523157208088715
+      ],
+      "mc_noise": 0.0029367794202892184,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "outer_pit_share",
+      "a": 0.21656881930854532,
+      "b": 0.21232876712328766,
+      "gain": -0.0042400521852576645,
+      "band": [
+        -0.006523157208088715,
+        -0.0019569471624266144
+      ],
+      "mc_noise": 0.0029367794202892258,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "crps_runs",
+      "a": 18.375407061317677,
+      "b": 18.36870224233529,
+      "gain": -0.006704818982388616,
+      "band": [
+        -0.036341580234832804,
+        0.02278703604044647
+      ],
+      "mc_noise": 0.027737919828516935,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "explained_share",
+      "a": 0.014691221313224201,
+      "b": 0.013708972670439357,
+      "gain": -0.0009822486427848443,
+      "band": [
+        -0.003918615998262776,
+        0.0019722977711462528
+      ],
+      "mc_noise": 0.0029010643054257707,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_50",
+      "a": 0.4977168949771689,
+      "b": 0.49151989562948467,
+      "gain": -0.006196999347684251,
+      "band": [
+        -0.010437051532941947,
+        -0.002283105022831078
+      ],
+      "mc_noise": 0.03374384442155758,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "inside_80",
+      "a": 0.7834311806914547,
+      "b": 0.7981082844096543,
+      "gain": 0.014677103718199636,
+      "band": [
+        0.01108936725375076,
+        0.0182648401826484
+      ],
+      "mc_noise": 0.025860148479046986,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "league",
+      "matches": 3066,
+      "score": "outer_pit_share",
+      "a": 0.21656881930854532,
+      "b": 0.20189171559034572,
+      "gain": -0.014677103718199608,
+      "band": [
+        -0.0182648401826484,
+        -0.011089367253750815
+      ],
+      "mc_noise": 0.02586014847904699,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "crps_runs",
+      "a": 37.49576706132362,
+      "b": 37.20235391781521,
+      "gain": -0.29341314350840975,
+      "band": [
+        -0.44457956532411275,
+        -0.14227015219262082
+      ],
+      "mc_noise": 0.11836552645383029,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "explained_share",
+      "a": 0.08545704106716823,
+      "b": 0.08545704106716823,
+      "gain": 0.0,
+      "band": [
+        -1.1102230246251565e-16,
+        1.1102230246251565e-16
+      ],
+      "mc_noise": 0.004873038283310409,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_50",
+      "a": 0.42349726775956287,
+      "b": 0.4931693989071038,
+      "gain": 0.06967213114754095,
+      "band": [
+        0.054644808743169404,
+        0.08606557377049179
+      ],
+      "mc_noise": 0.006271518541605476,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_80",
+      "a": 0.7062841530054644,
+      "b": 0.7718579234972678,
+      "gain": 0.06557377049180335,
+      "band": [
+        0.050546448087431695,
+        0.08196721311475408
+      ],
+      "mc_noise": 0.004984467048950276,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "outer_pit_share",
+      "a": 0.2937158469945355,
+      "b": 0.22814207650273224,
+      "gain": -0.06557377049180327,
+      "band": [
+        -0.0819672131147541,
+        -0.050546448087431695
+      ],
+      "mc_noise": 0.004984467048950287,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "crps_runs",
+      "a": 37.49576706132362,
+      "b": 37.20284800014702,
+      "gain": -0.2929190611765975,
+      "band": [
+        -0.43236774196649963,
+        -0.15545773023746465
+      ],
+      "mc_noise": 0.11779781146947496,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "explained_share",
+      "a": 0.08545704106716823,
+      "b": 0.08546690850646121,
+      "gain": 9.867439292987612e-06,
+      "band": [
+        -1.655205528590664e-05,
+        3.6819661337156304e-05
+      ],
+      "mc_noise": 0.004482312213297899,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_50",
+      "a": 0.42349726775956287,
+      "b": 0.4931693989071038,
+      "gain": 0.06967213114754095,
+      "band": [
+        0.054644808743169404,
+        0.08469945355191255
+      ],
+      "mc_noise": 0.006498052455751511,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_80",
+      "a": 0.7062841530054644,
+      "b": 0.7718579234972678,
+      "gain": 0.06557377049180335,
+      "band": [
+        0.05047814207650274,
+        0.0806010928961749
+      ],
+      "mc_noise": 0.005797969358718848,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "scaled_shifted vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "outer_pit_share",
+      "a": 0.2937158469945355,
+      "b": 0.22814207650273224,
+      "gain": -0.06557377049180327,
+      "band": [
+        -0.08060109289617487,
+        -0.05047814207650277
+      ],
+      "mc_noise": 0.005797969358718859,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "crps_runs",
+      "a": 37.49576706132362,
+      "b": 37.22255312689739,
+      "gain": -0.27321393442623076,
+      "band": [
+        -0.467625324074081,
+        -0.06770393366727279
+      ],
+      "mc_noise": 0.07606223988058852,
+      "lower_is_better": true
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "explained_share",
+      "a": 0.08545704106716823,
+      "b": 0.08473478750200047,
+      "gain": -0.000722253565167752,
+      "band": [
+        -0.006082938531665583,
+        0.004512447342597641
+      ],
+      "mc_noise": 0.003154715087470884,
+      "lower_is_better": false
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_50",
+      "a": 0.42349726775956287,
+      "b": 0.47540983606557374,
+      "gain": 0.051912568306010876,
+      "band": [
+        0.038251366120218566,
+        0.06693989071038248
+      ],
+      "mc_noise": 0.021725177509341907,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "inside_80",
+      "a": 0.7062841530054644,
+      "b": 0.7718579234972678,
+      "gain": 0.06557377049180335,
+      "band": [
+        0.051912568306010876,
+        0.0806010928961749
+      ],
+      "mc_noise": 0.022974084779838987,
+      "lower_is_better": null
+    },
+    {
+      "comparison": "conformal vs raw (combined)",
+      "format": "ODI",
+      "matches": 732,
+      "score": "outer_pit_share",
+      "a": 0.2937158469945355,
+      "b": 0.22814207650273224,
+      "gain": -0.06557377049180327,
+      "band": [
+        -0.08060109289617487,
+        -0.0519125683060109
+      ],
+      "mc_noise": 0.022974084779838987,
+      "lower_is_better": null
+    }
+  ]
+}

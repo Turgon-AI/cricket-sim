@@ -1,0 +1,23 @@
+{
+  "commit": "bdaea4d",
+  "build_fingerprint": "b8ec53879c7dc43e14acf24931273296ea099cd0ef3781b30e898c6c39c8d290",
+  "first_test_year": 2019,
+  "coverage": {
+    "ODI": {
+      "clean_matches": 2200,
+      "test_matches": 744,
+      "share_with_xi": 1.0,
+      "share_with_weather": 1.0,
+      "share_with_venue_history": 0.9489247311827957,
+      "share_with_home_team": 0.8373655913978495
+    },
+    "T20I": {
+      "clean_matches": 1030,
+      "test_matches": 577,
+      "share_with_xi": 1.0,
+      "share_with_weather": 1.0,
+      "share_with_venue_history": 0.9445407279029463,
+      "share_with_home_team": 0.9306759098786829
+    }
+  }
+}

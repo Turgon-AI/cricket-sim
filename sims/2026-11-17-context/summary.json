@@ -1,0 +1,120 @@
+{
+  "ODI": {
+    "half_life_years": null,
+    "elo_scale": 1.0,
+    "pitch_sd": 0.025,
+    "context_inputs": [
+      "venue_dev",
+      "bat_home",
+      "bowl_home",
+      "bat_rpb",
+      "bat_opb",
+      "bat_rpb_365",
+      "bowl_rpb",
+      "bowl_wpb",
+      "bowl_rpb_365"
+    ],
+    "before": "no context inputs, pitch sd 0.025",
+    "all": {
+      "before": {
+        "matches": 73,
+        "brier": 0.2681232397260274,
+        "crps_first_total": 39.75424319178082,
+        "inside_80pct_range": 0.7534246575342466,
+        "mean_bias_runs": 11.267123287671232
+      },
+      "after": {
+        "matches": 73,
+        "brier": 0.26042588698630137,
+        "crps_first_total": 37.317203479452054,
+        "inside_80pct_range": 0.7534246575342466,
+        "mean_bias_runs": 4.883561643835616
+      },
+      "brier_elo_only": 0.26181683337859546,
+      "brier_history_rate": 0.250319918614351
+    },
+    "full_members": {
+      "before": {
+        "matches": 38,
+        "brier": 0.2994665592105263,
+        "crps_first_total": 42.55471489473683,
+        "inside_80pct_range": 0.7105263157894737,
+        "mean_bias_runs": -5.197368421052632
+      },
+      "after": {
+        "matches": 38,
+        "brier": 0.2687174144736842,
+        "crps_first_total": 39.98364786842105,
+        "inside_80pct_range": 0.7368421052631579,
+        "mean_bias_runs": 8.789473684210526
+      },
+      "brier_elo_only": 0.2880662188722745,
+      "brier_history_rate": 0.24930757758352845
+    }
+  },
+  "T20I": {
+    "half_life_years": null,
+    "elo_scale": 1.0,
+    "pitch_sd": 0.025,
+    "context_inputs": [
+      "venue_dev",
+      "bat_home",
+      "bowl_home",
+      "bat_rpb",
+      "bat_opb",
+      "bat_rpb_365",
+      "bowl_rpb",
+      "bowl_wpb",
+      "bowl_rpb_365"
+    ],
+    "before": "no context inputs, pitch sd 0.025",
+    "all": {
+      "before": {
+        "matches": 73,
+        "brier": 0.22694409589041098,
+        "crps_first_total": 19.856799205479454,
+        "inside_80pct_range": 0.7945205479452054,
+        "mean_bias_runs": -8.767123287671232
+      },
+      "after": {
+        "matches": 73,
+        "brier": 0.21594863698630137,
+        "crps_first_total": 18.69505201369863,
+        "inside_80pct_range": 0.7397260273972602,
+        "mean_bias_runs": -8.952054794520548
+      },
+      "brier_elo_only": 0.22134961922763555,
+      "brier_history_rate": 0.2516716712188269
+    },
+    "full_members": {
+      "before": {
+        "matches": 73,
+        "brier": 0.22694409589041098,
+        "crps_first_total": 19.856799205479454,
+        "inside_80pct_range": 0.7945205479452054,
+        "mean_bias_runs": -8.767123287671232
+      },
+      "after": {
+        "matches": 73,
+        "brier": 0.21594863698630137,
+        "crps_first_total": 18.69505201369863,
+        "inside_80pct_range": 0.7397260273972602,
+        "mean_bias_runs": -8.952054794520548
+      },
+      "brier_elo_only": 0.22134961922763555,
+      "brier_history_rate": 0.2516716712188269
+    }
+  },
+  "run": {
+    "commit": "bdaea4d",
+    "build_fingerprint": "0240fb4ce447d1eb412313056600edf73c9897aafd3cc3b59c3008ad63d71dba",
+    "train_before": "2026-01-01",
+    "tuned_on": "2025-01-01 to 2026-01-01",
+    "train_years": 10,
+    "sims_per_match": 5000,
+    "backtest_sims_per_match": 1000,
+    "tune_sims_per_match": 500,
+    "seed": 20261016,
+    "full_members_only": true
+  }
+}

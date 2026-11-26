@@ -1,0 +1,164 @@
+{
+  "ODI": {
+    "half_life_years": null,
+    "elo_scale": 1.0,
+    "pitch_sd": 0.0,
+    "context_inputs": [
+      "venue_dev",
+      "bat_home",
+      "bowl_home",
+      "bat_rpb",
+      "bat_opb",
+      "bat_rpb_365",
+      "bowl_rpb",
+      "bowl_wpb",
+      "bowl_rpb_365",
+      "is_international"
+    ],
+    "in_play_inputs": [
+      "last6_runs",
+      "last6_boundaries",
+      "striker_balls"
+    ],
+    "totals_stretch": 1.253015853063173,
+    "stretch_fit": [
+      {
+        "segment": "ODI",
+        "from": "2023-01-01",
+        "to": "2024-01-01",
+        "matches": 168,
+        "scale_this_year_alone": 1.4437148938105118
+      },
+      {
+        "segment": "ODI",
+        "from": "2024-01-01",
+        "to": "2025-01-01",
+        "matches": 68,
+        "scale_this_year_alone": 1.1824095733886708
+      },
+      {
+        "segment": "ODI",
+        "from": "2025-01-01",
+        "to": "2026-01-01",
+        "matches": 94,
+        "scale_this_year_alone": 1.0453253484454894
+      }
+    ],
+    "before": "no context inputs, pitch sd 0.025",
+    "all": {
+      "before": {
+        "matches": 73,
+        "brier": 0.2667137089041096,
+        "crps_first_total": 40.088768767123284,
+        "inside_80pct_range": 0.7808219178082192,
+        "mean_bias_runs": 11.554794520547945
+      },
+      "after": {
+        "matches": 73,
+        "brier": 0.2592463253424658,
+        "crps_first_total": 37.234511124911705,
+        "inside_80pct_range": 0.821917808219178,
+        "mean_bias_runs": 6.96470630740785
+      },
+      "brier_elo_only": 0.26181683337859546,
+      "brier_history_rate": 0.250319918614351
+    },
+    "full_members": {
+      "before": {
+        "matches": 38,
+        "brier": 0.29722540131578945,
+        "crps_first_total": 42.75098242105263,
+        "inside_80pct_range": 0.7631578947368421,
+        "mean_bias_runs": -5.2631578947368425
+      },
+      "after": {
+        "matches": 38,
+        "brier": 0.2760733289473684,
+        "crps_first_total": 39.83848989803033,
+        "inside_80pct_range": 0.7894736842105263,
+        "mean_bias_runs": 11.770825388505164
+      },
+      "brier_elo_only": 0.2880662188722745,
+      "brier_history_rate": 0.24930757758352845
+    }
+  },
+  "T20I": {
+    "half_life_years": null,
+    "elo_scale": 1.0,
+    "pitch_sd": 0.025,
+    "context_inputs": [
+      "venue_dev",
+      "bat_home",
+      "bowl_home",
+      "bat_rpb",
+      "bat_opb",
+      "bat_rpb_365",
+      "bowl_rpb",
+      "bowl_wpb",
+      "bowl_rpb_365",
+      "is_international"
+    ],
+    "in_play_inputs": [
+      "last6_runs",
+      "last6_boundaries",
+      "striker_balls"
+    ],
+    "totals_stretch": 1.0,
+    "stretch_fit": [],
+    "before": "no context inputs, pitch sd 0.025",
+    "all": {
+      "before": {
+        "matches": 73,
+        "brier": 0.22298135616438358,
+        "crps_first_total": 19.670185643835616,
+        "inside_80pct_range": 0.8356164383561644,
+        "mean_bias_runs": -7.0
+      },
+      "after": {
+        "matches": 73,
+        "brier": 0.21541093150684934,
+        "crps_first_total": 18.544076205479453,
+        "inside_80pct_range": 0.8904109589041096,
+        "mean_bias_runs": -8.095890410958905
+      },
+      "brier_elo_only": 0.22134961922763555,
+      "brier_history_rate": 0.2516716712188269
+    },
+    "full_members": {
+      "before": {
+        "matches": 73,
+        "brier": 0.22298135616438358,
+        "crps_first_total": 19.670185643835616,
+        "inside_80pct_range": 0.8356164383561644,
+        "mean_bias_runs": -7.0
+      },
+      "after": {
+        "matches": 73,
+        "brier": 0.21541093150684934,
+        "crps_first_total": 18.544076205479453,
+        "inside_80pct_range": 0.8904109589041096,
+        "mean_bias_runs": -8.095890410958905
+      },
+      "brier_elo_only": 0.22134961922763555,
+      "brier_history_rate": 0.2516716712188269
+    }
+  },
+  "run": {
+    "commit": "3bb1947",
+    "build_fingerprint": "ca15e28ebb4af18d620ff6284fdb49d2371bc7875666463ea3924ec5cb80c419",
+    "train_before": "2026-01-01",
+    "tuned_on": "2025-01-01 to 2026-01-01",
+    "train_years": 10,
+    "sims_per_match": 5000,
+    "backtest_sims_per_match": 1000,
+    "tune_sims_per_match": 500,
+    "seed": 20261016,
+    "full_members_only": false,
+    "t20i_trained_on_leagues": true,
+    "in_play_inputs": true,
+    "stretch_formats": [
+      "ODI"
+    ],
+    "stretch_years": 3
+  }
+}
