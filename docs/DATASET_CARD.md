@@ -2,7 +2,7 @@
 
 Structured after *Datasheets for Datasets* (Gebru et al., 2021). Describes the dataset export
 (`cricket export` → `data/export/<build fingerprint>/`). Every number here comes from `data/gold/headline.json`
-of build `ca15e28ebb4af18d` unless stated; the column-level documentation is the export's README.md (generated from
+of build `abf009871cfe15fd` unless stated; the column-level documentation is the export's README.md (generated from
 the data contracts) and `croissant.json` (MLCommons Croissant 1.0).
 
 ## Motivation
@@ -267,4 +267,4 @@ reported to Cricsheet (cricsheet.org), so everyone downstream benefits.
 **Can others contribute?** Yes, through pull requests. Every change must pass the contracts, the fixture build
 and the leakage test in CI.
 
-<!-- cricket-sim card stamp: build_fingerprint=ca15e28ebb4af18d matches_in_scope=9540 balls_in_scope=4507621 pct_matches_with_weather=99.98 pct_in_scope_players_with_dob_wikidata=87.8 afghanistan_withheld_odis=188 -->
+<!-- cricket-sim card stamp: build_fingerprint=abf009871cfe15fd matches_in_scope=9540 balls_in_scope=4507621 pct_matches_with_weather=99.98 pct_in_scope_players_with_dob_wikidata=87.8 afghanistan_withheld_odis=188 -->
