@@ -28,7 +28,7 @@ schema:
   - name: segment
     logicalType: string
     physicalType: VARCHAR
-    description: '''Test'', ''ODI'', ''T20I'' or ''IPL''.'
+    description: The dim_match segment ('Test', 'ODI', 'T20I', 'IPL' or one of the nine other leagues).
     primaryKey: true
     primaryKeyPosition: 1
     required: true
@@ -41,6 +41,15 @@ schema:
         - ODI
         - T20I
         - IPL
+        - T20 Blast
+        - BBL
+        - BPL
+        - CPL
+        - PSL
+        - LPL
+        - ILT20
+        - SA20
+        - MLC
       mustBe: 0
   - name: year
     logicalType: integer
@@ -179,10 +188,10 @@ schema:
       Mean confidence (0-1) of those commentary-predicted line labels. NULL when the segment-year has none.
   quality:
   - name: row_count_floor_full_data
-    description: on the complete snapshots, at least 90 to 95% of the 92 rows of the 2026-10-27 real
+    description: on the complete snapshots, at least 90 to 95% of the 167 rows of the 2026-11-18 real
       build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
     metric: rowCount
-    mustBeGreaterOrEqualTo: 87
+    mustBeGreaterOrEqualTo: 150
     customProperties:
     - property: fullDataOnly
       value: true

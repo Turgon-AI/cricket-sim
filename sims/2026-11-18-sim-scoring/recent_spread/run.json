@@ -1,0 +1,174 @@
+{
+  "variant": "recent_spread",
+  "leagues": true,
+  "score_leagues": true,
+  "recent": true,
+  "spread": {
+    "T20I": {
+      "pitch_sd": 0.025,
+      "innings_sd": 0.0,
+      "tuned_on": 2018,
+      "grid": [
+        {
+          "pitch_sd": 0.0,
+          "innings_sd": 0.0,
+          "matches": 327,
+          "crps_runs": 17.957196636085627,
+          "log_loss": 0.7193345636193126
+        },
+        {
+          "pitch_sd": 0.025,
+          "innings_sd": 0.0,
+          "matches": 327,
+          "crps_runs": 17.795379204892967,
+          "log_loss": 0.7221006022392347
+        },
+        {
+          "pitch_sd": 0.05,
+          "innings_sd": 0.0,
+          "matches": 327,
+          "crps_runs": 18.115969113149852,
+          "log_loss": 0.726228153704012
+        },
+        {
+          "pitch_sd": 0.075,
+          "innings_sd": 0.0,
+          "matches": 327,
+          "crps_runs": 18.02043241590214,
+          "log_loss": 0.7244874924255201
+        },
+        {
+          "pitch_sd": 0.1,
+          "innings_sd": 0.0,
+          "matches": 327,
+          "crps_runs": 19.049963608562688,
+          "log_loss": 0.7110403201697166
+        },
+        {
+          "pitch_sd": 0.025,
+          "innings_sd": 0.025,
+          "matches": 327,
+          "crps_runs": 17.99445749235474,
+          "log_loss": 0.7224755104075622
+        },
+        {
+          "pitch_sd": 0.025,
+          "innings_sd": 0.05,
+          "matches": 327,
+          "crps_runs": 18.238741896024464,
+          "log_loss": 0.702285529967241
+        },
+        {
+          "pitch_sd": 0.025,
+          "innings_sd": 0.075,
+          "matches": 327,
+          "crps_runs": 18.332752599388375,
+          "log_loss": 0.7028979260602519
+        },
+        {
+          "pitch_sd": 0.025,
+          "innings_sd": 0.1,
+          "matches": 327,
+          "crps_runs": 19.185558103975534,
+          "log_loss": 0.6993281675589135
+        },
+        {
+          "pitch_sd": 0.025,
+          "innings_sd": 0.15,
+          "matches": 327,
+          "crps_runs": 22.019810091743118,
+          "log_loss": 0.689837372458376
+        }
+      ]
+    },
+    "ODI": {
+      "pitch_sd": 0.075,
+      "innings_sd": 0.0,
+      "tuned_on": 2018,
+      "grid": [
+        {
+          "pitch_sd": 0.0,
+          "innings_sd": 0.0,
+          "matches": 91,
+          "crps_runs": 37.15172747252747,
+          "log_loss": 0.6113546681034637
+        },
+        {
+          "pitch_sd": 0.025,
+          "innings_sd": 0.0,
+          "matches": 91,
+          "crps_runs": 37.0674956043956,
+          "log_loss": 0.6424572360515973
+        },
+        {
+          "pitch_sd": 0.05,
+          "innings_sd": 0.0,
+          "matches": 91,
+          "crps_runs": 36.44004945054945,
+          "log_loss": 0.6080704691833273
+        },
+        {
+          "pitch_sd": 0.075,
+          "innings_sd": 0.0,
+          "matches": 91,
+          "crps_runs": 36.30003736263736,
+          "log_loss": 0.6159300094228308
+        },
+        {
+          "pitch_sd": 0.1,
+          "innings_sd": 0.0,
+          "matches": 91,
+          "crps_runs": 38.310706593406586,
+          "log_loss": 0.6169063410227432
+        },
+        {
+          "pitch_sd": 0.075,
+          "innings_sd": 0.025,
+          "matches": 91,
+          "crps_runs": 36.69787252747252,
+          "log_loss": 0.621288130278333
+        },
+        {
+          "pitch_sd": 0.075,
+          "innings_sd": 0.05,
+          "matches": 91,
+          "crps_runs": 37.158107692307695,
+          "log_loss": 0.6183067062284346
+        },
+        {
+          "pitch_sd": 0.075,
+          "innings_sd": 0.075,
+          "matches": 91,
+          "crps_runs": 38.70943076923077,
+          "log_loss": 0.6212430078222716
+        },
+        {
+          "pitch_sd": 0.075,
+          "innings_sd": 0.1,
+          "matches": 91,
+          "crps_runs": 39.64415384615385,
+          "log_loss": 0.6235702496212334
+        },
+        {
+          "pitch_sd": 0.075,
+          "innings_sd": 0.15,
+          "matches": 91,
+          "crps_runs": 44.77704615384615,
+          "log_loss": 0.6336564945689519
+        }
+      ]
+    }
+  },
+  "commit": "3bb1947",
+  "tree_dirty": true,
+  "build_fingerprint": "ca15e28ebb4af18d620ff6284fdb49d2371bc7875666463ea3924ec5cb80c419",
+  "seed": 20261016,
+  "first_year": 2016,
+  "last_year": 2026,
+  "plays": {
+    "T20I": 400,
+    "league": 200,
+    "ODI": 300
+  },
+  "minutes": 78.6
+}

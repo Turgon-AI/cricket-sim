@@ -162,10 +162,10 @@ schema:
       value: hPa
   quality:
   - name: row_count_floor_full_data
-    description: on the complete snapshots, at least 90 to 95% of the 190,598 rows of the 2026-10-27 real
+    description: on the complete snapshots, at least 90 to 95% of the 267,731 rows of the 2026-11-18 real
       build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
     metric: rowCount
-    mustBeGreaterOrEqualTo: 180000
+    mustBeGreaterOrEqualTo: 240000
     customProperties:
     - property: fullDataOnly
       value: true

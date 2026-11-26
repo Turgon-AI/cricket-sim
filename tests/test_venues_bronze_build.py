@@ -251,6 +251,15 @@ def test_plan_comes_from_the_bronze_zip_not_silver(tmp_path, monkeypatch):
     assert plan["config_sha256"]["venue_overrides.yml"]
 
 
+def test_a_plan_rule_can_carry_its_own_start_date():
+    rule = {"event_name": "Big Bash League", "from_date": "2015-04-01"}
+    sel = {"gender": "male", "from_date": "2001-01-01", "any_of": [rule]}
+    bbl = {**INFO, "team_type": "club", "event_name": "Big Bash League"}
+    assert ing.selected({**bbl, "dates": [date(2015, 12, 18)]}, sel)
+    assert not ing.selected({**bbl, "dates": [date(2014, 12, 18)]}, sel)
+    assert not ing.selected({**bbl, "event_name": "Other", "dates": [date(2015, 12, 18)]}, sel)
+
+
 def test_weather_ingest_refuses_without_a_sealed_locked_geo_snapshot(tmp_path, monkeypatch):
     z = _zip(tmp_path, {"1": INFO})
     (paths.snapshot_dir("cricsheet", "c1")).mkdir(parents=True)

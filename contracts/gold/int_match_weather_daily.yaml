@@ -67,14 +67,16 @@ schema:
     logicalType: string
     physicalType: VARCHAR
     description: 'How the playing window was set: ''ball_timestamps'' (first to last ball of the day from Cricinfo
-      timestamps, available from late 2019) or ''default_estimate'' (a fixed local-time window per format). NULL
-      when there is no timezone.'
+      timestamps, available from late 2019), ''scheduled_start'' (day 1 of an ODI or T20 with a scheduled local start
+      on Wikipedia: from that start for 8 hours (ODI), 3.5 (T20) or 4 (IPL)) or ''default_estimate'' (a fixed
+      local-time window per format). NULL when there is no timezone.'
     quality:
     - name: valid_window_source
       metric: invalidValues
       arguments:
         validValues:
         - ball_timestamps
+        - scheduled_start
         - default_estimate
       mustBe: 0
   - name: weather_available
@@ -276,6 +278,62 @@ schema:
     customProperties:
     - property: unit
       value: hours
+  - name: innings1_temperature_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings 1 mean air temperature (C), over the hours that innings is expected to take (see innings2_minutes_after_sunset
+      for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL
+      otherwise, because a format-default window does not say when either innings was played.
+  - name: innings1_humidity_pct
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings 1 mean relative humidity (%), over the hours that innings is expected to take (see innings2_minutes_after_sunset
+      for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL
+      otherwise, because a format-default window does not say when either innings was played.
+  - name: innings1_dew_point_depression_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings 1 mean gap between air temperature and dew point (C); a small gap means dew is likely, over the hours that innings is expected to take (see innings2_minutes_after_sunset
+      for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL
+      otherwise, because a format-default window does not say when either innings was played.
+  - name: innings1_wind_speed_kmh
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings 1 mean wind speed at 10 m (km/h), over the hours that innings is expected to take (see innings2_minutes_after_sunset
+      for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL
+      otherwise, because a format-default window does not say when either innings was played.
+  - name: innings2_temperature_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings 2 mean air temperature (C), over the hours that innings is expected to take (see innings2_minutes_after_sunset
+      for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL
+      otherwise, because a format-default window does not say when either innings was played.
+  - name: innings2_humidity_pct
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings 2 mean relative humidity (%), over the hours that innings is expected to take (see innings2_minutes_after_sunset
+      for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL
+      otherwise, because a format-default window does not say when either innings was played.
+  - name: innings2_dew_point_depression_c
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings 2 mean gap between air temperature and dew point (C); a small gap means dew is likely, over the hours that innings is expected to take (see innings2_minutes_after_sunset
+      for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL
+      otherwise, because a format-default window does not say when either innings was played.
+  - name: innings2_wind_speed_kmh
+    logicalType: number
+    physicalType: DOUBLE
+    description: Innings 2 mean wind speed at 10 m (km/h), over the hours that innings is expected to take (see innings2_minutes_after_sunset
+      for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL
+      otherwise, because a format-default window does not say when either innings was played.
+  - name: innings2_minutes_after_sunset
+    logicalType: integer
+    physicalType: SMALLINT
+    description: Minutes from sunset at the ground (NOAA sunrise equation) to the expected start of innings 2
+      (positive means the chase starts after dark, when dew forms). Innings windows from the window start, innings 1
+      lasting 3.5 h (ODI), 1.5 h (T20) or 1.75 h (IPL) and innings 2 starting 4.25 h, 1.75 h or 2 h after the start.
+      These are approximate, since an innings that ends early, a rain delay or a long break moves the real hours. Same rows as the
+      innings columns.
   quality:
   - name: row_count_floor_full_data
     description: on the complete snapshots, at least 90 to 95% of the 32,324 rows of the 2026-10-27 real
@@ -297,8 +355,9 @@ schema:
     mustBe: 0
   - name: max_temp_not_below_mean
     type: sql
-    description: Window maximum temperature is not below the window mean.
-    query: SELECT count(*) FROM ${table} WHERE window_max_temperature_c < window_temperature_c
+    description: Window maximum temperature is not below the window mean (beyond floating-point rounding, which
+      the mean of identical hourly values can show).
+    query: SELECT count(*) FROM ${table} WHERE window_max_temperature_c < window_temperature_c - 1e-9
     mustBe: 0
   - name: reason_matches_availability
     type: sql
@@ -322,8 +381,10 @@ customProperties:
   - weather
   - derived
   - ari
+  - wiki_series
 - property: upstream
   value:
   - matches
   - venues
   - stg_ari_tracking
+  - wikipedia_match_schedule

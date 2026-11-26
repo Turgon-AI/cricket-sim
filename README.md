@@ -1,8 +1,8 @@
 # cricket-sim
 
 A reproducible, contract-checked pipeline that turns open ball-by-ball cricket data into an analysis-ready
-dataset: every delivery of men's Tests, ODIs, full-member T20Is and the IPL since 2001 (5,871 matches,
-3.66M deliveries), with match state computed from earlier balls and checked for pre-ball invariance on the
+dataset: every delivery of men's Tests, ODIs, full-member T20Is and the IPL since 2001, and nine more franchise
+T20 leagues (T20 Blast, BBL, BPL, CPL, PSL, LPL, ILT20, SA20, MLC) since 2015 (9,540 matches, 4.51M deliveries), with match state computed from earlier balls and checked for pre-ball invariance on the
 committed fixture, plus venue, weather and player context, and per-match quality checks. On top of it sits an open ODI ball-by-ball
 win-probability and expected-runs model in which **every published probability comes from a model trained
 only on earlier seasons** (1,740 held-out matches, scored
@@ -35,10 +35,11 @@ Start with: [docs/DATASET_CARD.md](docs/DATASET_CARD.md) (what the data is and h
 | source | used for | licence | in the export? | how to obtain |
 |---|---|---|---|---|
 | [Cricsheet](https://cricsheet.org) | ball-by-ball, people register, known-missing list | ODC-BY 1.0 | yes | `cricket ingest cricsheet`, `cricsheet_missing` |
-| [Wikipedia](https://en.wikipedia.org) season pages (pinned revisions) | reference list of internationals and their results | CC BY-SA 4.0 | yes (3 share-alike files) | `cricket ingest wiki_fixtures` |
-| [Wikidata](https://www.wikidata.org) | player birth date and nationality; venue coordinates | CC0 | yes | `cricket ingest wikidata_players`, `venues_geo` |
-| [OpenStreetMap](https://www.openstreetmap.org) via Nominatim | venue geocodes | ODbL 1.0 | yes (`dim_venue`) | `cricket ingest venues_geo` |
-| [Open-Meteo](https://open-meteo.com) (ECMWF ERA5) | hourly weather | CC BY 4.0 | yes | `cricket ingest weather` |
+| [Wikipedia](https://en.wikipedia.org) season pages (pinned revisions) | reference list of internationals and their results | CC BY-SA 4.0 | yes (4 share-alike files) | `cricket ingest wiki_fixtures` |
+| [Wikipedia](https://en.wikipedia.org) series pages (pinned revisions) | scheduled start time and day/night mark of ODIs, T20Is and IPL matches | CC BY-SA 4.0 | yes (`dim_match_schedule`) | `cricket ingest wiki_series` (after `wiki_fixtures`) |
+| [Wikidata](https://www.wikidata.org) | player birth date and nationality; venue coordinates | CC0 | yes | `cricket ingest wikidata_players`, `venues_and_weather` |
+| [OpenStreetMap](https://www.openstreetmap.org) via Nominatim | venue geocodes | ODbL 1.0 | yes (`dim_venue`) | `cricket ingest venues_and_weather` (snapshot `venues_geo`) |
+| [Open-Meteo](https://open-meteo.com) (ECMWF ERA5) | hourly weather | CC BY 4.0 | yes | `cricket ingest venues_and_weather` (snapshot `weather`) |
 | [Ari Adaikalam's dataset](https://www.kaggle.com/datasets/ariadaikalam/the-ultimate-ball-by-ball-cricket-dataset) (Cricinfo tracking) | internal analysis only | non-commercial; Cricinfo's terms | **no** | `cricket ingest ari` (Kaggle account) |
 | [HawkeyeStats](https://github.com/alittlefitness/HawkeyeStats) | internal analysis only | none stated | **no** | `cricket ingest hawkeye` |
 

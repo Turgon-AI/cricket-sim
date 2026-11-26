@@ -104,10 +104,14 @@ expected = {}
 for seg in scope["segments"]:
     conds = [f"gender = '{scope['gender']}'", f"start_date >= DATE '{scope['from_date']}'"]
     for key, value in seg.items():
-        if key == "name":
+        if key in ("name", "missing_list"):
             continue
         if key == "both_teams_in":
             conds.append(f"team1 IN ({members}) AND team2 IN ({members})")
+        elif key == "event_name_in":
+            conds.append("event_name IN (" + ", ".join("'" + v.replace("'", "''") + "'" for v in value) + ")")
+        elif key == "from_date":
+            conds.append(f"start_date >= DATE '{value}'")
         else:
             conds.append(f"{key} = '{value}'")
     for (match_id,) in con.execute(f"SELECT match_id FROM '{data}/silver/matches.parquet' WHERE " + " AND ".join(conds)).fetchall():
@@ -136,8 +140,9 @@ check(99.0 <= headline["matches_passing_quality_pct"] <= 100.0,
       f"matches passing quality is in the expected band 99 to 100 ({headline['matches_passing_quality_pct']}%)")
 by_year = one("SELECT sum(matches) FROM '{d}/gold/report_coverage_by_segment_year.parquet'")
 check(by_year == matches, f"coverage report 'matches' adds up to the matches in scope ({by_year} = {matches})")
-ipl = one("SELECT sum(matches) FROM '{d}/gold/report_ipl_seasons.parquet'")
-check(ipl == one("SELECT count(*) FROM '{d}/gold/dim_match.parquet' WHERE segment = 'IPL'"), "IPL seasons report counts IPL matches only")
+leagues = one("SELECT sum(matches) FROM '{d}/gold/report_league_seasons.parquet'")
+check(leagues == one("SELECT count(*) FROM '{d}/gold/dim_match.parquet' WHERE team_type = 'club'"),
+      "league seasons report counts every league match and nothing else")
 
 print("model scores: a leaked input would make them far too good")
 scores = {(t, s, m): (ll, br) for t, s, m, ll, br in con.execute(

@@ -1,7 +1,9 @@
 # Model card: ODI ball-by-ball win probability and expected runs
 
-> **Status (2026-11-03):** Every number below was regenerated from the current code (build `0240fb4ce447d1eb`,
+> **Status (2026-11-26):** Every number below was regenerated from the current code (build `abf009871cfe15fd`,
 > model run `92243fb5ccdc6861`), except the recalibration audit in Calibration, which is from the 2026-10-23 run.
+> Retraining on this build (which pinned two league grounds) and on build `ca15e28ebb4af18d` (which added nine T20
+> leagues and no ODIs) gave the same model fingerprint as on build `0240fb4ce447d1eb`, so no number changed.
 > **What the code guarantees:**
 > - Venue home status is the home team of the latest `dim_venue_version` whose inputs end before the match date
 >   (`dataset.home_teams_as_of`), so it uses only matches on earlier dates. The home team counts men's internationals
@@ -31,7 +33,7 @@
 > down.
 
 Structured after *Model Cards for Model Reporting* (Mitchell et al., 2019). Numbers are from model run
-`92243fb5ccdc6861` (model fingerprint), built on data build `0240fb4ce447d1eb`. They are in
+`92243fb5ccdc6861` (model fingerprint), built on data build `abf009871cfe15fd`. They are in
 `data/models/report_model_*.parquet`, which also ships with the dataset.
 
 ## Model details
@@ -234,4 +236,4 @@ The full tables are in `report_model_calibration`.
   - as-of player features;
   - T20 versions.
 
-<!-- cricket-sim card stamp: build_fingerprint=0240fb4ce447d1eb model_fingerprint=92243fb5ccdc6861 innings_1_brier=0.1887 innings_2_brier=0.1194 -->
+<!-- cricket-sim card stamp: build_fingerprint=abf009871cfe15fd model_fingerprint=92243fb5ccdc6861 innings_1_brier=0.1887 innings_2_brier=0.1194 -->

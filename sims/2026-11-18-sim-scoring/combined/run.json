@@ -1,0 +1,43 @@
+{
+  "variant": "combined",
+  "leagues": true,
+  "score_leagues": true,
+  "recent": true,
+  "spread": {
+    "T20I": {
+      "pitch_sd": 0.025,
+      "innings_sd": 0.0,
+      "fixed": true
+    },
+    "ODI": {
+      "pitch_sd": 0.0,
+      "innings_sd": 0.0,
+      "fixed": true
+    }
+  },
+  "fixed_spread": {
+    "T20I": [
+      0.025,
+      0.0
+    ],
+    "ODI": [
+      0.0,
+      0.0
+    ]
+  },
+  "post_stretch": [
+    "ODI"
+  ],
+  "commit": "3bb1947",
+  "tree_dirty": true,
+  "build_fingerprint": "ca15e28ebb4af18d620ff6284fdb49d2371bc7875666463ea3924ec5cb80c419",
+  "seed": 20261016,
+  "first_year": 2016,
+  "last_year": 2026,
+  "plays": {
+    "T20I": 400,
+    "league": 200,
+    "ODI": 300
+  },
+  "minutes": 63.7
+}

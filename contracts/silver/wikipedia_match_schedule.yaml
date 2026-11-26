@@ -1,0 +1,107 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: cricket-sim.silver.wikipedia_match_schedule
+name: wikipedia_match_schedule
+version: 1.0.0
+status: active
+domain: cricket
+dataProduct: cricket-sim
+description:
+  purpose: The scheduled local start time and day/night status of limited-overs matches, read from the per-match
+    templates on Wikipedia series pages, so weather can be placed on the hours a match was actually played.
+  limitations: 'Source: Wikipedia series pages pinned by revision id (bronze wiki_series), licence CC BY-SA 4.0
+    (derived tables must stay CC BY-SA). Only matches whose template links an ESPNcricinfo scorecard are read; older
+    pages (before about 2009) mostly have no match templates or no time. The time is the scheduled start, not the
+    first ball: a rain delay is not in it. The template documentation does not say which zone; it is usually local,
+    IPL pages use Indian time even in the UAE and South Africa (see dim_match_schedule.time_zone_assumed and
+    report_start_time_check). day_night_flag is the page''s own mark and is
+    NULL when the page says nothing; it is not inferred from the time.'
+  usage: Join to matches on CAST(cricinfo_match_id AS VARCHAR) = match_id.
+schema:
+- name: wikipedia_match_schedule
+  physicalName: data/silver/wikipedia_match_schedule.parquet
+  physicalType: table
+  logicalType: object
+  description: One row per Cricinfo match id found in a match template, after de-duplicating matches that appear on
+    more than one page (a series page and its sub-page).
+  dataGranularityDescription: One row per Cricinfo match id.
+  properties:
+  - name: cricinfo_match_id
+    logicalType: integer
+    physicalType: BIGINT
+    description: ESPNcricinfo match id from the template's report link. Equals Cricsheet's match_id for these matches.
+    primaryKey: true
+    primaryKeyPosition: 1
+    required: true
+    unique: true
+  - name: scheduled_start_stated
+    logicalType: string
+    physicalType: TIME
+    description: First clock time in the template's time field ('14:30', '2:30 pm'), as the page states it. Usually
+      local time at the ground, but IPL pages give Indian time wherever the match is played, and a few fields name a
+      zone (stated_time_zone). NULL when the page gives none.
+  - name: stated_time_zone
+    logicalType: string
+    physicalType: VARCHAR
+    description: IANA zone the time field names ('UTC' for GMT or UTC, 'Asia/Kolkata' for IST); NULL when it names
+      none, which usually means local time.
+  - name: day_night_flag
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: TRUE when the template marks a day/night match (daynight or night field set, or 'D/N' in the time),
+      FALSE when the field says no, NULL when the page says nothing.
+  - name: time_text
+    logicalType: string
+    physicalType: VARCHAR
+    description: The time field as plain text, kept so a parse can be checked (for example '14:00 (ACDT)').
+  - name: date_text
+    logicalType: string
+    physicalType: VARCHAR
+    description: The date field as plain text.
+  - name: template
+    logicalType: string
+    physicalType: VARCHAR
+    description: Which match template the row came from.
+    required: true
+  - name: page_title
+    logicalType: string
+    physicalType: VARCHAR
+    description: Wikipedia page the row came from.
+    required: true
+  - name: page_revid
+    logicalType: integer
+    physicalType: BIGINT
+    description: Revision id of that page in the pinned snapshot.
+    required: true
+  - name: duplicates
+    logicalType: integer
+    physicalType: INTEGER
+    description: How many other rows for the same match id were dropped.
+    required: true
+  - name: duplicate_conflict
+    logicalType: boolean
+    physicalType: BOOLEAN
+    description: TRUE when the dropped rows gave a different time or day/night flag.
+    required: true
+  quality:
+  - name: row_count_floor_full_data
+    description: on the complete snapshots, about 95% of the 7,101 rows of the 2026-11-18 real build, so a snapshot
+      or step that silently lost rows fails (skipped for the SUBSET CI sample)
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 6700
+    customProperties:
+    - property: fullDataOnly
+      value: true
+  - name: row_count_floor
+    metric: rowCount
+    mustBeGreaterOrEqualTo: 1
+customProperties:
+- property: layer
+  value: silver
+- property: kind
+  value: reference
+- property: sources
+  value:
+  - wiki_series
+- property: upstream
+  value: []

@@ -2,7 +2,7 @@
 
 Structured after *Datasheets for Datasets* (Gebru et al., 2021). Describes the dataset export
 (`cricket export` → `data/export/<build fingerprint>/`). Every number here comes from `data/gold/headline.json`
-of build `0240fb4ce447d1eb` unless stated; the column-level documentation is the export's README.md (generated from
+of build `abf009871cfe15fd` unless stated; the column-level documentation is the export's README.md (generated from
 the data contracts) and `croissant.json` (MLCommons Croissant 1.0).
 
 ## Motivation
@@ -30,7 +30,7 @@ only. For ODIs from 2008, the model tables add, per ball, the batting side's win
 (`model_ball_outcome`), each from a model trained only on earlier seasons, plus pre-match Elo
 (`model_team_elo`) and the evaluation reports (`report_model_*`). See docs/MODEL_CARD.md.
 
-**How many instances?** 5,871 matches and 3,657,877 deliveries:
+**How many instances?** 9,540 matches and 4,507,621 deliveries:
 
 | segment | matches | first | last |
 |---|---|---|---|
@@ -38,9 +38,22 @@ only. For ODIs from 2008, the model tables add, per ball, the batting side's win
 | ODI | 2,596 | 2002-06-27 | 2026-10-13 |
 | T20I (both teams ICC full members) | 1,136 | 2005-02-17 | 2026-10-13 |
 | IPL | 1,243 | 2008-04-18 | 2026-05-31 |
+| T20 Blast (England) | 1,448 | 2015-05-15 | 2026-07-18 |
+| BBL (Big Bash League) | 539 | 2015-12-18 | 2026-01-25 |
+| BPL (Bangladesh Premier League) | 414 | 2015-11-22 | 2026-01-23 |
+| CPL (Caribbean Premier League) | 395 | 2015-06-20 | 2026-09-20 |
+| PSL (Pakistan Super League) | 357 | 2016-02-04 | 2026-05-03 |
+| LPL (Lanka Premier League) | 143 | 2020-11-26 | 2026-08-08 |
+| ILT20 (International League T20) | 134 | 2023-01-13 | 2026-01-04 |
+| SA20 | 130 | 2023-01-10 | 2026-01-25 |
+| MLC (Major League Cricket) | 109 | 2023-07-13 | 2026-07-18 |
 
-**Is it a sample?** It is every match Cricsheet holds in that scope (men's, from 2001-01-01), which is not every
-match played. `report_international_coverage` reconciles Cricsheet against every numbered international listed
+**Is it a sample?** It is every match Cricsheet holds in that scope (men's, from 2001-01-01; the nine leagues
+after the IPL from 2015-04-01), which is not every match played. For the leagues there is no outside list: the
+only check is Cricsheet's own missing list, which names 21 league matches in scope (T20 Blast 5, BPL 6, CPL 5,
+BBL 3, PSL 2), so each league is at least 98.6% held by that list. A league with no entry on the list (the IPL,
+LPL, ILT20, SA20, MLC) may simply be one Cricsheet does not track gaps for. `report_league_seasons` counts
+matches per league and year. `report_international_coverage` reconciles Cricsheet against every numbered international listed
 on Wikipedia's season pages and gives a named reason for each gap. The 3,321 listed ODIs split like this:
 
 | ODI status | count |
@@ -79,13 +92,14 @@ returns it.
 total, or the match winner (`dim_match`).
 
 **Is anything missing?**
-- **Weather:** 99.97% of matches have it (two matches at a venue that could not be geocoded have none).
-- **Player birth dates:** 90.5% of in-scope players have one (Wikidata).
-- **Player country:** `dim_player.country` is kept as built. `country_conflict` flags the 191 in-scope players
+- **Weather:** 99.98% of matches have it (two matches at a venue that could not be geocoded have none). Two
+  league grounds (Pomona, 7 MLC matches; Geelong, 1 BBL match) are placed at the city centre, not the ground.
+- **Player birth dates:** 87.8% of in-scope players have one (Wikidata). League-only players have fewer.
+- **Player country:** `dim_player.country` is kept as built. `country_conflict` flags the 206 in-scope players
   whose Wikidata citizenship names no national side they played for in Cricsheet; the country itself is not
   changed.
 - **Player country over time:** `dim_player.country` is the latest national side. `dim_player_team` gives each
-  player's spells with one side (2,390 spells for 2,348 capped in-scope players; 40 played for more than one
+  player's spells with one side (2,422 spells for 2,380 capped in-scope players; 40 played for more than one
   country, e.g. Roelof van der Merwe for South Africa, then the Netherlands), so nationality can be taken as of any
   match date.
 - **Player physicals, batting hand and bowling style:** absent. No open source records them with usable
@@ -95,10 +109,12 @@ total, or the match winner (`dim_match`).
   the final revised target, not when it was set.
 
 **Are there errors or noise?** The nine arithmetic and consistency checks in `report_match_quality` pass for
-5,868 of 5,871 scoped matches (99.95%). This is an internal-consistency rate, not a scorecard reconciliation
-accuracy estimate. The three flagged matches are: a 7-ball over in Zimbabwe v South Africa (T20I, 2022), the 2006 Oval Test, which was awarded
-to England when Pakistan did not take the field, and Canada v Nepal (ODI, 2024), which Nepal won only through 5 post-innings penalty runs that are on no ball
-(`result_in_ball_stream = false`). All three stay in the data with `passes_quality = false`.
+9,536 of 9,540 scoped matches (99.96%). This is an internal-consistency rate, not a scorecard reconciliation
+accuracy estimate. The four flagged matches are: a 7-ball over in Zimbabwe v South Africa (T20I, 2022), the 2006 Oval Test, which was awarded
+to England when Pakistan did not take the field, and two matches decided by post-innings penalty runs that are on no ball
+(`result_in_ball_stream = false`): Canada v Nepal (ODI, 2024), which Nepal won through 5 such runs, and Kent v
+Somerset (T20 Blast, 2018), where Kent's 6 such runs turned a Somerset win into a Kent win by 5 runs. All four stay
+in the data with `passes_quality = false`.
 
 **Checked against an outside source:** `report_result_check` compares the result of every international linked
 to the Wikipedia reference list (4,597 matches) with the pinned season page. 4,582 agree on the kind of result,
@@ -117,15 +133,15 @@ the contracts, not evidence from this table. Five checks are live here and can f
 
 | check | passed | failed | not checkable | can it fail in a completed build? |
 |---|---|---|---|---|
-| `runs_add_up` (runs = batter + extras on every ball) | 5,871 | 0 | 0 | no: enforced upstream by the silver `balls` contract rule `total_is_bat_plus_extras` |
-| `extras_add_up` (extras = wides + no-balls + byes + leg byes + penalty) | 5,871 | 0 | 0 | no: enforced upstream by the silver `balls` contract rule `extras_add_up` |
-| `overs_consistent` (six legal balls an over unless listed as miscounted) | 5,870 | 1 | 0 | yes |
-| `wickets_within_limit` (at most 10 dismissals, 2 in a super over) | 5,871 | 0 | 0 | no: enforced upstream by the gold `fact_innings` contract rule `dismissals_within_limit` |
-| `bowler_quota_respected` (no bowler starts more than a fifth of the scheduled overs) | 4,681 | 0 | 1,190 | yes |
-| `batters_within_limit` (at most 12 batters an innings: eleven plus a concussion replacement) | 5,871 | 0 | 0 | yes |
-| `target_matches` (unrevised target = first-innings total + 1) | 4,437 | 0 | 1,434 | no: enforced upstream by the `fact_innings` contract rules `set_target_equals_stated` and `nominal_target_equals_target` |
-| `result_consistent` (the stated margin follows from the totals) | 5,038 | 0 | 833 | yes |
-| `result_in_ball_stream` (the winner follows from the balls alone) | 5,037 | 1 | 833 | yes |
+| `runs_add_up` (runs = batter + extras on every ball) | 9,540 | 0 | 0 | no: enforced upstream by the silver `balls` contract rule `total_is_bat_plus_extras` |
+| `extras_add_up` (extras = wides + no-balls + byes + leg byes + penalty) | 9,540 | 0 | 0 | no: enforced upstream by the silver `balls` contract rule `extras_add_up` |
+| `overs_consistent` (six legal balls an over unless listed as miscounted) | 9,539 | 1 | 0 | yes |
+| `wickets_within_limit` (at most 10 dismissals, 2 in a super over) | 9,540 | 0 | 0 | no: enforced upstream by the gold `fact_innings` contract rule `dismissals_within_limit` |
+| `bowler_quota_respected` (no bowler starts more than a fifth of the scheduled overs) | 8,208 | 0 | 1,332 | yes |
+| `batters_within_limit` (at most 12 batters an innings: eleven plus a concussion replacement) | 9,540 | 0 | 0 | yes |
+| `target_matches` (unrevised target = first-innings total + 1) | 7,719 | 0 | 1,821 | no: enforced upstream by the `fact_innings` contract rules `set_target_equals_stated` and `nominal_target_equals_target` |
+| `result_consistent` (the stated margin follows from the totals) | 8,463 | 0 | 1,077 | yes |
+| `result_in_ball_stream` (the winner follows from the balls alone) | 8,461 | 2 | 1,077 | yes |
 
 The build's own leak check on chases (no chase may show a target or ball limit the batting side then exceeded) is
 judged from the target Cricsheet states, before the pipeline relabels a contradicted chase `inconsistent_with_balls`;
@@ -223,7 +239,7 @@ every build for types, keys, foreign keys and quality rules.
 
 **How:** the export folder written by `cricket export`, with this repository as the reproducible source.
 
-**Formats:** Parquet for every table, and CSV for tables of up to 2 million rows. `fact_delivery` (3.66M rows) is
+**Formats:** Parquet for every table, and CSV for tables of up to 2 million rows. `fact_delivery` (4.51M rows) is
 Parquet only.
 
 **Licences:** each file carries its own licence (LICENSES.md, croissant.json):
@@ -251,4 +267,4 @@ reported to Cricsheet (cricsheet.org), so everyone downstream benefits.
 **Can others contribute?** Yes, through pull requests. Every change must pass the contracts, the fixture build
 and the leakage test in CI.
 
-<!-- cricket-sim card stamp: build_fingerprint=0240fb4ce447d1eb matches_in_scope=5871 balls_in_scope=3657877 pct_matches_with_weather=99.97 pct_in_scope_players_with_dob_wikidata=90.5 afghanistan_withheld_odis=188 -->
+<!-- cricket-sim card stamp: build_fingerprint=abf009871cfe15fd matches_in_scope=9540 balls_in_scope=4507621 pct_matches_with_weather=99.98 pct_in_scope_players_with_dob_wikidata=87.8 afghanistan_withheld_odis=188 -->

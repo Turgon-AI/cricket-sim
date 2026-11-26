@@ -11,6 +11,8 @@ Scope (config/scope.yml) is applied here and only here: silver keeps every match
 scope never needs a re-ingest. The export (export.py) reads gold only.
 """
 
+from datetime import date
+
 import pyarrow as pa
 
 from . import ball_layers
@@ -21,7 +23,11 @@ from .wiki_fixtures import link_reference, load_link_overrides
 
 SCOPE_KEYS = {"gender", "from_date", "full_members", "segments"}
 SEGMENT_REQUIRED = ("name", "match_type")
-SEGMENT_KEYS = set(SEGMENT_REQUIRED) | {"team_type", "event_name", "both_teams_in"}
+# condition keys select matches; event_name_in is a list (a league renamed by its sponsors); from_date narrows the
+# global from_date for one segment. missing_list is not a condition: it names the segment on Cricsheet's missing list.
+SEGMENT_KEYS = set(SEGMENT_REQUIRED) | {"team_type", "event_name", "event_name_in", "both_teams_in", "from_date",
+                                        "missing_list"}
+SEGMENT_LIST_KEYS = {"event_name_in"}
 
 
 def validate_scope(scope) -> None:
@@ -55,7 +61,17 @@ def validate_scope(scope) -> None:
         problems += [f"{label}: unknown key '{key}' (allowed: {', '.join(sorted(SEGMENT_KEYS))})"
                      for key in sorted(seg.keys() - SEGMENT_KEYS)]
         problems += [f"{label}: '{key}' must be text" for key, value in seg.items()
-                     if key in SEGMENT_KEYS and value is not None and not isinstance(value, str)]
+                     if key in SEGMENT_KEYS - SEGMENT_LIST_KEYS and value is not None and not isinstance(value, str)]
+        problems += [f"{label}: '{key}' must be a non-empty list of text" for key, value in seg.items()
+                     if key in SEGMENT_LIST_KEYS and not (isinstance(value, list) and value
+                                                          and all(isinstance(v, str) for v in value))]
+        if seg.get("event_name") and seg.get("event_name_in"):
+            problems.append(f"{label}: use 'event_name' or 'event_name_in', not both")
+        if isinstance(seg.get("from_date"), str):
+            try:
+                date.fromisoformat(seg["from_date"])
+            except ValueError:
+                problems.append(f"{label}: 'from_date' must be a date like 2015-04-01")
         if isinstance(seg.get("both_teams_in"), str) and not isinstance(scope.get(seg["both_teams_in"]), list):
             problems.append(f"{label}: both_teams_in names '{seg['both_teams_in']}', which is not a list in scope.yml")
     problems += [f"duplicate segment name '{name}'" for name in sorted({n for n in names if names.count(n) > 1})]
@@ -68,19 +84,34 @@ def _segment_case(scope: dict, alias: str = "m") -> str:
     for seg in scope["segments"]:
         conds = []
         for key, value in seg.items():
-            if key == "name":
+            if key in ("name", "missing_list"):
                 continue
             if key == "both_teams_in":
-                teams = ", ".join("'" + t.replace("'", "''") + "'" for t in scope[value])
+                teams = _quoted(scope[value])
                 conds.append(f"{alias}.team1 IN ({teams}) AND {alias}.team2 IN ({teams})")
+            elif key == "event_name_in":
+                conds.append(f"{alias}.event_name IN ({_quoted(value)})")
+            elif key == "from_date":
+                conds.append(f"{alias}.start_date >= DATE '{value}'")
             else:
                 conds.append(f"{alias}.{key} = '{value}'")
         whens.append(f"WHEN {' AND '.join(conds)} THEN '{seg['name']}'")
     return "CASE " + " ".join(whens) + " END"
 
 
+def _quoted(values) -> str:
+    return ", ".join("'" + str(v).replace("'", "''") + "'" for v in values)
+
+
 def _full_members(scope: dict) -> str:
-    return ", ".join("'" + t.replace("'", "''") + "'" for t in scope["full_members"])
+    return _quoted(scope["full_members"])
+
+
+def _missing_list_sql(scope: dict) -> str:
+    """Competition entries of Cricsheet's missing list that belong to a segment, from that segment's own from_date."""
+    rules = [f"(lower(list_name) = {_quoted([seg['missing_list']])} AND start_date >= DATE '{seg.get('from_date', scope['from_date'])}')"
+             for seg in scope["segments"] if seg.get("missing_list")]
+    return " OR ".join(rules) or "false"
 
 
 def _pct(expr: str) -> str:
@@ -317,6 +348,36 @@ def reference_link_inputs(con, scope: dict) -> tuple[list[dict], list[dict]]:
     return [dict(zip(ref_keys, r)) for r in refs], [dict(zip(cs_keys, r)) for r in cs_rows]
 
 
+# How often each ground was used before a match, over every Cricsheet match (all formats, both genders): days since
+# the last match there ended, and matches started there in the 14 and 365 days before. Ground use, not strip use;
+# Cricsheet lacks most domestic cricket, so these are floors. Same-day matches at the ground are not counted.
+VENUE_USE_SQL = """
+        WITH u AS (SELECT m.match_id, mv.venue_id, m.start_date, coalesce(m.end_date, m.start_date) AS end_date
+                   FROM matches m JOIN match_venues mv USING (match_id))
+        SELECT a.match_id,
+            datediff('day', max(b.end_date), a.start_date) AS venue_days_since_last_match,
+            count(b.match_id) FILTER (b.start_date >= a.start_date - INTERVAL 14 DAY) AS venue_matches_prior_14d,
+            count(b.match_id) FILTER (b.start_date >= a.start_date - INTERVAL 365 DAY) AS venue_matches_prior_365d
+        FROM u a LEFT JOIN u b ON b.venue_id = a.venue_id AND b.start_date < a.start_date
+        GROUP BY a.match_id, a.start_date"""
+
+# Wikipedia's scheduled start against the first ball of day 1 (int_match_play_windows: the scheduled start read in
+# the zone the venue build picks, and the first ball where the window comes from Cricinfo-derived ball timestamps).
+# A late first ball is usually a rain delay; an early one, or a gap of whole hours, points at a time-zone error on
+# the page or in the timestamps.
+START_TIME_CHECK_SQL = """
+        WITH c AS (
+            SELECT s.match_id, s.segment, s.scheduled_start_stated, s.time_zone_assumed,
+                CAST(w.window_start_local AS TIME) AS first_ball_local,
+                datediff('minute', w.scheduled_start_utc, w.window_start_utc) AS minutes_late
+            FROM dim_match_schedule s JOIN int_match_play_windows w
+              ON w.match_id = s.match_id AND w.match_day_number = 1 AND w.window_source = 'ball_timestamps'
+            WHERE w.scheduled_start_utc IS NOT NULL)
+        SELECT *, CASE WHEN abs(minutes_late) <= 15 THEN 'on_time' WHEN minutes_late < -15 THEN 'early'
+                       WHEN minutes_late <= 240 THEN 'late' ELSE 'very_late' END AS status
+        FROM c"""
+
+
 def build_gold(con) -> dict:
     scope = load_yaml("scope.yml")
     validate_scope(scope)
@@ -341,7 +402,7 @@ def build_gold(con) -> dict:
           AND ({_segment_case(scope)}) IS NOT NULL""")
 
     # ---- dimensions ------------------------------------------------------------------------------
-    write("dim_match", """
+    write("dim_match", f"""
         SELECT m.match_id, s.segment, m.match_type, m.match_type_number, m.gender, m.team_type,
             m.event_name, m.event_match_number, m.event_stage, m.season, m.season_year,
             m.start_date, m.end_date, m.n_dates, v.venue_id, v.venue_version, m.venue AS venue_name, m.city,
@@ -351,10 +412,13 @@ def build_gold(con) -> dict:
             m.scheduled_overs, m.balls_per_over, m.n_innings, m.player_of_match,
             m.umpires, m.tv_umpires, m.match_referees, m.supersubs,
             q.passes_quality, m.cricsheet_missing AS cricsheet_missing_fields,
-            m.data_version AS cricsheet_data_version, m.revision AS cricsheet_revision
+            m.data_version AS cricsheet_data_version, m.revision AS cricsheet_revision,
+            u.venue_days_since_last_match, coalesce(u.venue_matches_prior_14d, 0) AS venue_matches_prior_14d,
+            coalesce(u.venue_matches_prior_365d, 0) AS venue_matches_prior_365d
         FROM matches m JOIN scope s USING (match_id)
         JOIN int_match_quality q USING (match_id)
-        LEFT JOIN match_venues v USING (match_id)""", "segment, start_date, match_id")
+        LEFT JOIN match_venues v USING (match_id)
+        LEFT JOIN ({VENUE_USE_SQL}) u USING (match_id)""", "segment, start_date, match_id")
 
     # a whole-snapshot dimension: a birth date implying an age over 50 at the player's last match is left out here
     write("dim_player", """
@@ -542,17 +606,30 @@ def build_gold(con) -> dict:
 
     write("report_result_check", RESULT_CHECK_SQL, "segment, match_id")
 
+    # scheduled start and day/night status from Wikipedia series pages (CC BY-SA, so a table of its own: dim_match
+    # stays ODC-BY). Joined on the Cricinfo match id, which is Cricsheet's match id for these matches.
+    write("dim_match_schedule", """
+        SELECT d.match_id, d.segment, d.start_date, s.scheduled_start_stated,
+            CASE WHEN s.scheduled_start_stated IS NULL THEN NULL WHEN s.stated_time_zone IS NOT NULL THEN s.stated_time_zone
+                 WHEN d.segment = 'IPL' THEN 'Asia/Kolkata' ELSE 'ground_local' END AS time_zone_assumed,
+            s.day_night_flag AS wikipedia_day_night_flag,
+            s.time_text AS wikipedia_time_text, s.duplicate_conflict, s.page_title, s.page_revid
+        FROM dim_match d JOIN wikipedia_match_schedule s ON CAST(s.cricinfo_match_id AS VARCHAR) = d.match_id
+        WHERE d.segment IN ('ODI', 'T20I', 'IPL')""", "segment, start_date, match_id")
+    # internal check of those start times against the first ball (Cricinfo-derived timestamps, never exported)
+    write("report_start_time_check", START_TIME_CHECK_SQL, "segment, match_id")
+
     write("report_cricsheet_known_missing", f"""
         SELECT list_name, start_date, teams FROM cricsheet_missing
         WHERE gender = '{scope['gender']}' AND start_date >= DATE '{scope['from_date']}'
           AND ((list_type = 'match_type' AND list_name IN ('Test', 'Odi'))
-               OR (list_type = 'competition' AND lower(list_name) = 'indian premier league'))""",
+               OR (list_type = 'competition' AND ({_missing_list_sql(scope)})))""",
           "list_name, start_date, teams")
 
-    write("report_ipl_seasons", """
-        SELECT year(start_date) AS season_year, count(*) AS matches,
+    write("report_league_seasons", """
+        SELECT segment, year(start_date) AS season_year, count(*) AS matches,
             count(*) FILTER (passes_quality) AS matches_passing_quality
-        FROM dim_match WHERE segment = 'IPL' GROUP BY ALL""", "season_year")
+        FROM dim_match WHERE team_type = 'club' GROUP BY ALL""", "segment, season_year")
 
     # Ari's Cricinfo tracking is joined to Cricsheet on (match_id, innings, delivery_number). Proof that those keys
     # mean the same ball: every row must land on a Cricsheet delivery, and Cricinfo's DRS-review events must sit on
@@ -734,6 +811,12 @@ def _headline(con, scope: dict) -> dict:
             "SELECT segment, status, count(*) FROM report_international_coverage GROUP BY ALL ORDER BY ALL").fetchall()},
         "cricsheet_internationals_not_in_reference": dict(con.execute(
             "SELECT segment, count(*) FROM report_cricsheet_not_in_reference GROUP BY ALL ORDER BY ALL").fetchall()),
+        "scheduled_start_coverage_pct": dict(con.execute("""
+            SELECT d.segment, round(100.0 * avg(CASE WHEN s.scheduled_start_stated IS NOT NULL THEN 1 ELSE 0 END), 1)
+            FROM dim_match d LEFT JOIN dim_match_schedule s USING (match_id)
+            WHERE d.segment IN ('ODI', 'T20I', 'IPL') GROUP BY ALL ORDER BY ALL""").fetchall()),
+        "start_time_check_vs_first_ball": dict(con.execute(
+            "SELECT status, count(*) FROM report_start_time_check GROUP BY ALL ORDER BY ALL").fetchall()),
         "result_check_vs_wikipedia": dict(con.execute(
             "SELECT status, count(*) FROM report_result_check GROUP BY ALL ORDER BY ALL").fetchall()),
         "players_with_more_than_one_national_team": q(

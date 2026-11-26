@@ -1,0 +1,31 @@
+segment,match_id,start_date,match,venue,elo_gap_bat_first,event,sim_pct,history_pct,happened,note
+ODI,1496590,2026-09-27,England (batted first) v Sri Lanka,The Oval,13,England wins,52.6,47.4,yes,Elo alone says 51.9%
+ODI,1496590,2026-09-27,England (batted first) v Sri Lanka,The Oval,13,First innings 300+,34.2,26.1,yes,"sim median 273, 80% range 183 to 356, actual 355"
+ODI,1496590,2026-09-27,England (batted first) v Sri Lanka,The Oval,13,First innings 355+ (the actual score),10.3,7.2,yes,how surprising the real score was
+ODI,1525656,2026-09-27,South Africa (batted first) v Australia,"Wanderers Stadium, Johannesburg",-2,South Africa wins,49.2,47.4,yes,Elo alone says 49.8%
+ODI,1525656,2026-09-27,South Africa (batted first) v Australia,"Wanderers Stadium, Johannesburg",-2,First innings 300+,27.9,26.1,yes,"sim median 257, 80% range 158 to 349, actual 365"
+ODI,1525656,2026-09-27,South Africa (batted first) v Australia,"Wanderers Stadium, Johannesburg",-2,First innings 365+ (the actual score),6.5,5.2,yes,how surprising the real score was
+ODI,1529227,2026-09-27,West Indies (batted first) v India,"Greenfield International Stadium, Thiruvananthapuram",-228,West Indies wins,23.9,47.4,no,Elo alone says 21.2%
+ODI,1529227,2026-09-27,West Indies (batted first) v India,"Greenfield International Stadium, Thiruvananthapuram",-228,First innings 300+,11.3,26.1,no,"sim median 238, 80% range 165 to 304, actual 295"
+ODI,1529227,2026-09-27,West Indies (batted first) v India,"Greenfield International Stadium, Thiruvananthapuram",-228,First innings 295+ (the actual score),13.6,28.8,yes,how surprising the real score was
+ODI,1529228,2026-09-30,West Indies (batted first) v India,"Barsapara Cricket Stadium, Guwahati",-238,West Indies wins,20.4,47.4,no,Elo alone says 20.2%
+ODI,1529228,2026-09-30,West Indies (batted first) v India,"Barsapara Cricket Stadium, Guwahati",-238,First innings 300+,12.3,26.1,yes,"sim median 241, 80% range 160 to 305, actual 405"
+ODI,1529228,2026-09-30,West Indies (batted first) v India,"Barsapara Cricket Stadium, Guwahati",-238,First innings 405+ (the actual score),0.0,1.2,yes,how surprising the real score was
+ODI,1529229,2026-10-03,India (batted first) v West Indies,"Maharaja Yadavindra Singh International Cricket Stadium, New Chandigarh",248,India wins,78.1,47.4,no,Elo alone says 80.7%
+ODI,1529229,2026-10-03,India (batted first) v West Indies,"Maharaja Yadavindra Singh International Cricket Stadium, New Chandigarh",248,First innings 300+,49.3,26.1,yes,"sim median 299, 80% range 231 to 373, actual 351"
+ODI,1529229,2026-10-03,India (batted first) v West Indies,"Maharaja Yadavindra Singh International Cricket Stadium, New Chandigarh",248,First innings 351+ (the actual score),18.8,8.1,yes,how surprising the real score was
+T20I,1529231,2026-10-09,India (batted first) v West Indies,"JSCA International Stadium Complex, Ranchi",217,India wins,81.8,48.8,no,Elo alone says 77.7%
+T20I,1529231,2026-10-09,India (batted first) v West Indies,"JSCA International Stadium Complex, Ranchi",217,First innings 180+,64.0,35.6,yes,"sim median 192, 80% range 145 to 239, actual 249"
+T20I,1529231,2026-10-09,India (batted first) v West Indies,"JSCA International Stadium Complex, Ranchi",217,First innings 249+ (the actual score),6.8,1.2,yes,how surprising the real score was
+T20I,1550708,2026-10-09,Sri Lanka (batted first) v Pakistan,Rawalpindi Cricket Stadium,-150,Sri Lanka wins,47.0,48.8,no,Elo alone says 29.6%
+T20I,1550708,2026-10-09,Sri Lanka (batted first) v Pakistan,Rawalpindi Cricket Stadium,-150,First innings 180+,37.0,35.6,yes,"sim median 171, 80% range 125 to 211, actual 182"
+T20I,1550708,2026-10-09,Sri Lanka (batted first) v Pakistan,Rawalpindi Cricket Stadium,-150,First innings 182+ (the actual score),34.4,33.1,yes,how surprising the real score was
+T20I,1529232,2026-10-11,India (batted first) v West Indies,"Holkar Cricket Stadium, Indore",179,India wins,84.3,48.8,yes,Elo alone says 73.7%
+T20I,1529232,2026-10-11,India (batted first) v West Indies,"Holkar Cricket Stadium, Indore",179,First innings 180+,73.3,35.6,yes,"sim median 202, 80% range 153 to 260, actual 223"
+T20I,1529232,2026-10-11,India (batted first) v West Indies,"Holkar Cricket Stadium, Indore",179,First innings 223+ (the actual score),30.7,5.7,yes,how surprising the real score was
+T20I,1550709,2026-10-11,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,164,Pakistan wins,73.7,48.8,yes,Elo alone says 72.0%
+T20I,1550709,2026-10-11,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,164,First innings 180+,61.8,35.6,yes,"sim median 194, 80% range 130 to 259, actual 215"
+T20I,1550709,2026-10-11,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,164,First innings 215+ (the actual score),33.5,8.5,yes,how surprising the real score was
+T20I,1550710,2026-10-13,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,178,Pakistan wins,81.4,48.8,no,Elo alone says 73.6%
+T20I,1550710,2026-10-13,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,178,First innings 180+,70.1,35.6,no,"sim median 201, 80% range 147 to 258, actual 168"
+T20I,1550710,2026-10-13,Pakistan (batted first) v Sri Lanka,Rawalpindi Cricket Stadium,178,First innings 168+ (the actual score),80.3,50.4,yes,how surprising the real score was

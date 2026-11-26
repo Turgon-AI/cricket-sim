@@ -20,3 +20,22 @@ wiki_fixtures:
   attribution: >-
     Wikipedia contributors, "International cricket in <season>" pages, English Wikipedia
     (https://en.wikipedia.org), CC BY-SA 4.0; derived data must be shared alike. Revision ids are in the snapshot index.
+
+# Scheduled start time and day/night status of ODIs, T20Is and IPL matches, from the per-match templates on
+# Wikipedia series pages. Read by cricket_sim.wiki_series.
+wiki_series:
+  description: >-
+    Wikitext of the English Wikipedia series pages that the pinned season pages (wiki_fixtures) link with
+    {{main|...}} from a section holding a numbered men's ODI or T20I, every "YYYY Indian Premier League" page, and
+    their own {{main|...}} sub-pages, pinned by revision id. Parsed into data/silver/wikipedia_match_schedule.parquet.
+  endpoint: https://en.wikipedia.org/w/api.php
+  request: "action=query&prop=revisions&rvprop=content|ids&rvslots=main&formatversion=2&redirects=1"
+  user_agent: "cricket-sim/0.1 (non-commercial research; match start times) python-requests"
+  delay_seconds: 1.0
+  ipl_first_year: 2008
+  ipl_last_year: 2026
+  licence: CC BY-SA 4.0
+  redistributable: true
+  attribution: >-
+    Wikipedia contributors, cricket series and season pages, English Wikipedia (https://en.wikipedia.org),
+    CC BY-SA 4.0; derived data must be shared alike. Page titles and revision ids are in the snapshot index.

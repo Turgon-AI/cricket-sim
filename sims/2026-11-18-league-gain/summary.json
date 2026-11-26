@@ -1,0 +1,179 @@
+{
+  "commit": "3bb1947",
+  "build_fingerprint": "ca15e28ebb4af18d620ff6284fdb49d2371bc7875666463ea3924ec5cb80c419",
+  "first_test_year": 2019,
+  "features": [
+    "recent_level",
+    "year",
+    "elo_diff",
+    "venue_dev",
+    "venue_n",
+    "bat_first_home",
+    "bat_second_home",
+    "bf_bat_rpb",
+    "bf_bat_opb",
+    "bf_bat_rpb_365",
+    "bf_bowl_rpb",
+    "bf_bowl_wpb",
+    "bf_bowl_rpb_365",
+    "bf_caps",
+    "bs_bat_rpb",
+    "bs_bat_opb",
+    "bs_bat_rpb_365",
+    "bs_bowl_rpb",
+    "bs_bowl_wpb",
+    "bs_bowl_rpb_365",
+    "bs_caps",
+    "toss_winner_bats_first",
+    "toss_bat",
+    "is_international"
+  ],
+  "seed": 20261016,
+  "training_rows_by_segment": {
+    "BBL": 496,
+    "BPL": 411,
+    "CPL": 358,
+    "ILT20": 132,
+    "IPL": 1201,
+    "LPL": 130,
+    "MLC": 102,
+    "PSL": 343,
+    "SA20": 118,
+    "T20 Blast": 1304,
+    "T20I": 1030
+  },
+  "results": [
+    {
+      "variant": "base",
+      "model": "linear",
+      "test_matches": 577,
+      "train_rows_last_year": 649,
+      "share_explained": 0.09920952561835727,
+      "mean_abs_error_runs": 26.886543088975237,
+      "win_skill": 0.05749390414626687
+    },
+    {
+      "variant": "base",
+      "model": "boosted",
+      "test_matches": 577,
+      "train_rows_last_year": 649,
+      "share_explained": 0.0192117843959696,
+      "mean_abs_error_runs": 27.693008253173165,
+      "win_skill": 0.04246798878492075
+    },
+    {
+      "variant": "venue",
+      "model": "linear",
+      "test_matches": 577,
+      "train_rows_last_year": 649,
+      "share_explained": 0.0981610404264387,
+      "mean_abs_error_runs": 26.904620195156927,
+      "win_skill": 0.0385966812062849,
+      "gain_share": -0.00104848519191858,
+      "gain_share_band": [
+        -0.020338597685502224,
+        0.018196469716700258
+      ],
+      "gain_win_skill": -0.018897222939981972,
+      "gain_win_skill_band": [
+        -0.035799250986067,
+        -0.001167519869189162
+      ]
+    },
+    {
+      "variant": "venue",
+      "model": "boosted",
+      "test_matches": 577,
+      "train_rows_last_year": 649,
+      "share_explained": 0.007013487192656931,
+      "mean_abs_error_runs": 27.795292039051255,
+      "win_skill": 0.030610465423721478,
+      "gain_share": -0.012198297203312669,
+      "gain_share_band": [
+        -0.04224907537389162,
+        0.019032867642130236
+      ],
+      "gain_win_skill": -0.011857523361199274,
+      "gain_win_skill_band": [
+        -0.035931962292385045,
+        0.015551160949568385
+      ]
+    },
+    {
+      "variant": "rows_only",
+      "model": "linear",
+      "test_matches": 577,
+      "train_rows_last_year": 4176,
+      "share_explained": 0.15862685510284558,
+      "mean_abs_error_runs": 25.686681175220237,
+      "win_skill": 0.09100664962747806,
+      "gain_share": 0.0594173294844883,
+      "gain_share_band": [
+        0.03285562791963154,
+        0.09076601825479343
+      ],
+      "gain_win_skill": 0.03351274548121119,
+      "gain_win_skill_band": [
+        0.005768378096791317,
+        0.06131048955368958
+      ]
+    },
+    {
+      "variant": "rows_only",
+      "model": "boosted",
+      "test_matches": 577,
+      "train_rows_last_year": 4176,
+      "share_explained": 0.09060803882378976,
+      "mean_abs_error_runs": 26.804991844735614,
+      "win_skill": 0.05979925396357133,
+      "gain_share": 0.07139625442782016,
+      "gain_share_band": [
+        0.032075810290746236,
+        0.11794226594086663
+      ],
+      "gain_win_skill": 0.01733126517865058,
+      "gain_win_skill_band": [
+        -0.0269852744057962,
+        0.062075456847231744
+      ]
+    },
+    {
+      "variant": "rows",
+      "model": "linear",
+      "test_matches": 577,
+      "train_rows_last_year": 4176,
+      "share_explained": 0.1392355156613979,
+      "mean_abs_error_runs": 25.90989635818102,
+      "win_skill": 0.08468456836639793,
+      "gain_share": 0.04002599004304064,
+      "gain_share_band": [
+        0.008134866358884973,
+        0.07635769092808486
+      ],
+      "gain_win_skill": 0.027190664220131056,
+      "gain_win_skill_band": [
+        -0.0030317171947362494,
+        0.0584511843790527
+      ]
+    },
+    {
+      "variant": "rows",
+      "model": "boosted",
+      "test_matches": 577,
+      "train_rows_last_year": 4176,
+      "share_explained": 0.069087114243496,
+      "mean_abs_error_runs": 26.97779148700128,
+      "win_skill": 0.06890389722184831,
+      "gain_share": 0.049875329847526406,
+      "gain_share_band": [
+        0.004781700931320909,
+        0.10228236433271083
+      ],
+      "gain_win_skill": 0.026435908436927558,
+      "gain_win_skill_band": [
+        -0.018807908126407917,
+        0.07371011813623553
+      ]
+    }
+  ]
+}

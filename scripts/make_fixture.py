@@ -260,6 +260,28 @@ def weather(docs: dict) -> None:
     write_manifest("weather", entries, manifest["upstream"])
 
 
+# ---------------------------------------------------------------- Wikipedia series pages (real subset, CC BY-SA 4.0)
+def wiki_series() -> None:
+    """Only the pinned series pages that hold a match template for a fixture match, copied byte for byte."""
+    from cricket_sim.wiki_series import INDEX_NAME, parse_page
+
+    src = real("wiki_series")
+    index = json.loads((src / INDEX_NAME).read_text(encoding="utf-8"))
+    wanted = {int(m) for m in MATCHES}
+    keep = [e for e in index["pages"] if wanted & {r["cricinfo_match_id"] for r in parse_page(
+        e["resolved_title"], bronze.read_zst(src / e["stored_as"]).decode("utf-8"))}]
+    manifest = json.loads((src / "_snapshot.json").read_text())
+    by_stored = {e["stored_as"]: e for e in manifest["files"]}
+    entries = []
+    for e in keep:
+        shutil.copy2(src / e["stored_as"], out("wiki_series") / e["stored_as"])
+        entries.append({k: v for k, v in by_stored[e["stored_as"]].items() if k not in ("stored_bytes", "stored_sha256")})
+    (out("wiki_series") / INDEX_NAME).write_text(json.dumps({"pages": keep, "missing": []}, indent=2, ensure_ascii=False)
+                                                 + "\n", encoding="utf-8")
+    entries.append({"name": INDEX_NAME, "stored_as": INDEX_NAME, "compressed": False})
+    write_manifest("wiki_series", entries, {**manifest["upstream"], "fixture_subset_of": lock()["wiki_series"]})
+
+
 def _dates(start: str, end: str) -> list[str]:
     d, e = datetime.fromisoformat(start), datetime.fromisoformat(end)
     return [(d + timedelta(days=i)).strftime("%Y-%m-%d") for i in range((e - d).days + 1)]
@@ -282,6 +304,7 @@ def main() -> None:
     synthetic_ari(docs)
     synthetic_hawkeye(docs)
     weather(docs)
+    wiki_series()
     write_lock()
     (OUT / "SUBSET").write_text("This folder holds a SUBSET of the real snapshots (scripts/make_fixture.py).\n"
                                 "Checks that only hold for complete data, such as stale venue overrides, are skipped.\n")

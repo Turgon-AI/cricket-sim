@@ -170,6 +170,7 @@ Conformed facts as recorded: Cricsheet parsed into tables, reference lists, the 
 | [`venues`](#venues) | One row per canonical venue (venue_id), 590 rows. | venue_id |
 | [`wickets`](#wickets) | One row per wicket event on a delivery (match_id, innings, delivery_number, wicket_number). | match_id, innings, delivery_number, wicket_number |
 | [`wikipedia_fixtures`](#wikipedia_fixtures) | One row per numbered international (match_format, match_number). | match_format, match_number |
+| [`wikipedia_match_schedule`](#wikipedia_match_schedule) | One row per Cricinfo match id. | cricinfo_match_id |
 
 ### balls
 
@@ -889,6 +890,30 @@ One row per (match_format, match_number) after de-duplicating rows that appear o
 | `duplicate_conflict` | BOOLEAN | True when the discarded duplicates disagreed with the kept row on id, date or teams (22 rows). |
 | `conflict_fields` | VARCHAR | Which of 'cricinfo_match_id', 'start_date', 'teams' disagreed. NULL if no conflict. |
 
+### wikipedia_match_schedule
+
+One row per Cricinfo match id found in a match template, after de-duplicating matches that appear on more than one page (a series page and its sub-page).
+
+- **One row is:** One row per Cricinfo match id.
+- **Key:** `cricinfo_match_id`
+- **Kind:** reference · **Sources:** wiki_series
+
+- **Limitations:** Source: Wikipedia series pages pinned by revision id (bronze wiki_series), licence CC BY-SA 4.0 (derived tables must stay CC BY-SA). Only matches whose template links an ESPNcricinfo scorecard are read; older pages (before about 2009) mostly have no match templates or no time. The time is the scheduled start, not the first ball: a rain delay is not in it. The template documentation does not say which zone; it is usually local, IPL pages use Indian time even in the UAE and South Africa (see dim_match_schedule.time_zone_assumed and report_start_time_check). day_night_flag is the page's own mark and is NULL when the page says nothing; it is not inferred from the time.
+
+| column | type | description |
+|---|---|---|
+| `cricinfo_match_id` **key** | BIGINT | ESPNcricinfo match id from the template's report link. Equals Cricsheet's match_id for these matches. |
+| `scheduled_start_stated` | TIME | First clock time in the template's time field ('14:30', '2:30 pm'), as the page states it. Usually local time at the ground, but IPL pages give Indian time wherever the match is played, and a few fields name a zone (stated_time_zone). NULL when the page gives none. |
+| `stated_time_zone` | VARCHAR | IANA zone the time field names ('UTC' for GMT or UTC, 'Asia/Kolkata' for IST); NULL when it names none, which usually means local time. |
+| `day_night_flag` | BOOLEAN | TRUE when the template marks a day/night match (daynight or night field set, or 'D/N' in the time), FALSE when the field says no, NULL when the page says nothing. |
+| `time_text` | VARCHAR | The time field as plain text, kept so a parse can be checked (for example '14:00 (ACDT)'). |
+| `date_text` | VARCHAR | The date field as plain text. |
+| `template` required | VARCHAR | Which match template the row came from. |
+| `page_title` required | VARCHAR | Wikipedia page the row came from. |
+| `page_revid` required | BIGINT | Revision id of that page in the pinned snapshot. |
+| `duplicates` required | INTEGER | How many other rows for the same match id were dropped. |
+| `duplicate_conflict` required | BOOLEAN | TRUE when the dropped rows gave a different time or day/night flag. |
+
 ## Gold
 
 Everything derived. int_ = building blocks over all matches; dim_/fact_/map_/report_ = in-scope products. Only gold dim_/fact_/map_/report_ tables can be exported.
@@ -896,6 +921,7 @@ Everything derived. int_ = building blocks over all matches; dim_/fact_/map_/rep
 | table | one row is | key |
 |---|---|---|
 | [`dim_match`](#dim_match) | One row per in-scope match. | match_id |
+| [`dim_match_schedule`](#dim_match_schedule) | One row per match. | match_id |
 | [`dim_player`](#dim_player) | One row per player (Cricsheet person) who appears on a team sheet of at least one in-scope match. | cricsheet_id |
 | [`dim_player_team`](#dim_player_team) | One row per (player_id, spell). | player_id, spell |
 | [`dim_venue`](#dim_venue) | One row per canonical venue (ground) referenced by dim_match. | venue_id |
@@ -920,10 +946,11 @@ Everything derived. int_ = building blocks over all matches; dim_/fact_/map_/rep
 | [`report_cricsheet_not_in_reference`](#report_cricsheet_not_in_reference) | One row per unlinked in-scope Cricsheet international. | match_id |
 | [`report_hawkeye_summary`](#report_hawkeye_summary) | One row per Hawk-Eye competition file. | competition |
 | [`report_international_coverage`](#report_international_coverage) | One row per reference international, keyed by (segment, match_number). | segment, match_number |
-| [`report_ipl_seasons`](#report_ipl_seasons) | One row per IPL season (calendar year of match start). | season_year |
+| [`report_league_seasons`](#report_league_seasons) | One row per league segment and calendar year of match start. | segment, season_year |
 | [`report_match_quality`](#report_match_quality) | One row per match in scope (same rows as dim_match). | match_id |
 | [`report_player_careers`](#report_player_careers) | One row per (player, format family, gender) for every in-scope player. | player_id, format_family, gender |
 | [`report_result_check`](#report_result_check) | One row per Cricsheet match linked to a reference match (the rows of map_match_ids). | match_id |
+| [`report_start_time_check`](#report_start_time_check) | One row per match. | match_id |
 
 ### dim_match
 
@@ -933,16 +960,16 @@ Every in-scope match from Cricsheet with its segment, competition, dates, venue 
 - **Key:** `match_id`
 - **Kind:** dim · **Sources:** cricsheet, derived · **Built from:** `matches`, `int_match_quality`, `match_venues`
 
-- **Limitations:** Scope (config/scope.yml): men's matches from 2001-01-01 in four segments: Tests, ODIs, T20Is where both teams are ICC full members, and the IPL. Cricsheet is incomplete: it withholds Afghanistan's matches and lacks some internationals (see report_international_coverage and report_cricsheet_known_missing). Team, venue and official names are Cricsheet's spellings and change over time (e.g. 'Delhi Daredevils' and 'Delhi Capitals'); use venue_id for grounds. match_type_number is not unique (2 ODI numbers repeat in scope), so never use it as a key. 3 matches fail passes_quality.
+- **Limitations:** Scope (config/scope.yml): men's matches from 2001-01-01 in thirteen segments: Tests, ODIs, T20Is where both teams are ICC full members, the IPL, and from 2015-04-01 nine franchise T20 leagues (T20 Blast, BBL, BPL, CPL, PSL, LPL, ILT20, SA20, MLC). League coverage is checked only against Cricsheet's own missing list, a weaker claim than the internationals have. Cricsheet is incomplete: it withholds Afghanistan's matches and lacks some internationals (see report_international_coverage and report_cricsheet_known_missing). Team, venue and official names are Cricsheet's spellings and change over time (e.g. 'Delhi Daredevils' and 'Delhi Capitals'); use venue_id for grounds. match_type_number is not unique (2 ODI numbers repeat in scope), so never use it as a key. 4 matches fail passes_quality.
 
 | column | type | description |
 |---|---|---|
 | `match_id` **key** | VARCHAR | Cricsheet match identifier (the name of the match's file in Cricsheet's download, e.g. '1000851'). For most internationals it equals the ESPNcricinfo match id, but do not rely on that; use map_match_ids. |
-| `segment` required | VARCHAR | Which part of the scope the match belongs to: 'Test', 'ODI', 'T20I' (both teams ICC full members) or 'IPL' (Indian Premier League). |
-| `match_type` required | VARCHAR | Cricsheet match type: 'Test', 'ODI' or 'T20' (T20Is and IPL matches are both 'T20'). |
-| `match_type_number` | INTEGER | Official international match number (Test No., ODI No., T20I No.) as Cricsheet gives it. NULL for IPL matches. Not unique: a handful of numbers are shared by two matches. |
+| `segment` required | VARCHAR | Which part of the scope the match belongs to: 'Test', 'ODI', 'T20I' (both teams ICC full members), 'IPL' (Indian Premier League), or one of the leagues 'T20 Blast' (England), 'BBL' (Big Bash League), 'BPL' (Bangladesh Premier League), 'CPL' (Caribbean Premier League), 'PSL' (Pakistan Super League), 'LPL' (Lanka Premier League), 'ILT20' (International League T20), 'SA20' or 'MLC' (Major League Cricket). |
+| `match_type` required | VARCHAR | Cricsheet match type: 'Test', 'ODI' or 'T20' (T20Is and league matches are all 'T20'). |
+| `match_type_number` | INTEGER | Official international match number (Test No., ODI No., T20I No.) as Cricsheet gives it. NULL for league matches. Not unique: a handful of numbers are shared by two matches. |
 | `gender` required | VARCHAR | 'male' for every row in the current scope. |
-| `team_type` required | VARCHAR | 'international' for Tests, ODIs and T20Is; 'club' for IPL. |
+| `team_type` required | VARCHAR | 'international' for Tests, ODIs and T20Is; 'club' for the IPL and the other leagues. |
 | `event_name` | VARCHAR | Competition or series name as Cricsheet gives it (e.g. 'Indian Premier League', 'ICC Cricket World Cup'). NULL when Cricsheet records none. |
 | `event_match_number` | INTEGER | Match number within the event or series. NULL when Cricsheet gives none or a non-numeric one. |
 | `event_stage` | VARCHAR | Knockout stage when given, e.g. 'Final', 'Semi Final', 'Qualifier 1'; NULL otherwise. |
@@ -979,6 +1006,32 @@ Every in-scope match from Cricsheet with its segment, competition, dates, venue 
 | `cricsheet_missing_fields` | VARCHAR | Cricsheet's own note of data it lacks for this match (e.g. powerplays), as JSON. NULL when Cricsheet notes nothing missing. |
 | `cricsheet_data_version` required | VARCHAR | Cricsheet JSON format version of the match file (e.g. '1.2.0'). |
 | `cricsheet_revision` required | SMALLINT | Cricsheet's revision number of the match file (1 = original; higher = corrected since). |
+| `venue_days_since_last_match` | BIGINT | Days from the end of the last earlier Cricsheet match at this ground (any format, either gender) to this match's start date. A rough sign of how fresh the ground is; it is ground use, not strip use, and Cricsheet lacks most domestic cricket, so the true gap may be shorter. NULL when Cricsheet has no earlier match there. Matches starting the same day at the ground are not counted. |
+| `venue_matches_prior_14d` required | BIGINT | Earlier Cricsheet matches (any format, either gender) that started at this ground in the 14 days before this match's start date. Same caveats as venue_days_since_last_match. |
+| `venue_matches_prior_365d` required | BIGINT | The same count over the 365 days before the match. |
+
+### dim_match_schedule
+
+One row per in-scope limited-overs match found on a Wikipedia series page.
+
+- **One row is:** One row per match.
+- **Key:** `match_id`
+- **Kind:** dim · **Sources:** wiki_series, cricsheet, derived · **Built from:** `dim_match`, `wikipedia_match_schedule`
+
+- **Limitations:** Only matches whose Wikipedia template links a Cricinfo scorecard and that Cricsheet holds; coverage by segment is in headline.json (scheduled_start_coverage_pct). Few matches before about 2009 have a time. The time is the scheduled start, not the first ball. Licence CC BY-SA 4.0: anything built from this table must stay CC BY-SA.
+
+| column | type | description |
+|---|---|---|
+| `match_id` **key** | VARCHAR | Cricsheet match identifier. |
+| `segment` required | VARCHAR | 'ODI', 'T20I' or 'IPL'. |
+| `start_date` required | DATE | The match's start date (dim_match). |
+| `scheduled_start_stated` | TIME | Scheduled start as the page states it, in the zone time_zone_assumed names. NULL when the page gives none. |
+| `time_zone_assumed` | VARCHAR | Zone the stated time is read in: the zone the time field names ('UTC', 'Asia/Kolkata'), else 'Asia/Kolkata' for the IPL (its pages give Indian time even for matches in the UAE or South Africa), else 'ground_local' (the time zone of the ground: see dim_venue_version.timezone). NULL when there is no time. |
+| `wikipedia_day_night_flag` | BOOLEAN | The page's day/night mark; NULL when the page says nothing. |
+| `wikipedia_time_text` | VARCHAR | The page's time field as plain text. |
+| `duplicate_conflict` required | BOOLEAN | TRUE when two Wikipedia pages gave this match different times or marks (the first page with a time is kept). |
+| `page_title` required | VARCHAR | Wikipedia page the row came from. |
+| `page_revid` required | BIGINT | Revision id of that page. |
 
 ### dim_player
 
@@ -1141,7 +1194,7 @@ Every delivery of every in-scope match, with the batting side, over and ball pos
 - **Key:** `match_id`, `innings`, `delivery_number`
 - **Kind:** fact · **Sources:** cricsheet, derived · **Built from:** `balls`, `matches`, `int_ball_state_pre`
 
-- **Limitations:** Scope: men's Tests, ODIs, T20Is between two ICC full members, and the IPL, from 2001 (config/scope.yml); Cricsheet coverage is incomplete (see report_international_coverage; e.g. Afghanistan matches are withheld by Cricsheet). The '_before' columns never include the ball itself; the build checks that the next ball's state equals this state plus this ball. The target and ball limit as cross-checked against how the innings went (NULL for rain-revised chases and innings of unknown length) are hindsight, so they live in fact_delivery_hindsight, not here; the nominal_ and scheduled_ columns are their pre-ball counterparts. Before late 2017 Cricsheet folded byes off a no-ball into the no-ball count (see noball_includes_byes). A wicket on the ball is in dismissal_count; who was out and how is in fact_dismissal. 3 matches in scope fail the quality checks (dim_match.passes_quality).
+- **Limitations:** Scope: men's Tests, ODIs, T20Is between two ICC full members, and the IPL, from 2001, and nine other franchise T20 leagues from 2015-04-01 (config/scope.yml); Cricsheet coverage is incomplete (see report_international_coverage; e.g. Afghanistan matches are withheld by Cricsheet). The '_before' columns never include the ball itself; the build checks that the next ball's state equals this state plus this ball. The target and ball limit as cross-checked against how the innings went (NULL for rain-revised chases and innings of unknown length) are hindsight, so they live in fact_delivery_hindsight, not here; the nominal_ and scheduled_ columns are their pre-ball counterparts. Before late 2017 Cricsheet folded byes off a no-ball into the no-ball count (see noball_includes_byes). A wicket on the ball is in dismissal_count; who was out and how is in fact_dismissal. 3 matches in scope fail the quality checks (dim_match.passes_quality).
 
 | column | type | description | timing |
 |---|---|---|---|
@@ -1414,7 +1467,7 @@ Playing window start and end for each match day, in UTC and local time, with how
 
 - **One row is:** One row per match and match day (match_id, match_day_number) at venues with a timezone, 25,712 rows.
 - **Key:** `match_id`, `match_day_number`
-- **Kind:** derived · **Sources:** ari, venues_geo, derived · **Built from:** `matches`, `venues`, `stg_ari_tracking`
+- **Kind:** derived · **Sources:** ari, venues_geo, derived, wiki_series · **Built from:** `matches`, `venues`, `stg_ari_tracking`, `wikipedia_match_schedule`
 
 - **Limitations:** Internal only: the 5,587 'ball_timestamps' windows come from Cricinfo-derived ball timestamps (Ari Adaikalam), which are not redistributable, so this table is never exported. Timestamps exist only from October 2019, so about 78% of rows are the default per-format estimate (not real play times). A timestamp cluster becomes a match day only if it has at least 20 balls and spans no more than 13 hours (9 for T20 and IPL); a gap of over 6 hours between balls splits days, and the end is the last ball plus 5 minutes. Day/night status and interruptions are not known. Rows exist only for match days at venues with a timezone (25,712 of 32,324).
 
@@ -1424,11 +1477,12 @@ Playing window start and end for each match day, in UTC and local time, with how
 | `match_day_number` **key** | SMALLINT | 1-based index of the match day among the match's Cricsheet dates. (day) |
 | `match_date` | DATE | Calendar date of this match day (local date). |
 | `venue_id` | VARCHAR | Canonical venue of the match. Joins to venues.venue_id. |
-| `window_source` | VARCHAR | 'ball_timestamps' (from first and last ball times) or 'default_estimate' (a fixed local-time window by format: Test 10:00-18:00, ODI 10:00-22:00, T20 14:00-23:00, IPL 15:30-23:30). |
+| `window_source` | VARCHAR | 'ball_timestamps' (from first and last ball times), 'scheduled_start' (day 1 of an ODI or T20: the scheduled local start on Wikipedia, for 8 h (ODI), 3.5 h (T20) or 4 h (IPL)) or 'default_estimate' (a fixed local-time window by format: Test 10:00-18:00, ODI 10:00-22:00, T20 14:00-23:00, IPL 15:30-23:30). |
 | `window_start_utc` | TIMESTAMP | Start of the playing window in UTC (naive timestamp): the first ball of the day, or the default start converted to UTC. |
 | `window_end_utc` | TIMESTAMP | End of the playing window in UTC: the last ball of the day plus 5 minutes, or the default end converted to UTC. |
 | `window_start_local` | TIMESTAMP | window_start_utc in the venue's local time (naive timestamp). |
 | `window_end_local` | TIMESTAMP | window_end_utc in the venue's local time (naive timestamp). |
+| `scheduled_start_utc` | TIMESTAMP | Day 1 of an ODI or T20 only, the Wikipedia scheduled start in UTC (read in the zone dim_match_schedule.time_zone_assumed names), whatever set the window; NULL otherwise. |
 | `n_balls_timed` | INTEGER | Number of balls with timestamps in the cluster that defined the window (at least 20). NULL for default estimates. (balls) |
 | `internal_note` | VARCHAR | Fixed text 'internal-only: windows from Cricinfo-derived ball timestamps (Ari) are not redistributable' on ball_timestamps rows; NULL on default_estimate rows. |
 
@@ -1465,7 +1519,7 @@ Playing-window weather summary per match day, with availability and data-quality
 
 - **One row is:** One row per match and match day (match_id, match_day_number), 32,324 rows.
 - **Key:** `match_id`, `match_day_number`
-- **Kind:** derived · **Sources:** weather, derived, ari · **Built from:** `matches`, `venues`, `stg_ari_tracking`
+- **Kind:** derived · **Sources:** weather, derived, ari, wiki_series · **Built from:** `matches`, `venues`, `stg_ari_tracking`, `wikipedia_match_schedule`
 
 - **Limitations:** Internal only: 5,587 windows are placed with Cricinfo ball timestamps, so this table inherits that restriction and is never exported (hourly weather without the phase column is the exported form). Weather exists for only 11,533 of 32,324 match days: unlocated venues (5,710 days) and venues outside the weather plan (15,081 days). No day is lost to the archive lag. Two days have partial hours (window_precipitation_mm is NULL on them). On days without ball timestamps (about 78%) the window is a fixed per-format estimate, so the aggregates cover the likely rather than actual playing hours. Values are ERA5 reanalysis at the venue point, which can be a city centre (see weather_location_quality) and which misses some storms; it is not proof of rain delays.
 
@@ -1477,7 +1531,7 @@ Playing-window weather summary per match day, with availability and data-quality
 | `venue_id` | VARCHAR | Canonical venue of the match. Joins to venues.venue_id. |
 | `venue_version` required | SMALLINT | Venue version whose point the weather was placed at (joins to venue_versions with venue_id). |
 | `timezone` | VARCHAR | IANA timezone used to place the playing window. NULL for the 6,612 match days at venues with no timezone. |
-| `window_source` | VARCHAR | How the playing window was set: 'ball_timestamps' (first to last ball of the day from Cricinfo timestamps, available from late 2019) or 'default_estimate' (a fixed local-time window per format). NULL when there is no timezone. |
+| `window_source` | VARCHAR | How the playing window was set: 'ball_timestamps' (first to last ball of the day from Cricinfo timestamps, available from late 2019), 'scheduled_start' (day 1 of an ODI or T20 with a scheduled local start on Wikipedia: from that start for 8 hours (ODI), 3.5 (T20) or 4 (IPL)) or 'default_estimate' (a fixed local-time window per format). NULL when there is no timezone. |
 | `weather_available` | BOOLEAN | TRUE when at least one weather hour exists for the window (11,533 days), including any partial days (2 in the current build); FALSE otherwise. |
 | `weather_missing_reason` | VARCHAR | Why weather is absent or incomplete: 'venue_not_geocoded', 'no_timezone (venue outside the weather plan)', 'not_in_weather_plan', 'after_archive_lag' (date too recent for the archive), 'fetch_failed', or 'partial_hours' (some hours missing, so window_precipitation_mm is NULL). NULL when complete. |
 | `geocode_confidence` | VARCHAR | Geocode confidence of the venue's point ('high', 'medium', 'low' or 'manual'), copied from venues. NULL when the venue is not located. |
@@ -1499,6 +1553,15 @@ Playing-window weather summary per match day, with availability and data-quality
 | `window_hours_with_rain` | SMALLINT | Number of window hours with at least 0.1 mm of precipitation. (hours) |
 | `pre_match_12h_precipitation_mm` | DOUBLE | Total precipitation over the 12 hours before the window starts. NULL if fewer than 12 of those hours exist or there is no weather. (mm) |
 | `pre_match_hours_present` | SMALLINT | How many of the 12 pre-match hours exist. NULL when no weather. (hours) |
+| `innings1_temperature_c` | DOUBLE | Innings 1 mean air temperature (C), over the hours that innings is expected to take (see innings2_minutes_after_sunset for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL otherwise, because a format-default window does not say when either innings was played. |
+| `innings1_humidity_pct` | DOUBLE | Innings 1 mean relative humidity (%), over the hours that innings is expected to take (see innings2_minutes_after_sunset for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL otherwise, because a format-default window does not say when either innings was played. |
+| `innings1_dew_point_depression_c` | DOUBLE | Innings 1 mean gap between air temperature and dew point (C); a small gap means dew is likely, over the hours that innings is expected to take (see innings2_minutes_after_sunset for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL otherwise, because a format-default window does not say when either innings was played. |
+| `innings1_wind_speed_kmh` | DOUBLE | Innings 1 mean wind speed at 10 m (km/h), over the hours that innings is expected to take (see innings2_minutes_after_sunset for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL otherwise, because a format-default window does not say when either innings was played. |
+| `innings2_temperature_c` | DOUBLE | Innings 2 mean air temperature (C), over the hours that innings is expected to take (see innings2_minutes_after_sunset for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL otherwise, because a format-default window does not say when either innings was played. |
+| `innings2_humidity_pct` | DOUBLE | Innings 2 mean relative humidity (%), over the hours that innings is expected to take (see innings2_minutes_after_sunset for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL otherwise, because a format-default window does not say when either innings was played. |
+| `innings2_dew_point_depression_c` | DOUBLE | Innings 2 mean gap between air temperature and dew point (C); a small gap means dew is likely, over the hours that innings is expected to take (see innings2_minutes_after_sunset for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL otherwise, because a format-default window does not say when either innings was played. |
+| `innings2_wind_speed_kmh` | DOUBLE | Innings 2 mean wind speed at 10 m (km/h), over the hours that innings is expected to take (see innings2_minutes_after_sunset for the split). Only for day 1 of an ODI or T20 whose window_source is 'ball_timestamps' or 'scheduled_start'; NULL otherwise, because a format-default window does not say when either innings was played. |
+| `innings2_minutes_after_sunset` | SMALLINT | Minutes from sunset at the ground (NOAA sunrise equation) to the expected start of innings 2 (positive means the chase starts after dark, when dew forms). Innings windows from the window start, innings 1 lasting 3.5 h (ODI), 1.5 h (T20) or 1.75 h (IPL) and innings 2 starting 4.25 h, 1.75 h or 2 h after the start. These are approximate, since an innings that ends early, a rain delay or a long break moves the real hours. Same rows as the innings columns. |
 
 ### int_player_match_stats
 
@@ -1584,7 +1647,7 @@ Per segment and calendar year: matches, matches passing quality, balls, and the 
 
 | column | type | description |
 |---|---|---|
-| `segment` **key** | VARCHAR | 'Test', 'ODI', 'T20I' or 'IPL'. |
+| `segment` **key** | VARCHAR | The dim_match segment ('Test', 'ODI', 'T20I', 'IPL' or one of the nine other leagues). |
 | `year` **key** | BIGINT | Calendar year of the matches' start dates. |
 | `matches` required | BIGINT | In-scope matches with at least one ball. (matches) |
 | `matches_passing_quality` required | BIGINT | Of those, matches with dim_match.passes_quality = true. (matches) |
@@ -1622,17 +1685,17 @@ Per match with Cricinfo tracking: how many tracking rows land on a Cricsheet bal
 
 ### report_cricsheet_known_missing
 
-Men's Tests and ODIs (and IPL matches, if any) since 2001 on Cricsheet's list of matches it knows it lacks.
+Men's Tests and ODIs since 2001, and in-scope league matches, on Cricsheet's list of matches it knows it lacks.
 
 - **One row is:** One row per entry on Cricsheet's missing list in scope.
 - **Key:** none
 - **Kind:** report · **Sources:** cricsheet_missing · **Built from:** `cricsheet_missing`
 
-- **Limitations:** Copied from Cricsheet's 'missing' web page: entries have only a date and a teams string, no match number or id. Only men's Test and ODI lists and the IPL competition list are kept (currently no IPL entries); T20Is are not covered.
+- **Limitations:** Copied from Cricsheet's 'missing' web page: entries have only a date and a teams string, no match number or id. Only men's Test and ODI lists and the competition lists of the league segments are kept (each league from its own scope start date). A league with no gaps has no list at all, so absence cannot be told apart from a league Cricsheet does not track. T20Is are not covered.
 
 | column | type | description |
 |---|---|---|
-| `list_name` required | VARCHAR | Cricsheet list the entry is on, as Cricsheet titles it: 'Test', 'Odi', or the IPL competition. |
+| `list_name` required | VARCHAR | Cricsheet list the entry is on, as Cricsheet titles it: 'Test', 'Odi', or a league's competition name (e.g. 'T20 blast', 'Big bash league'). |
 | `start_date` required | DATE | Date of the missing match as listed by Cricsheet. |
 | `teams` required | VARCHAR | Teams as Cricsheet writes them, 'Team A vs Team B'. |
 
@@ -1698,20 +1761,21 @@ Every numbered men's Test, ODI and full-member T20I from 2001 in the Wikipedia r
 | `page_title` | VARCHAR | Title of the English Wikipedia season page this row was taken from (CC BY-SA 4.0 source). |
 | `page_revid` | BIGINT | Wikipedia revision id of that page, the pinned version (oldid in the page URL). Together with page_title it identifies the exact source page revision. |
 
-### report_ipl_seasons
+### report_league_seasons
 
-Number of IPL matches per season in scope and how many pass the quality checks.
+Number of matches per league and season in scope and how many pass the quality checks.
 
-- **One row is:** One row per IPL season (calendar year of match start).
-- **Key:** `season_year`
+- **One row is:** One row per league segment and calendar year of match start.
+- **Key:** `segment`, `season_year`
 - **Kind:** report · **Sources:** cricsheet, derived · **Built from:** `dim_match`
 
-- **Limitations:** Counts only matches Cricsheet holds; compare against the official number of matches per season. The current season may be partial.
+- **Limitations:** Counts only matches Cricsheet holds; compare against the official number of matches per season. The current season may be partial. A season is the calendar year of the match start, so a league played across New Year (BBL, BPL, SA20, ILT20) shows one season over two rows. Leagues other than the IPL start at 2015-04-01.
 
 | column | type | description |
 |---|---|---|
-| `season_year` **key** | BIGINT | Calendar year of the IPL season (year of match start dates). |
-| `matches` required | BIGINT | IPL matches in scope that season. (matches) |
+| `segment` **key** | VARCHAR | The league's segment in dim_match (every segment whose matches have team_type 'club'). |
+| `season_year` **key** | BIGINT | Calendar year of the match start dates. |
+| `matches` required | BIGINT | Matches of that league in scope with a start date in that year. (matches) |
 | `matches_passing_quality` required | BIGINT | Of those, matches with dim_match.passes_quality = true. (matches) |
 
 ### report_match_quality
@@ -1800,6 +1864,26 @@ One row per linked international with both sources' results side by side, the th
 | `status` required | VARCHAR | 'agrees', 'margin_differs', 'winner_differs', 'class_differs' (the first failing check in that order of severity, worst last) or 'not_checkable' (Wikipedia's class is unknown). |
 | `page_title` required | VARCHAR | Title of the Wikipedia season page the reference row came from (CC BY-SA 4.0 source). |
 | `page_revid` required | BIGINT | Pinned revision id of that page. |
+
+### report_start_time_check
+
+One row per match with a scheduled start and a timed first ball.
+
+- **One row is:** One row per match.
+- **Key:** `match_id`
+- **Kind:** report · **Sources:** wiki_series, ari, cricsheet, derived · **Built from:** `dim_match_schedule`, `int_match_play_windows`
+
+- **Limitations:** Internal only (the first-ball times are Cricinfo-derived and never exported). Covers only matches with both a scheduled time and ball timestamps (mostly from late 2019). 'late' is usually a rain delay, not an error.
+
+| column | type | description |
+|---|---|---|
+| `match_id` **key** | VARCHAR | Cricsheet match identifier. |
+| `segment` required | VARCHAR | 'ODI', 'T20I' or 'IPL'. |
+| `scheduled_start_stated` required | TIME | Wikipedia's scheduled start as the page states it. |
+| `time_zone_assumed` required | VARCHAR | Zone the stated time was read in (dim_match_schedule.time_zone_assumed). |
+| `first_ball_local` required | TIME | First ball of day 1, local time (Cricinfo-derived). |
+| `minutes_late` required | BIGINT | First ball minus scheduled start, both in UTC, in minutes (negative = first ball before the scheduled time). |
+| `status` required | VARCHAR | 'on_time' (within 15 minutes), 'late' (16 to 240 minutes late), 'very_late' (more) or 'early' (more than 15 minutes early: points at a time zone or parse error). |
 
 ## Models
 

@@ -56,14 +56,16 @@ schema:
   - name: window_source
     logicalType: string
     physicalType: VARCHAR
-    description: '''ball_timestamps'' (from first and last ball times) or ''default_estimate'' (a fixed local-time
-      window by format: Test 10:00-18:00, ODI 10:00-22:00, T20 14:00-23:00, IPL 15:30-23:30).'
+    description: '''ball_timestamps'' (from first and last ball times), ''scheduled_start'' (day 1 of an ODI or T20:
+      the scheduled local start on Wikipedia, for 8 h (ODI), 3.5 h (T20) or 4 h (IPL)) or ''default_estimate'' (a
+      fixed local-time window by format: Test 10:00-18:00, ODI 10:00-22:00, T20 14:00-23:00, IPL 15:30-23:30).'
     quality:
     - name: valid_window_source
       metric: invalidValues
       arguments:
         validValues:
         - ball_timestamps
+        - scheduled_start
         - default_estimate
       mustBe: 0
   - name: window_start_utc
@@ -84,6 +86,11 @@ schema:
     logicalType: timestamp
     physicalType: TIMESTAMP
     description: window_end_utc in the venue's local time (naive timestamp).
+  - name: scheduled_start_utc
+    logicalType: timestamp
+    physicalType: TIMESTAMP
+    description: Day 1 of an ODI or T20 only, the Wikipedia scheduled start in UTC (read in the zone
+      dim_match_schedule.time_zone_assumed names), whatever set the window; NULL otherwise.
   - name: n_balls_timed
     logicalType: integer
     physicalType: INTEGER
@@ -127,8 +134,10 @@ customProperties:
   - ari
   - venues_geo
   - derived
+  - wiki_series
 - property: upstream
   value:
   - matches
   - venues
   - stg_ari_tracking
+  - wikipedia_match_schedule

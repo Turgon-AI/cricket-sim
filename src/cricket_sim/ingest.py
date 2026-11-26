@@ -144,8 +144,9 @@ def _context_ingesters():
     from .context_players import ingest_wikidata_players
     from .context_venues import ingest_venues_and_weather
     from .wiki_fixtures import ingest_wiki_fixtures
+    from .wiki_series import ingest_wiki_series
     return {"wikidata_players": ingest_wikidata_players, "venues_and_weather": ingest_venues_and_weather,
-            "wiki_fixtures": ingest_wiki_fixtures}
+            "wiki_fixtures": ingest_wiki_fixtures, "wiki_series": ingest_wiki_series}
 
 
 INGESTERS.update(_context_ingesters())

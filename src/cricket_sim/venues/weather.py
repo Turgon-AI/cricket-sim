@@ -9,7 +9,13 @@ Time handling
 Playing window (per match day)
   window_source = 'ball_timestamps': first to last ball of that day from Ari's per-ball UTC timestamps
                   (Cricinfo-derived, so the exact times stay in an internal table).
+  window_source = 'scheduled_start': day 1 of an ODI or T20, no ball timestamps, and a scheduled start on Wikipedia
+                  (silver wikipedia_match_schedule, read in the zone scheduled_start_utc picks): from that start
+                  for the format's usual length (SCHEDULED_HOURS).
   window_source = 'default_estimate': a format default in local time (below), converted with zoneinfo at the date.
+  Innings windows (ODI and T20 day 1, only when the window is timed or scheduled): innings 1 from the window start
+  for INNINGS1_HOURS, innings 2 from INNINGS2_START_HOURS after the start to the window end. Approximate: an
+  innings that ends early, a rain delay or a long break moves the real hours.
   Aggregates use only hours inside the window. Rain in the 12 hours before the window is a separate column.
 
 Hour conventions
@@ -37,6 +43,10 @@ HOUR = timedelta(hours=1)
 # T20s mostly 14:00-23:00; IPL 15:30 or 19:30 starts ending by ~23:40). Day/night status is not in Cricsheet.
 DEFAULT_WINDOWS = {"Test": (time(10, 0), time(18, 0)), "ODI": (time(10, 0), time(22, 0)),
                    "T20": (time(14, 0), time(23, 0)), "IPL": (time(15, 30), time(23, 30))}
+# usual length of a limited-overs match from its scheduled start, and where its innings fall (hours from the start)
+SCHEDULED_HOURS = {"ODI": 8.0, "T20": 3.5, "IPL": 4.0}
+INNINGS1_HOURS = {"ODI": 3.5, "T20": 1.5, "IPL": 1.75}
+INNINGS2_START_HOURS = {"ODI": 4.25, "T20": 1.75, "IPL": 2.0}
 CLUSTER_GAP = timedelta(hours=6)
 MIN_BALLS_PER_DAY = 20
 MAX_DAY_HOURS = {"Test": 13, "ODI": 13, "T20": 9, "IPL": 9}
@@ -116,9 +126,21 @@ def ball_clusters(timestamps: list[datetime]) -> list[tuple[datetime, datetime, 
     return [tuple(c) for c in out]
 
 
-def day_windows(dates: list[date], klass: str, tz: str | None, clusters: list[tuple]) -> list[dict]:
-    """One window per match date: from ball timestamps when a plausible cluster starts on that local date,
-    else the format default. Without a timezone no window can be placed (weather needs coordinates anyway)."""
+def scheduled_start_utc(day: date, stated: time | None, stated_zone: str | None, klass: str,
+                        tz: str | None) -> datetime | None:
+    """A Wikipedia scheduled start in UTC. The time is read in the zone the page names (GMT, IST), else Indian time
+    for the IPL (its pages give Indian time even for matches in the UAE or South Africa), else the ground's zone."""
+    zone = stated_zone or ("Asia/Kolkata" if klass == "IPL" else tz)
+    if stated is None or zone is None:
+        return None
+    return local_to_utc(datetime.combine(day, stated), zone)
+
+
+def day_windows(dates: list[date], klass: str, tz: str | None, clusters: list[tuple],
+                scheduled: datetime | None = None) -> list[dict]:
+    """One window per match date: from ball timestamps when a plausible cluster starts on that local date, else
+    (day 1 of a limited-overs match) from the scheduled start, else the format default. Without a timezone no
+    window can be placed (weather needs coordinates anyway)."""
     by_date = {}
     if tz:
         for start, end, n in clusters:
@@ -136,12 +158,44 @@ def day_windows(dates: list[date], klass: str, tz: str | None, clusters: list[tu
         if d in by_date:
             start, end, n = by_date[d]
             row.update(window_start_utc=start, window_end_utc=end, window_source="ball_timestamps", n_balls_timed=n)
+        elif tz and scheduled is not None and i == 1 and klass in SCHEDULED_HOURS:
+            start, end = scheduled, scheduled + timedelta(hours=SCHEDULED_HOURS[klass])
+            row.update(window_start_utc=start, window_end_utc=end, window_source="scheduled_start")
         elif tz:
             start = local_to_utc(datetime.combine(d, lo), tz)
             end = local_to_utc(datetime.combine(d, hi), tz)
             row.update(window_start_utc=start, window_end_utc=end, window_source="default_estimate")
         out.append(row)
     return out
+
+
+def innings_windows(klass: str, start: datetime, end: datetime) -> tuple[tuple, tuple] | None:
+    """(innings 1 window, innings 2 window) in UTC for a limited-overs day window, or None (Tests, or a window too
+    short to hold a second innings)."""
+    if klass not in SCHEDULED_HOURS:
+        return None
+    first = (start, min(end, start + timedelta(hours=INNINGS1_HOURS[klass])))
+    second_start = start + timedelta(hours=INNINGS2_START_HOURS[klass])
+    if second_start >= end:
+        return None
+    return first, (second_start, end)
+
+
+def sunset_utc(lat: float, lon: float, day: date) -> datetime | None:
+    """Sunset at a point on a date (UTC, naive), from the NOAA sunrise equation (about a minute of error).
+    None in polar day or night."""
+    n = day.toordinal() - date(2000, 1, 1).toordinal() + 0.0008 - lon / 360.0
+    mean_anomaly = math.radians((357.5291 + 0.98560028 * n) % 360)
+    centre = 1.9148 * math.sin(mean_anomaly) + 0.02 * math.sin(2 * mean_anomaly) + 0.0003 * math.sin(3 * mean_anomaly)
+    ecliptic = math.radians((math.degrees(mean_anomaly) + centre + 180 + 102.9372) % 360)
+    transit = 2451545.0 + n + 0.0053 * math.sin(mean_anomaly) - 0.0069 * math.sin(2 * ecliptic)
+    declination = math.asin(math.sin(ecliptic) * math.sin(math.radians(23.4397)))
+    cos_h = ((math.sin(math.radians(-0.833)) - math.sin(math.radians(lat)) * math.sin(declination))
+             / (math.cos(math.radians(lat)) * math.cos(declination)))
+    if not -1 <= cos_h <= 1:
+        return None
+    julian = transit + math.degrees(math.acos(cos_h)) / 360.0
+    return datetime(2000, 1, 1, 12) + timedelta(days=julian - 2451545.0)
 
 
 def _floor(t: datetime, grid: int = 0) -> datetime:

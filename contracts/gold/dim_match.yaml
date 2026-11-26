@@ -11,11 +11,13 @@ description:
     The match dimension: one row per in-scope match with its segment, teams, toss, result, officials, canonical
     venue and quality verdict. Every fact and report table joins to it on match_id.
   limitations: >-
-    Scope (config/scope.yml): men's matches from 2001-01-01 in four segments: Tests, ODIs, T20Is where both teams
-    are ICC full members, and the IPL. Cricsheet is incomplete: it withholds Afghanistan's matches and lacks some
+    Scope (config/scope.yml): men's matches from 2001-01-01 in thirteen segments: Tests, ODIs, T20Is where both
+    teams are ICC full members, the IPL, and from 2015-04-01 nine franchise T20 leagues (T20 Blast, BBL, BPL, CPL,
+    PSL, LPL, ILT20, SA20, MLC). League coverage is checked only against Cricsheet's own missing list, a weaker
+    claim than the internationals have. Cricsheet is incomplete: it withholds Afghanistan's matches and lacks some
     internationals (see report_international_coverage and report_cricsheet_known_missing). Team, venue and official
     names are Cricsheet's spellings and change over time (e.g. 'Delhi Daredevils' and 'Delhi Capitals'); use venue_id
-    for grounds. match_type_number is not unique (2 ODI numbers repeat in scope), so never use it as a key. 3 matches
+    for grounds. match_type_number is not unique (2 ODI numbers repeat in scope), so never use it as a key. 4 matches
     fail passes_quality.
 schema:
 - name: dim_match
@@ -40,8 +42,10 @@ schema:
     logicalType: string
     physicalType: VARCHAR
     description: >-
-      Which part of the scope the match belongs to: 'Test', 'ODI', 'T20I' (both teams ICC full members) or 'IPL'
-      (Indian Premier League).
+      Which part of the scope the match belongs to: 'Test', 'ODI', 'T20I' (both teams ICC full members), 'IPL'
+      (Indian Premier League), or one of the leagues 'T20 Blast' (England), 'BBL' (Big Bash League), 'BPL'
+      (Bangladesh Premier League), 'CPL' (Caribbean Premier League), 'PSL' (Pakistan Super League), 'LPL' (Lanka
+      Premier League), 'ILT20' (International League T20), 'SA20' or 'MLC' (Major League Cricket).
     required: true
     quality:
     - name: valid_segment
@@ -52,11 +56,20 @@ schema:
         - ODI
         - T20I
         - IPL
+        - T20 Blast
+        - BBL
+        - BPL
+        - CPL
+        - PSL
+        - LPL
+        - ILT20
+        - SA20
+        - MLC
       mustBe: 0
   - name: match_type
     logicalType: string
     physicalType: VARCHAR
-    description: 'Cricsheet match type: ''Test'', ''ODI'' or ''T20'' (T20Is and IPL matches are both ''T20'').'
+    description: 'Cricsheet match type: ''Test'', ''ODI'' or ''T20'' (T20Is and league matches are all ''T20'').'
     required: true
     quality:
     - name: valid_match_type
@@ -71,7 +84,7 @@ schema:
     logicalType: integer
     physicalType: INTEGER
     description: >-
-      Official international match number (Test No., ODI No., T20I No.) as Cricsheet gives it. NULL for IPL matches.
+      Official international match number (Test No., ODI No., T20I No.) as Cricsheet gives it. NULL for league matches.
       Not unique: a handful of numbers are shared by two matches.
   - name: gender
     logicalType: string
@@ -88,7 +101,7 @@ schema:
   - name: team_type
     logicalType: string
     physicalType: VARCHAR
-    description: '''international'' for Tests, ODIs and T20Is; ''club'' for IPL.'
+    description: '''international'' for Tests, ODIs and T20Is; ''club'' for the IPL and the other leagues.'
     required: true
     quality:
     - name: valid_team_type
@@ -335,7 +348,32 @@ schema:
     physicalType: SMALLINT
     description: Cricsheet's revision number of the match file (1 = original; higher = corrected since).
     required: true
+  - name: venue_days_since_last_match
+    logicalType: integer
+    physicalType: BIGINT
+    description: Days from the end of the last earlier Cricsheet match at this ground (any format, either gender) to
+      this match's start date. A rough sign of how fresh the ground is; it is ground use, not strip use, and Cricsheet
+      lacks most domestic cricket, so the true gap may be shorter. NULL when Cricsheet has no earlier match there.
+      Matches starting the same day at the ground are not counted.
+  - name: venue_matches_prior_14d
+    logicalType: integer
+    physicalType: BIGINT
+    description: Earlier Cricsheet matches (any format, either gender) that started at this ground in the 14 days
+      before this match's start date. Same caveats as venue_days_since_last_match.
+    required: true
+  - name: venue_matches_prior_365d
+    logicalType: integer
+    physicalType: BIGINT
+    description: The same count over the 365 days before the match.
+    required: true
   quality:
+  - name: venue_use_counts_consistent
+    description: the 14-day count never exceeds the 365-day count, a gap is never negative, and a match with an
+      earlier match there in the last 14 days has a gap of at most 14 days
+    type: sql
+    query: SELECT count(*) FROM ${table} WHERE venue_matches_prior_14d > venue_matches_prior_365d OR
+      venue_days_since_last_match < 0 OR (venue_matches_prior_14d > 0 AND venue_days_since_last_match > 14)
+    mustBe: 0
   - name: venue_version_exists
     description: every (venue_id, venue_version) is a row of dim_venue_version valid on the match's start date
     type: sql
@@ -344,10 +382,10 @@ schema:
       m.start_date)
     mustBe: 0
   - name: row_count_floor_full_data
-    description: on the complete snapshots, at least 90 to 95% of the 5,871 rows of the 2026-10-27 real
+    description: on the complete snapshots, at least 90 to 95% of the 9,540 rows of the 2026-11-18 real
       build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
     metric: rowCount
-    mustBeGreaterOrEqualTo: 5500
+    mustBeGreaterOrEqualTo: 8800
     customProperties:
     - property: fullDataOnly
       value: true

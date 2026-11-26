@@ -19,3 +19,52 @@ segments:
   - name: IPL
     match_type: T20
     event_name: Indian Premier League
+    missing_list: indian premier league
+  # Men's franchise T20 leagues, one segment each (wave one, added 2026-11-18). From 2015-04-01: earlier BPL and BBL seasons are only 51 to 87%
+  # held by Cricsheet. event_name_in lists every sponsor name a league has used. missing_list is the name the
+  # league has on Cricsheet's missing list (lower case); a league with no gaps has no entry there.
+  - name: T20 Blast
+    match_type: T20
+    event_name_in: [NatWest T20 Blast, Vitality Blast, Vitality Blast Men]
+    from_date: "2015-04-01"
+    missing_list: t20 blast
+  - name: BBL
+    match_type: T20
+    event_name: Big Bash League
+    from_date: "2015-04-01"
+    missing_list: big bash league
+  - name: BPL
+    match_type: T20
+    event_name: Bangladesh Premier League
+    from_date: "2015-04-01"
+    missing_list: bangladesh premier league
+  - name: CPL
+    match_type: T20
+    event_name: Caribbean Premier League
+    from_date: "2015-04-01"
+    missing_list: caribbean premier league
+  - name: PSL
+    match_type: T20
+    event_name: Pakistan Super League
+    from_date: "2015-04-01"
+    missing_list: pakistan super league
+  - name: LPL
+    match_type: T20
+    event_name: Lanka Premier League
+    from_date: "2015-04-01"
+    missing_list: lanka premier league
+  - name: ILT20
+    match_type: T20
+    event_name: International League T20
+    from_date: "2015-04-01"
+    missing_list: international league t20
+  - name: SA20
+    match_type: T20
+    event_name: SA20
+    from_date: "2015-04-01"
+    missing_list: sa20
+  - name: MLC
+    match_type: T20
+    event_name: Major League Cricket
+    from_date: "2015-04-01"
+    missing_list: major league cricket

@@ -1,0 +1,129 @@
+{
+  "ODI": {
+    "all_years_all": {
+      "matches": 732,
+      "spread_sd_runs": 69.49513238070296,
+      "luck_sd_runs_hindsight": 49.761413676152536,
+      "luck_share_hindsight": 0.5127157356031724,
+      "luck_share_hindsight_band": [
+        0.4641331877787895,
+        0.5572920211670008
+      ]
+    },
+    "all_years_full_members": {
+      "matches": 422,
+      "spread_sd_runs": 69.05472654197924,
+      "luck_sd_runs_hindsight": 50.140760216609465,
+      "luck_share_hindsight": 0.5272238024281577,
+      "luck_share_hindsight_band": [
+        0.47783730868275354,
+        0.5926291296945204
+      ]
+    },
+    "model_years_all": {
+      "matches": 403,
+      "spread_sd_runs": 71.72253517728622,
+      "luck_sd_runs_hindsight": 50.797194828569154,
+      "luck_sd_runs_model": 55.00633583603278,
+      "luck_share_hindsight": 0.5016123210605867,
+      "luck_share_hindsight_band": [
+        0.4504911950687839,
+        0.5621806002868096
+      ],
+      "luck_share_model": 0.588185301859013,
+      "luck_share_model_band": [
+        0.5294851156417124,
+        0.6588630265173511
+      ],
+      "model_explained_share": 0.07540360462367335,
+      "model_explained_share_band": [
+        0.014503733119674716,
+        0.13883073862550716
+      ],
+      "model_error_that_is_luck": 0.6361535744681456,
+      "model_error_that_is_luck_band": [
+        0.5692766788622436,
+        0.719994032559935
+      ]
+    },
+    "model_years_full_members": {
+      "matches": 220,
+      "spread_sd_runs": 73.16053776401158,
+      "luck_sd_runs_hindsight": 51.42863924622332,
+      "luck_sd_runs_model": 57.65838021607453,
+      "luck_share_hindsight": 0.4941471429666681,
+      "luck_share_hindsight_band": [
+        0.43365576446535403,
+        0.5745423041741666
+      ],
+      "luck_share_model": 0.621113683632993,
+      "luck_share_model_band": [
+        0.5447674398065734,
+        0.7193033440223731
+      ],
+      "model_explained_share": 0.05416857870538139,
+      "model_explained_share_band": [
+        -0.03298433239696672,
+        0.13238742010251356
+      ],
+      "model_error_that_is_luck": 0.656685398316368,
+      "model_error_that_is_luck_band": [
+        0.5630791385601407,
+        0.7700384701459236
+      ]
+    }
+  },
+  "T20I": {
+    "all_years_all": {
+      "matches": 576,
+      "spread_sd_runs": 35.96029347458706,
+      "luck_sd_runs_hindsight": 27.0218018671832,
+      "luck_share_hindsight": 0.5646536707216,
+      "luck_share_hindsight_band": [
+        0.5027146152105497,
+        0.6239365529215819
+      ]
+    },
+    "model_years_all": {
+      "matches": 298,
+      "spread_sd_runs": 39.253026110032536,
+      "luck_sd_runs_hindsight": 28.19346814584194,
+      "luck_sd_runs_model": 28.054818927652796,
+      "luck_share_hindsight": 0.5158824089819259,
+      "luck_share_hindsight_band": [
+        0.4537962172214261,
+        0.5967559119530845
+      ],
+      "luck_share_model": 0.510820895008907,
+      "luck_share_model_band": [
+        0.4450351510166805,
+        0.5923250210754263
+      ],
+      "model_explained_share": 0.09862195613066116,
+      "model_explained_share_band": [
+        0.011707578270031039,
+        0.17971350043613696
+      ],
+      "model_error_that_is_luck": 0.5667110470276268,
+      "model_error_that_is_luck_band": [
+        0.4908805506790766,
+        0.6580269849458203
+      ]
+    }
+  },
+  "run": {
+    "commit": "bdaea4d",
+    "build_fingerprint": "0240fb4ce447d1eb412313056600edf73c9897aafd3cc3b59c3008ad63d71dba",
+    "first_test_year": 2019,
+    "replays": 1000,
+    "model_years": [
+      2023,
+      2024,
+      2025,
+      2026
+    ],
+    "model_sims": 300,
+    "prior_balls": 30,
+    "seed": 20261016
+  }
+}

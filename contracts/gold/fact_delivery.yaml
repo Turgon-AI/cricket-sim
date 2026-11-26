@@ -11,7 +11,8 @@ description:
     only from earlier balls, so it is safe as model input) followed by what happened on the ball. Every non-key
     column carries customProperty timingClass: ''pre_ball'' (knowable before the ball is bowled) or ''outcome''
     (the result of the ball).'
-  limitations: 'Scope: men''s Tests, ODIs, T20Is between two ICC full members, and the IPL, from 2001 (config/scope.yml);
+  limitations: 'Scope: men''s Tests, ODIs, T20Is between two ICC full members, and the IPL, from 2001, and nine
+    other franchise T20 leagues from 2015-04-01 (config/scope.yml);
     Cricsheet coverage is incomplete (see report_international_coverage; e.g. Afghanistan matches are withheld by
     Cricsheet). The ''_before'' columns never include the ball itself; the build checks that the next ball''s state
     equals this state plus this ball. The target and ball limit as cross-checked against how the innings went (NULL
@@ -460,10 +461,10 @@ schema:
       value: outcome
   quality:
   - name: row_count_floor_full_data
-    description: on the complete snapshots, at least 90 to 95% of the 3,657,877 rows of the 2026-10-27 real
+    description: on the complete snapshots, at least 90 to 95% of the 4,507,621 rows of the 2026-11-18 real
       build, so a snapshot or step that silently lost rows fails (skipped for the SUBSET CI sample)
     metric: rowCount
-    mustBeGreaterOrEqualTo: 3400000
+    mustBeGreaterOrEqualTo: 4100000
     customProperties:
     - property: fullDataOnly
       value: true
