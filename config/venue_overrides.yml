@@ -188,6 +188,9 @@ venues:
   ted-summerton-reserve: {osm_ref: way/147105294, country: Australia, note: "OSM 'Ted Summerton Reserve', Moe, Victoria (was Monroe County, Ohio)"}
   county-ground-derby: {osm_ref: way/107385079, country: England, note: "OSM 'Derbyshire County Cricket Club', Nottingham Road (was Derby County FC's training ground)"}
   international-sports-stadium: {osm_ref: way/280925037, country: Australia, note: "OSM 'Coffs Harbour International Stadium' (was the Coffs Harbour centroid)"}
+  # Two more left at city centres after the leagues went in (pinned 2026-11-26).
+  knight-riders-cricket-ground: {wikidata_qid: Q139025997, country: United States, note: "Wikidata 'Knight Riders Cricket Field' at Fairplex, Pomona; MLC from 2026 (was the Pomona centroid)"}
+  geelong-cricket-ground: {wikidata_qid: Q48767673, country: Australia, note: "Wikidata 'Kardinia Park', the park beside the stadium; Wikipedia's 2018-19 WBBL page links Geelong Cricket Ground there. Wikipedia puts the men's BBL match of 2019-01-13 in the stadium (GMHBA), Cricsheet here; kept as Cricsheet says (was the Geelong centroid)"}
   college-ground: {osm_ref: way/166337274, country: England, needs_review: true, note: "OSM Cheltenham College grounds; the cricket field is on the campus (was the Cheltenham centroid)"}
   sikh-union-club-ground: {osm_ref: way/226426594, note: "OSM pitch 'Sikh Union Club', Nairobi (pinned QID had no coordinates)"}
   kyambogo-cricket-oval: {osm_ref: way/1064904518, note: "OSM pitch 'Kyambogo Cricket Ground', Kampala"}
